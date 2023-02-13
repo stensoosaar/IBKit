@@ -1,6 +1,7 @@
 # IBKit - Interactive Brokers API swiftified
 
-IBKit is open source Interactive Brokers API library written natively in Swift. 
+IBKit is open source Interactive Brokers API library written in Swift. It allows you automater trades, retrieve market data and monitor positions and orders. Offering both live and paper trading capabilities, it can be used as an algo trading platform or as an backtesting datasource. In latter case you need to write your own portfolio accounting methods.
+
 The software is not an official API and is not affiliated or related with Interactive Brokers.
 
 ## Conformance
