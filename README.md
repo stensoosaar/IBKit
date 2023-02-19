@@ -17,7 +17,7 @@ The current version should conform with IB API version 10.18.
 
 ## Requirements
 - [IB Gateway](https://www.interactivebrokers.com/en/trading/ibgateway-stable.php).
-- macOS 13+
+- macOS 12+
 - Swift 5.5+
 - XCode 13+
 
