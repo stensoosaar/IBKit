@@ -147,8 +147,6 @@ extension IBClient: IBConnectionDelegate {
 					let object = try decoder.decode(IBCommissionReport.self)
 					self.accountEventFeed.send(object)
 					
-					
-					
 				case .CONTRACT_DATA:
 					let object = try decoder.decode(IBContractDetails.self)
 					self.marketEventFeed.send(object)
@@ -244,8 +242,12 @@ extension IBClient: IBConnectionDelegate {
 				case .TICK_GENERIC:
 					print(decoder.buffer)
 					
+				case .NEWS_BULLETINS:
+					let object = try decoder.decode(NewsBulletin.self)
+					print(object)
+					
 				default:
-					print("Unknown response type \(responseType) received")
+					print("response type \(responseType) not handled")
 			}
 			
 		} catch {

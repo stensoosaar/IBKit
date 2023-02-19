@@ -171,7 +171,7 @@ public extension IBClient {
 	}
 	
 	
-	internal func requestMarketData(reqId: Int, contract:IBContract, events: [IBTickType]?=nil, snapshot: Bool, regulatory: Bool) throws {
+	func requestMarketData(reqId: Int, contract:IBContract, events: [IBTickType]?=nil, snapshot: Bool=false, regulatory: Bool=false) throws {
 				
 		let version: Int = 11
 		let encoder = IBEncoder(serverVersion: serverVersion)
@@ -217,7 +217,7 @@ public extension IBClient {
 		if serverVersion >= IBServerVersion.LINKING{
 			try container.encode("")
 		}
-		
+				
 		try send(encoder: encoder)
 
 	}
