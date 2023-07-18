@@ -29,11 +29,11 @@ import Foundation
 
 public class IBDecoder {
 
-    public var buffer: [String] = []
+	public var buffer: [String] = []
 
-    fileprivate var cursor: Int = 0
+	fileprivate var cursor: Int = 0
 
-    fileprivate let separator: String = "\0"
+	fileprivate let separator: String = "\0"
 	
 	public lazy var dateFormatter: DateFormatter = {
 		let df = DateFormatter()
@@ -49,7 +49,7 @@ public class IBDecoder {
 	public init(serverVersion: Int?) {
 		self.serverVersion = serverVersion
 	}
-    
+	
 	public func setDateFormat(format: String) {
 		dateFormatter.dateFormat = format
 	}
@@ -58,75 +58,84 @@ public class IBDecoder {
 
 
 public extension IBDecoder {
-    
-    enum Error: Swift.Error {
-        case prematureEndOfData
-        case typeNotConformingToIBDecodable(IBDecodable.Type)
-        case typeNotConformingToDecodable(Any.Type)
-        case decodingError(message: String)
-    }
-    
-}
-
-public extension IBDecoder {
-    
-    func decode<T:Decodable>(_ type: T.Type, from data: Data) throws -> T {
-        guard let buffer = String(data:data, encoding: .ascii)?.components(separatedBy: separator).dropLast() else {
-            throw Error.typeNotConformingToDecodable(type)
-        }
-        self.buffer = Array(buffer)
-        return try T.init(from: self)
-    }
-    
-}
-
-
-public extension IBDecoder {
-    
-    func readString() throws -> String {
-        guard cursor < buffer.count else {throw Error.prematureEndOfData}
-        let value = buffer[cursor]
-        cursor += 1
-		if debugMode { print(value) }
-        return value
-    }
-    
-    func unwrap(_ type: Bool.Type) throws -> Bool {
-        switch try unwrap(Int.self) {
-        case 0: return false
-        case 1: return true
-        case let x: throw Error.decodingError(message: "Bool out of range \(x), cursor: \(cursor)")
-        }
-    }
-    
-    func unwrap(_ type: Int.Type) throws -> Int {
-        let stringValue = try readString()
-        guard let value = Int(stringValue) else {
-            throw Error.decodingError(message: "cant unwrap Int from \(stringValue), cursor: \(cursor)")
-        }
-        return value
-    }
-    
-    func unwrap(_ type: Double.Type) throws -> Double {
-        let stringValue = try readString()
-        guard let value = Double(stringValue) else {
-            throw Error.decodingError(message: "cant unwrap double from \(stringValue), cursor: \(cursor)")
-        }
-        return value
-    }
-    
-    func unwrap(_ type: Date.Type) throws -> Date {
+	
+	enum Error: Swift.Error, LocalizedError {
+		case prematureEndOfData
+		case typeNotConformingToIBDecodable(IBDecodable.Type)
+		case typeNotConformingToDecodable(Any.Type)
+		case decodingError(message: String)
 		
-        let stringValue = try readString().condensedWhitespace
+		public var errorDescription: String? {
+			switch self {
+				case .prematureEndOfData:							return "Unexpected message end"
+				case .typeNotConformingToIBDecodable(let type):		return "\(type) is not conforming IB Decoder "
+				case .typeNotConformingToDecodable(let type):		return "\(type) is not conforming Decoder "
+				case .decodingError(let message):					return "Decoding error: \(message)"
+			}
+		}
+	}
+	
+}
+
+public extension IBDecoder {
+	
+	func decode<T:Decodable>(_ type: T.Type, from data: Data) throws -> T {
+		guard let buffer = String(data:data, encoding: .ascii)?.components(separatedBy: separator).dropLast() else {
+			throw Error.typeNotConformingToDecodable(type)
+		}
+		self.buffer = Array(buffer)
+		return try T.init(from: self)
+	}
+	
+}
+
+
+public extension IBDecoder {
+	
+	func readString() throws -> String {
+		guard cursor < buffer.count else {throw Error.prematureEndOfData}
+		let value = buffer[cursor]
+		cursor += 1
+		if debugMode { print(value) }
+		return value
+	}
+	
+	func unwrap(_ type: Bool.Type) throws -> Bool {
+		switch try unwrap(Int.self) {
+		case 0: return false
+		case 1: return true
+		case let x: throw Error.decodingError(message: "Bool out of range \(x), cursor: \(cursor)  \(buffer)")
+		}
+	}
+	
+	func unwrap(_ type: Int.Type) throws -> Int {
+		let stringValue = try readString()
+		guard let value = Int(stringValue) else {
+			throw Error.decodingError(message: "cant unwrap Int from \(stringValue), cursor: \(cursor), \(buffer)")
+		}
+		return value
+	}
+	
+	func unwrap(_ type: Double.Type) throws -> Double {
+		let stringValue = try readString()
+		guard let value = Double(stringValue) else {
+			throw Error.decodingError(message: "cant unwrap double from \(stringValue), cursor: \(cursor)  \(buffer)")
+		}
+		return value
+	}
+	
+	func unwrap(_ type: Date.Type) throws -> Date {
+				
+		let stringValue = try readString().condensedWhitespace
 		
 		if stringValue == "" {
-			throw Error.decodingError(message: "cant unwrap date from \(stringValue), cursor: \(cursor)")
+			throw Error.decodingError(message: "cant unwrap date from \(stringValue), cursor: \(cursor)  \(buffer)")
 		}
  
 		if let date = dateFormatter.date(from: stringValue) {
 			return date
 		}
-		
+				
 		switch stringValue.count {
 			case 6:
 				dateFormatter.dateFormat = "yyyyMM"
@@ -141,7 +150,13 @@ public extension IBDecoder {
 				dateFormatter.dateFormat = "yyyyMMdd HH:mm:ss"
 			
 			case 10:
-				dateFormatter.dateFormat = "yyyy-MM-dd"
+				if stringValue.contains("-"){
+					dateFormatter.dateFormat = "yyyy-MM-dd"
+				} else if let timestamp = Double(stringValue) {
+					return Date(timeIntervalSince1970: timestamp)
+				} else {
+					throw Error.decodingError(message: "cant unwrap double from \(stringValue), cursor: \(cursor)  \(buffer)")
+				}
 			
 			case 13:
 				dateFormatter.dateFormat = "yyyyMMdd:HHmm"
@@ -151,12 +166,12 @@ public extension IBDecoder {
 				if let timestamp = Double(stringValue) {
 					return Date(timeIntervalSince1970: timestamp)
 				} else {
-					throw Error.decodingError(message: "cant unwrap double from \(stringValue), cursor: \(cursor)")
+					throw Error.decodingError(message: "cant unwrap double from \(stringValue), cursor: \(cursor)  \(buffer)")
 				}
 		}
 
 		guard let value = dateFormatter.date(from: stringValue) else {
-			throw Error.decodingError(message: "cant unwrap double from \(stringValue), cursor: \(cursor)")
+			throw Error.decodingError(message: "cant unwrap double from \(stringValue), cursor: \(cursor)  \(buffer)")
 		}
 		
 		return value
@@ -164,40 +179,40 @@ public extension IBDecoder {
 		
 	}
 
-    
-    func decode<T: Decodable>(_ type: T.Type) throws -> T {
-        
+	
+	func decode<T: Decodable>(_ type: T.Type) throws -> T {
+		
 		if debugMode { print(type) }
 		
-        switch type {
-            
-        case is Int.Type:
-            return try unwrap(Int.self) as! T
-                        
-        case is Double.Type:
-            return try unwrap(Double.self) as! T
-            
-        case is String.Type:
-            return try readString() as! T
-            
-        case is Bool.Type:
-            return try unwrap(Bool.self) as! T
+		switch type {
+			
+		case is Int.Type:
+			return try unwrap(Int.self) as! T
+						
+		case is Double.Type:
+			return try unwrap(Double.self) as! T
+			
+		case is String.Type:
+			return try readString() as! T
+			
+		case is Bool.Type:
+			return try unwrap(Bool.self) as! T
 
-        case is Date.Type:
-            return try unwrap(Date.self) as! T
+		case is Date.Type:
+			return try unwrap(Date.self) as! T
 
-        case let decodable as IBDecodable.Type:
-            return try decodable.init(from: self) as! T
-            
-        case is any RawRepresentable.Type:
-            return try T.init(from: self)
+		case let decodable as IBDecodable.Type:
+			return try decodable.init(from: self) as! T
+			
+		case is any RawRepresentable.Type:
+			return try T.init(from: self)
 
-        default:
-            return try T.init(from: self)
-        }
-        
-    }
-    
+		default:
+			return try T.init(from: self)
+		}
+		
+	}
+	
 }
 
 

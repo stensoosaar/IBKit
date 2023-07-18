@@ -29,11 +29,11 @@ import Foundation
 
 
 public class IBEncoder {
-    
-    public var buffer: [String] = []
-    
-    fileprivate var separator: String = "\0"
-    
+	
+	public var buffer: [String] = []
+	
+	fileprivate var separator: String = "\0"
+	
 	var dateFormatter: DateFormatter
 	
 	public var serverVersion: Int?
@@ -52,120 +52,127 @@ public class IBEncoder {
 	public func setDateFormat(format: String) {
 		dateFormatter.dateFormat = format
 	}
-    
-    public var description: String {
-        return buffer.joined(separator: separator)+separator
-    }
-    
-    public var length: Int{
-        return description.count
-    }
-    
-    public var data: Data {
-        var response = Data()
-        if let content = description.data(using: .ascii) {
-            response += content
-        }
-        return response
-    }
-    
-    public var dataWithLength: Data {
-        var response = Data()
-        response += Data(length.toBytes(size: 4))
-        if let content = description.data(using: .utf8, allowLossyConversion: false) {
-            response += content
-        }
-        return response
-    }
-    
-    public func encode<T:Encodable>(_ value:T) throws {
-        buffer.append("\(value)")
-    }
-    
+	
+	public var description: String {
+		return buffer.joined(separator: separator)+separator
+	}
+	
+	public var length: Int{
+		return description.count
+	}
+	
+	public var data: Data {
+		var response = Data()
+		if let content = description.data(using: .ascii) {
+			response += content
+		}
+		return response
+	}
+	
+	public var dataWithLength: Data {
+		var response = Data()
+		response += Data(length.toBytes(size: 4))
+		if let content = description.data(using: .utf8, allowLossyConversion: false) {
+			response += content
+		}
+		return response
+	}
+	
+	public func encode<T:Encodable>(_ value:T) throws {
+		buffer.append("\(value)")
+	}
+	
 }
 
 
 public extension IBEncoder {
-    
+	
 	static func encode(_ value: Encodable, serverVersion: Int) throws -> Data {
-        let encoder = IBEncoder(serverVersion: serverVersion)
-        try value.encode(to: encoder)
-        return encoder.data
-    }
-    
-    func wrap(_ value: Bool) throws {
-        buffer.append(value == true ? "1" : "0")
-    }
-    
-    func wrap(_ value: Double) throws {
-        buffer.append( String(format:"%.2f", value ))
-    }
-    
-    func wrap(_ value: Int) throws {
-        buffer.append( String(format:"%d", value ))
-    }
-    
-    func wrap(_ value: Int64) throws {
-        buffer.append( String(format:"%ld", value ))
-    }
-    
-    func wrap(_ value: String) throws {
-        buffer.append( value )
-    }
-    
-    func wrap(_ value: Character) throws {
-       buffer.append( String(value) )
-    }
-    
-    func wrap(_ value: Date) throws {
+		let encoder = IBEncoder(serverVersion: serverVersion)
+		try value.encode(to: encoder)
+		return encoder.data
+	}
+	
+	func wrap(_ value: Bool) throws {
+		buffer.append(value == true ? "1" : "0")
+	}
+	
+	func wrap(_ value: Double) throws {
+		buffer.append( String(format:"%.2f", value ))
+	}
+	
+	func wrap(_ value: Int) throws {
+		buffer.append( String(format:"%d", value ))
+	}
+	
+	func wrap(_ value: Int64) throws {
+		buffer.append( String(format:"%ld", value ))
+	}
+	
+	func wrap(_ value: String) throws {
+		buffer.append( value )
+	}
+	
+	func wrap(_ value: Character) throws {
+	   buffer.append( String(value) )
+	}
+	
+	func wrap(_ value: Date) throws {
 		buffer.append(self.dateFormatter.string(from: value))
-    }
-    
-    func encode(_ encodable: Encodable) throws {
-		                        
-        switch encodable {
-            
-        case let value as String:
-            try wrap(value)
-            
-        case let value as Int:
-            try wrap(value)
-            
-        case let value as Int64:
-            try wrap(value)
-            
-        case let value as Double:
-            try wrap(value)
-            
-        case let value as Bool:
-            try wrap(value)
-            
-        case let value as Date:
-            try wrap(value)
-            
-        case let value as IBEncodable:
-            try value.encode(to: self)
-            
-        case let value as (any RawRepresentable):
-            if let rawValue = value.rawValue as? Encodable {
-                try encode(rawValue)
-            }
+	}
+	
+	func encode(_ encodable: Encodable) throws {
+								
+		switch encodable {
+			
+		case let value as String:
+			try wrap(value)
+			
+		case let value as Int:
+			try wrap(value)
+			
+		case let value as Int64:
+			try wrap(value)
+			
+		case let value as Double:
+			try wrap(value)
+			
+		case let value as Bool:
+			try wrap(value)
+			
+		case let value as Date:
+			try wrap(value)
+			
+		case let value as IBEncodable:
+			try value.encode(to: self)
+			
+		case let value as (any RawRepresentable):
+			if let rawValue = value.rawValue as? Encodable {
+				try encode(rawValue)
+			}
 
-        default:
-            try encodable.encode(to: self)
-        }
-        
-    }
-    
+		default:
+			try encodable.encode(to: self)
+		}
+		
+	}
+	
 }
 
 
 public extension IBEncoder {
-    
-    enum Error: Swift.Error {
-        case typeNotConformingToIBEncodable(Encodable.Type)
-        case typeNotConformingToEncodable(Any.Type)
-    }
-    
+	
+	enum Error: Swift.Error, LocalizedError {
+		case typeNotConformingToIBEncodable(Encodable.Type)
+		case typeNotConformingToEncodable(Any.Type)
+		
+		public var errorDescription: String? {
+			switch self {
+				case .typeNotConformingToIBEncodable(let type):		return "\(type) does not conform with IBDecoder"
+				case .typeNotConformingToEncodable(let type):		return "\(type) does not conform with Decoder"
+			}
+		}
+	}
+	
 }
 

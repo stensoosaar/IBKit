@@ -7,7 +7,7 @@ IBKit is open source Interactive Brokers API library written in Swift. It allows
 The software is not an official API and is not affiliated or related with Interactive Brokers.
 
 ## Conformance
-The current version should conform with IB API version 10.18. 
+The current version should conform with IB API version 10.18. It is the aim to update the software with to MacOS major releases and include also better bites from TWS API.
 
 ## Current status
 - Common features seems to work fine but complex orders may generate errors. 
