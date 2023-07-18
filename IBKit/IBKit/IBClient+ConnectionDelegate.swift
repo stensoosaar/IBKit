@@ -176,7 +176,7 @@ extension IBClient: IBConnectionDelegate {
 					self.marketEventFeed.send(object)
 					
 				case .HISTORICAL_DATA_UPDATE:
-					let object = try decoder.decode(IBPriceHistoryUpdate.self)
+					let object = try decoder.decode(IBPriceBarUpdate.self)
 					self.marketEventFeed.send(object)
 					
 				case .REAL_TIME_BARS:

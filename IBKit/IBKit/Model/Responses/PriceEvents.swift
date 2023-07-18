@@ -80,35 +80,6 @@ public struct IBPriceHistory: Decodable, IBMarketEvent {
 	
 }
 
-
-public struct IBPriceHistoryUpdate: Decodable, IBMarketEvent {
-	
-	public var requestID: Int
-	public var prices: [IBPriceBar] = []
-	
-	public init(from decoder: Decoder) throws {
-		
-		guard let decoder = decoder as? IBDecoder else {
-			throw IBError.invalidValue("IB Decoder needed for decoding")
-		}
-		
-		var container = try decoder.unkeyedContainer()
-		self.requestID = try container.decode(Int.self)
-		
-		let count = try container.decode(Int.self)
-		if count == -1{return}
-		
-		decoder.setDateFormat(format: "yyyyMMdd")
-		for _ in 0..<count {
-			let obj = try container.decode(IBPriceBar.self)
-			prices.append(obj)
-		}
-
-	}
-	
-}
-
-
 public struct IBPriceBarUpdate: Decodable, IBMarketEvent {
 	
 	public var requestID: Int

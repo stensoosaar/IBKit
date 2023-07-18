@@ -54,14 +54,14 @@ public enum IBBarSource: String, Encodable {
 
 public struct IBPriceBar: Decodable {
 	
-	public let date: Date
-	public let open: Double
-	public let high: Double
-	public let low: Double
-	public let close: Double
-	public let volume: Double?
-	public let wap: Double?
-	public let count: Int?
+	public var date: Date
+	public var open: Double
+	public var high: Double
+	public var low: Double
+	public var close: Double
+	public var volume: Double?
+	public var wap: Double?
+	public var count: Int?
 
 	public init(from decoder: Decoder) throws {
 		var container = try decoder.unkeyedContainer()

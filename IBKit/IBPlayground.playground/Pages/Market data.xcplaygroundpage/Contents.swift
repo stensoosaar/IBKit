@@ -30,7 +30,7 @@
 			PlaygroundPage.current.finishExecution()
 		}, receiveValue: { event in
 		
-			if let event = event as? IBPriceHistoryUpdate{
+			if let event = event as? IBPriceHistory{
 				event.prices.forEach{print($0)}
 			}
 
