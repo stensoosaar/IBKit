@@ -1,5 +1,5 @@
 //
-//  IBEvent.swift
+//  AccountEvents.swift
 //	IBKit
 //
 //	Copyright (c) 2016-2023 Sten Soosaar
@@ -28,8 +28,14 @@
 import Foundation
 
 
-public protocol IBEvent { }
-
-public protocol IBIndexedEvent: IBEvent {
-	var requestID: Int				{ get }
+public struct IBManagedAccounts: Decodable, IBEvent {
+	
+	public var identifiers: [String]
+	
+	public init(from decoder: Decoder) throws {
+		var container = try decoder.unkeyedContainer()
+		_ = try container.decode(Int.self)
+		self.identifiers = try container.decode(String.self).components(separatedBy: ",")
+	}
+	
 }

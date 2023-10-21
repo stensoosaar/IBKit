@@ -1,7 +1,7 @@
 //
-//  IBEvent.swift
+//  NewsEvents.swift
 //	IBKit
-//
+//  
 //	Copyright (c) 2016-2023 Sten Soosaar
 //
 //	Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,13 +23,26 @@
 //	SOFTWARE.
 //
 
-
-
 import Foundation
 
 
-public protocol IBEvent { }
 
-public protocol IBIndexedEvent: IBEvent {
-	var requestID: Int				{ get }
+
+
+public struct IBNewsArticle: Decodable, IBIndexedEvent {
+	
+	public var requestID: Int
+	
+	public var articleType: Int
+	
+	public var articleText: String
+		
+	public init(from decoder: Decoder) throws {
+		var container = try decoder.unkeyedContainer()
+		requestID = try container.decode(Int.self)
+		articleType = try container.decode(Int.self)
+		articleText = try container.decode(String.self)
+	}
 }
+
+

@@ -31,11 +31,9 @@ import Combine
 
 open class IBClient {
 	
-	public var systemEventFeed = PassthroughSubject<IBSystemEvent,Never>()
+	internal var subject = PassthroughSubject<IBEvent,Never>()
 	
-	public var marketEventFeed = PassthroughSubject<IBMarketEvent,Never>()
-	
-	public var accountEventFeed = PassthroughSubject<IBAccountEvent,Never>()
+	lazy public var eventFeed = subject.share().eraseToAnyPublisher()
 	
 	var identifier: Int
 	
@@ -100,8 +98,7 @@ open class IBClient {
 		if connection != nil {
 			connection?.stop()
 			connection = nil
-			marketEventFeed.send(completion: .finished)
-			accountEventFeed.send(completion: .finished)
+			subject.send(completion: .finished)
 		}
 	}
 	
@@ -116,8 +113,7 @@ open class IBClient {
 	
 	func didStopCallback(error: Error?) {
 		
-		marketEventFeed.send(completion: .finished)
-		accountEventFeed.send(completion: .finished)
+		subject.send(completion: .finished)
 		
 		if error == nil {
 			exit(EXIT_SUCCESS)

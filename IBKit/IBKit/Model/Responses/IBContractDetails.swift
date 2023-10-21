@@ -29,7 +29,7 @@
 import Foundation
 
 
-public struct IBContractDetails: Decodable, IBMarketEvent {
+public struct IBContractDetails: Decodable, IBIndexedEvent {
 	
 	public var requestID: Int
 	
@@ -267,7 +267,7 @@ public struct IBContractDetails: Decodable, IBMarketEvent {
 }
 
 
-public struct IBContractDetailsEnd: Decodable, IBMarketEvent {
+public struct IBContractDetailsEnd: Decodable, IBIndexedEvent {
 	
 	public var requestID: Int
 	
@@ -280,118 +280,4 @@ public struct IBContractDetailsEnd: Decodable, IBMarketEvent {
 }
 
 
-public struct IBOptionChain: Decodable, IBMarketEvent {
-	
-	public var requestID: Int
-	public var exchange: String
-	public var underlyingContractId: Int
-	public var tradingClass : String
-	public var multiplier: String
-	public var expirations: [Date] = []
-	public var strikes: [Double] = []
 
-	public init(from decoder: Decoder) throws {
-		
-		var container = try decoder.unkeyedContainer()
-		
-		requestID = try container.decode(Int.self)
-		exchange = try container.decode(String.self)
-		underlyingContractId = try container.decode(Int.self)
-		tradingClass = try container.decode(String.self)
-		multiplier = try container.decode(String.self)
-		
-		let expCount = try container.decode(Int.self)
-		
-		if let decoder = decoder as? IBDecoder{
-			decoder.dateFormatter.dateFormat = "yyyyMMdd"
-		}
-		
-		for _ in 0..<expCount{
-			let expiration = try container.decode(Date.self)
-			expirations.append(expiration)
-		}
-
-		let strikeCount = try container.decode(Int.self)
-		for _ in 0..<strikeCount{
-			let strike = try container.decode(Double.self)
-			strikes.append(strike)
-		}
-
-	}
-
-}
-
-
-public struct IBOptionChainEnd: Decodable, IBMarketEvent {
-	
-	public var requestID: Int
-	
-	public init(from decoder: Decoder) throws {
-		var container = try decoder.unkeyedContainer()
-		self.requestID = try container.decode(Int.self)
-	}
-
-}
-
-
-public struct IBContractSearchResult: Decodable, IBSystemEvent {
-	
-	public struct Contract: Decodable {
-		
-		let contractID: Int
-		let symbol: String
-		let type: IBSecuritiesType
-		let primaryExchange: String
-		let currency: String
-		var availableTypes: [IBSecuritiesType]
-		
-		public init(from decoder: Decoder) throws {
-			var container = try decoder.unkeyedContainer()
-			self.contractID = try container.decode(Int.self)
-			self.symbol = try container.decode(String.self)
-			self.type = try container.decode(IBSecuritiesType.self)
-			self.primaryExchange = try container.decode(String.self)
-			self.currency = try container.decode(String.self)
-			let derivateCount = try container.decode(Int.self)
-			availableTypes = []
-			for _ in 0..<derivateCount{
-				let obj = try container.decode(IBSecuritiesType.self)
-				availableTypes.append(obj)
-			}
-		}
-
-	}
-	
-	let requestId: Int
-	
-	var values: [Contract] = []
-	
-	public init(from decoder: Decoder) throws {
-		var container = try decoder.unkeyedContainer()
-		requestId = try container.decode(Int.self)
-		let resultCount = try container.decode(Int.self)
-		for _ in 0..<resultCount {
-			let object = try container.decode(Contract.self)
-			values.append(object)
-		}
-	}
-
-}
-
-
-public struct IBFinancialReport: Decodable, IBMarketEvent {
-	
-	public var requestID: Int
-
-	public var xml: XMLDocument
-	
-	public init(from decoder: Decoder) throws {
-		
-		var container = try decoder.unkeyedContainer()
-		_ = try container.decode(Int.self)
-		requestID = try container.decode(Int.self)
-		let content = try container.decode(String.self)
-		xml = try XMLDocument(xmlString: content)
-	}
-	
-}

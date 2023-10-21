@@ -1,7 +1,7 @@
 //
-//  IBTickAttribute.swift
+//  PositionEvents.swift
 //	IBKit
-//
+//  
 //	Copyright (c) 2016-2023 Sten Soosaar
 //
 //	Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,30 +23,32 @@
 //	SOFTWARE.
 //
 
-
-
-
 import Foundation
 
 
-public enum IBTickAttribute {
+
+
+public struct IBPositionPNL: Decodable, IBIndexedEvent {
 	
-	/// The Bid price is lower than the day's lowest value or the ask price is higher than the highest ask.
-	case pastLimit
+	public var requestID: Int
+	public var contractID: Int?
+	public var account: String?
+	public var position: Double
+	public var daily: Double
+	public var unrealized: Double
+	public var realized: Double
+	public var value: Double
+
 	
-	/// The Bid is lower than day's lowest low.
-	case bidPastLow
+	public init(from decoder: Decoder) throws {
 	
-	/// The Ask is higher than day's highest ask.
-	case askPastHigh
-	
-	/// Whether the price tick is available for automatic execution or not
-	case canAutoExecute
-	
-	/// The bid/ask price tick is from pre-open session.
-	case preOpen
-	
-	/// Trade is classified as 'unreportable' (e.g. odd lots, combos, derivative trades, etc)
-	case unreported
-	
+		var container = try decoder.unkeyedContainer()
+		requestID = try container.decode(Int.self)
+		position = try container.decode(Double.self)
+		daily = try container.decode(Double.self)
+		unrealized = try container.decode(Double.self)
+		realized = try container.decode(Double.self)
+		value = try container.decode(Double.self)
+						
+	}
 }
