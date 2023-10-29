@@ -23,7 +23,7 @@ public struct IBPriceHistory: Decodable, IBIndexedEvent {
 		
 		var container = try decoder.unkeyedContainer()
 		self.requestID = try container.decode(Int.self)
-		decoder.setDateFormat(format: "yyyyMMdd HH:mm:ss")
+		decoder.setDateFormat(format: "yyyyMMdd HH:mm:ss VV")
 		let startDate = try container.decode(Date.self)
 		let endDate = try container.decode(Date.self)
 		self.interval = DateInterval(start: startDate, end: endDate)
