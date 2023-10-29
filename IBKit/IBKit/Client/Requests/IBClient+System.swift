@@ -30,25 +30,6 @@ import Foundation
 
 extension IBClient {
 	
-	internal func sendGreeting(range: ClosedRange<Int>) {
-	
-		var greeting = Data()
-		let prefix="API\0"
-		if let contentData = prefix.data(using: .ascii, allowLossyConversion: false){
-			greeting += contentData
-		}
-	
-		let versions = "v\(range.lowerBound)..\(range.upperBound)"
-		greeting += versions.count.toBytes(size: 4)
-		if let contentData = versions.data(using: .ascii, allowLossyConversion: false){
-			greeting += contentData
-		}
-	
-		connection?.send(data: greeting)
-	
-	}
-
-	
 	internal func startAPI(clientID: Int) throws {
 		let version: Int = 2
 		let encoder = IBEncoder(serverVersion: serverVersion)
@@ -61,7 +42,7 @@ extension IBClient {
 	}
 	
 	
-	public func nextRequestID() throws {
+	public func requestNextRequestID() throws {
 		let version: Int = 1
 		let encoder = IBEncoder(serverVersion: serverVersion)
 		var container = encoder.unkeyedContainer()
@@ -69,22 +50,18 @@ extension IBClient {
 		try container.encode(version)
 		try container.encode("")
 		try send(encoder: encoder)
-
 	}
 	
-	public func serverTime() throws {
-
+	public func requestServerTime() throws {
 		let version: Int = 1
 		let encoder = IBEncoder(serverVersion: serverVersion)
 		var container = encoder.unkeyedContainer()
 		try container.encode(IBRequestType.serverTime)
 		try container.encode(version)
 		try send(encoder: encoder)
-
 	}
 
-	public func subscribeBulletins(includePast all: Bool = false) throws {
-
+	public func requestBulletins(includePast all: Bool = false) throws {
 		let version: Int = 1
 		let encoder = IBEncoder(serverVersion: serverVersion)
 		var container = encoder.unkeyedContainer()
@@ -92,18 +69,15 @@ extension IBClient {
 		try container.encode(version)
 		try container.encode(all)
 		try send(encoder: encoder)
-
 	}
 	
-	public func unsubscribeNewsBulletins() throws {
-
+	public func cancelNewsBulletins() throws {
 		let version: Int = 1
 		let encoder = IBEncoder(serverVersion: serverVersion)
 		var container = encoder.unkeyedContainer()
 		try container.encode(IBRequestType.cancelNewsBulletins)
 		try container.encode(version)
 		try send(encoder: encoder)
-
 	}
 	
 }

@@ -1,4 +1,5 @@
 //: [Previous](@previous)
+
 /*:
  # Market data
  IB provides near real time (usually updates every 0.25 seconds) and historical market data.
@@ -25,7 +26,7 @@
 
 	var subscriptions: [AnyCancellable] = []
 
-	client.marketEventFeed.sink (
+	client.eventFeed.sink (
 		receiveCompletion: { completion in
 			PlaygroundPage.current.finishExecution()
 		}, receiveValue: { event in
@@ -43,7 +44,6 @@
 */
 	do {
 		try client.connect()
-		sleep(1)
 	} catch {
 		print(error.localizedDescription)
 	}
@@ -54,7 +54,7 @@
  - if using multiple securities / timeframes, you should store your request parameters with requestID
 */
 	do {
-		let requestID = client.getNextID()
+		let requestID = client.nextRequestID
 		let contract = IBContract.cfd("IBUS500", currency: "USD")
 		let lookback = IBDuration.lookback(30, unit: .day)
 		try client.requestPriceHistory(requestID, contract: contract, barSize: IBBarSize.day, barSource: IBBarSource.bidAsk, lookback: lookback)
@@ -64,3 +64,7 @@
 
 sleep(5)
 client.disconnect()
+
+
+//: [Next](@next)
+

@@ -29,28 +29,18 @@ import Network
 
 extension IBClient: IBConnectionDelegate {
 	
-	func connection(_ connection: NWConnection, didReceiveData data: Data) {
-		
-		guard let serverVersion = serverVersion else {
-			
-			guard let comps = String(data: data, encoding: .utf8)?.components(separatedBy: "\0").dropLast(),
-				  let versionString = comps.first, let timestampString = comps.last, let version = Int(versionString)
-			else {
-				fatalError("Cant parse Handshake")
-			}
-			
-			self.serverVersion = version
-			self.connectionTime = timestampString
-			print("Client connected at \(timestampString), server version \(self.serverVersion ?? 0)")
-			return
-			
-		}
+	func connection(_ connection: IBConnection, didConnect date: String, toServer version: Int) {
+		self.connectionTime = date
+		self.serverVersion = version
+	}
+	
+	
+	func connection(_ connection: IBConnection, didReceiveData data: Data) {
 		
 		let decoder = IBDecoder(serverVersion: serverVersion)
 			
 		guard let responseValue = try? decoder.decode(Int.self, from: data),
-			let responseType = IBResponseType(rawValue: responseValue)
-		else {
+			let responseType = IBResponseType(rawValue: responseValue) else {
 			print("Unknown response type \(String(data: data, encoding: .utf8).debugDescription)")
 			return
 		}
@@ -70,7 +60,23 @@ extension IBClient: IBConnectionDelegate {
 				case .CURRENT_TIME:
 					let object = try decoder.decode(IBServerTime.self)
 					subject.send(object)
-					
+				
+				case .ACCT_VALUE:
+					let object = try decoder.decode(IBAccountValue.self)
+				self.subject.send(object)
+
+				case .ACCT_UPDATE_TIME:
+					let object = try decoder.decode(IBAccountUpdateTime.self)
+					self.subject.send(object)
+
+				case .PORTFOLIO_VALUE:
+					let object = try decoder.decode(IBPortfolioValue.self)
+					self.subject.send(object)
+
+				case .ACCT_DOWNLOAD_END:
+					let object = try decoder.decode(IBAccountValueEnd.self)
+					self.subject.send(object)
+
 				case .SYMBOL_SAMPLES:
 					let object = try decoder.decode(IBContractSearchResult.self)
 					self.subject.send(object)
@@ -246,7 +252,7 @@ extension IBClient: IBConnectionDelegate {
 					print(object)
 					
 				default:
-					print("response type \(responseType) not handled")
+					print("response \(responseType) not handled")
 			}
 			
 		} catch {

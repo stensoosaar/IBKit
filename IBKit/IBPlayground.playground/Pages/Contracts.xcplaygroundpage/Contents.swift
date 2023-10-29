@@ -58,7 +58,4 @@ The OCC options symbol can be used to define an option contract in the API throu
 
 
 
-
-
-
 //: [Next](@next)

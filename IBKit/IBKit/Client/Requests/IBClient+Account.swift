@@ -42,6 +42,22 @@ public extension IBClient {
 	}
 	
 	
+	/// Subscribe account values, portfolio and last update time information
+	/// - Parameter accountName: account name
+	/// - Parameter subscribe: true for start and false to end
+
+	func subscribeAccountUpdates(accountName: String, subscribe:Bool) throws {
+		let version: Int = 2
+		let encoder = IBEncoder(serverVersion: serverVersion)
+		var container = encoder.unkeyedContainer()
+		try container.encode(IBRequestType.accountData)
+		try container.encode(version)
+		try container.encode(subscribe)
+		try container.encode(accountName)
+		try send(encoder: encoder)
+	}
+	
+	
 	/// Subscribes account summary.
 	/// - Parameter requestID: unique request identifier. Best way to obtain one, is by calling client.getNextID().
 	/// - Parameter tags: Array of IBAccountKeys to specify what to subscribe. As a default, all keys will be subscribed
@@ -60,20 +76,6 @@ public extension IBClient {
 		try container.encode(tagValues)
 		try send(encoder: encoder)
 	}
-	
-	func subscribeAccountSummary2(_ requestID: Int, tags: [String], accountGroup group: String = "All") throws {
-		let version: Int = 1
-		let encoder = IBEncoder(serverVersion: serverVersion)
-		var container = encoder.unkeyedContainer()
-		try container.encode(IBRequestType.accountSummary)
-		try container.encode(version)
-		try container.encode(requestID)
-		try container.encode(group)
-		let tagValues = tags.map({$0}).joined(separator: ",")
-		try container.encode(tagValues)
-		try send(encoder: encoder)
-	}
-	
 
 	
 	/// Unsubscribes account summary

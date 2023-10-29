@@ -141,6 +141,6 @@ struct IBServerVersion {
 	public static var INSTRUMENT_TIMEZONE: Int         	= 174
 	public static var HMDS_MARKET_DATA_IN_SHARES: Int  	= 175
 	
-	static var range: ClosedRange<Int> { return WHAT_IF_EXT_FIELDS...COMPLETED_ORDERS }
+	static var range: ClosedRange<Int> { return WHAT_IF_EXT_FIELDS...HMDS_MARKET_DATA_IN_SHARES }
 
 }

@@ -47,7 +47,6 @@ open class IBClient {
 	
 	public var connectionTime: String?
 	
-	var _nextValidID: Int = 0
 	
 	/// Creates new api client.
 	/// - Parameter id: Master API ID, set in IB Gateway or Workstation
@@ -66,9 +65,12 @@ open class IBClient {
 		
 	}
 
+
+	var _nextValidID: Int = 0
+
 	/// Return next valid request identifier you should use to make request or subscription
 
-	public func getNextID() -> Int{
+	public var nextRequestID: Int {
 		let value = _nextValidID
 		_nextValidID += 1
 		return value
@@ -85,9 +87,7 @@ open class IBClient {
 		connection?.didStopCallback = didStopCallback(error:)
 		connection?.delegate = self
 		connection?.start()
-		
-		sendGreeting(range: IBServerVersion.range)
-		
+				
 		try self.startAPI(clientID: self.identifier)
 		
 	}
@@ -103,9 +103,7 @@ open class IBClient {
 	}
 	
 	func send(encoder: IBEncoder) throws {
-		
 		if connection == nil { throw IBError.serverError("No connection found") }
-		
 		let requestDataWithLength = encoder.data.count.toBytes(size: 4) + encoder.data
 		connection?.send(data: requestDataWithLength)
 	}
