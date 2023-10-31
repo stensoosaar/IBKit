@@ -350,6 +350,7 @@ public struct IBAccountValue: Decodable, IBEvent{
 			
 			///To check projected margin requirements under Portfolio Margin model
 		case WhatIfPMEnabled					= "WhatIfPMEnabled"
+		
 
 	}
 	
