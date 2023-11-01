@@ -171,6 +171,17 @@ public struct IBContractDetails: Decodable, IBIndexedEvent {
 	public var notes: String?
 	
 	
+	public var stockType: String?
+
+	public var minTick: Double?
+
+	public var minSize: Double?
+
+	public var sizeIncrement: Double?
+
+	public var suggestedSizeIncrement: Double?
+	
+	
 	public init(from decoder: Decoder) throws {
 		
 		guard let decoder = decoder as? IBDecoder,
@@ -199,7 +210,7 @@ public struct IBContractDetails: Decodable, IBIndexedEvent {
 		let tradingClass = try container.decode(String.self)
 		let contractId = try container.decode(Int.self)
 		self.minimumTick = try container.decode(Double.self)
-		
+				
 		if serverVersion >= IBServerVersion.MD_SIZE_MULTIPLIER && serverVersion < IBServerVersion.SIZE_RULES {
 			self.mdSizeMultiplier = try container.decodeOptional(Double.self)
 		}
@@ -266,17 +277,17 @@ public struct IBContractDetails: Decodable, IBIndexedEvent {
 		}
 		
 		if serverVersion >= IBServerVersion.STOCK_TYPE{
-			let stockType = try container.decodeOptional(String.self)
+			self.stockType = try container.decodeOptional(String.self)
 		}
 		
 		if serverVersion >= IBServerVersion.FRACTIONAL_SIZE_SUPPORT && serverVersion < IBServerVersion.SIZE_RULES{
-			let minTick = try container.decodeOptional(Double.self)
+			self.minTick = try container.decodeOptional(Double.self)
 		}
 
 		if serverVersion >= IBServerVersion.SIZE_RULES{
-			let minSize = try container.decodeOptional(Double.self)
-			let sizeIncrement = try container.decodeOptional(Double.self)
-			let suggestedSizeIncrement = try container.decodeOptional(Double.self)
+			self.minSize = try container.decodeOptional(Double.self)
+			self.sizeIncrement = try container.decodeOptional(Double.self)
+			self.suggestedSizeIncrement = try container.decodeOptional(Double.self)
 		}
 		
 	}

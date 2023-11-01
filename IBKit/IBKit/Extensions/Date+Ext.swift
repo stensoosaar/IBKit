@@ -67,4 +67,12 @@ public extension Date{
 		return Calendar.current.date(byAdding: components, to: startOfMonth)!
 	}
 	
+	var futureExpirationCode: String? {
+		let comps = Calendar.current.dateComponents([.month, .year], from: self)
+		guard let month = comps.month, let year = comps.year else {return nil}
+		let monthCode = ["F","G","H","J","K","M","N","Q","U","V","X","Z"][month-1]
+		let yearCode = "\(year)".suffix(1)
+		return "\(monthCode)\(yearCode)"		
+	}
+	
 }
