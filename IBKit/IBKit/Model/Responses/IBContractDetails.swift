@@ -179,6 +179,7 @@ public struct IBContractDetails: Decodable, IBIndexedEvent {
 		}
 
 		var container = try decoder.unkeyedContainer()
+		
 		var version: Int = 8
 		if serverVersion < IBServerVersion.SIZE_RULES{
 			version = try container.decode(Int.self)
@@ -199,9 +200,7 @@ public struct IBContractDetails: Decodable, IBIndexedEvent {
 		let contractId = try container.decode(Int.self)
 		self.minimumTick = try container.decode(Double.self)
 		
-		
-		
-		if serverVersion >= IBServerVersion.MD_SIZE_MULTIPLIER{
+		if serverVersion >= IBServerVersion.MD_SIZE_MULTIPLIER && serverVersion < IBServerVersion.SIZE_RULES {
 			self.mdSizeMultiplier = try container.decodeOptional(Double.self)
 		}
 		
@@ -265,6 +264,21 @@ public struct IBContractDetails: Decodable, IBIndexedEvent {
 		if serverVersion >= IBServerVersion.REAL_EXPIRATION_DATE {
 			self.realExpirationDate = try container.decodeOptional(Date.self)
 		}
+		
+		if serverVersion >= IBServerVersion.STOCK_TYPE{
+			let stockType = try container.decodeOptional(String.self)
+		}
+		
+		if serverVersion >= IBServerVersion.FRACTIONAL_SIZE_SUPPORT && serverVersion < IBServerVersion.SIZE_RULES{
+			let minTick = try container.decodeOptional(Double.self)
+		}
+
+		if serverVersion >= IBServerVersion.SIZE_RULES{
+			let minSize = try container.decodeOptional(Double.self)
+			let sizeIncrement = try container.decodeOptional(Double.self)
+			let suggestedSizeIncrement = try container.decodeOptional(Double.self)
+		}
+		
 	}
 	
 }
