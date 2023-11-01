@@ -179,7 +179,10 @@ public struct IBContractDetails: Decodable, IBIndexedEvent {
 		}
 
 		var container = try decoder.unkeyedContainer()
-		let version = try container.decode(Int.self)
+		var version: Int = 8
+		if serverVersion < IBServerVersion.SIZE_RULES{
+			version = try container.decode(Int.self)
+		}
 			
 		self.requestID = version >= 3 ? try container.decode(Int.self) : -1
 
