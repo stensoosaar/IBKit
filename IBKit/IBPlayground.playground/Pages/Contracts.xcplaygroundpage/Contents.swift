@@ -64,20 +64,20 @@ The OCC options symbol can be used to define an option contract in the API throu
 
 
 let watchlist: [IBContract] = [
-	forex,
-	aapl,
-	dax,
-	cfd,
-	gold,
-	magellianFund,
-	crypto,
-	porsche,
-	aaplBond,
-	miniSPX,
+	//forex,
+	//aapl,
+	//dax,
+	//cfd,
+	//gold,
+	//magellianFund,
+	//crypto,
+	//porsche,
+	//aaplBond,
+	//miniSPX,
 	microSPX,
-	daxFutures,
-	callAAPL,
-	callTSLA
+	//daxFutures,
+	//callAAPL,
+	//callTSLA
 ]
 
 

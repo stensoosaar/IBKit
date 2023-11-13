@@ -200,6 +200,7 @@ public struct IBContractDetails: Decodable, IBIndexedEvent {
 
 		let symbol = try container.decode(String.self)
 		let type = try container.decode(IBSecuritiesType.self)
+		decoder.dateFormatter.dateFormat = "yyyyMMdd HH:mm:ss VV"
 		let expiration = try container.decodeOptional(Date.self)
 		let strikePrice = try container.decodeOptional(Double.self)
 		let executionRight = try container.decodeOptional(IBContract.ExecutionRight.self)
@@ -273,6 +274,7 @@ public struct IBContractDetails: Decodable, IBIndexedEvent {
 		}
 
 		if serverVersion >= IBServerVersion.REAL_EXPIRATION_DATE {
+			decoder.dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss VV"
 			self.realExpirationDate = try container.decodeOptional(Date.self)
 		}
 		

@@ -61,17 +61,25 @@ public struct IBContract {
 	
 	// Extended fields
 
-	public struct SecurityID{
+	public struct SecurityID: CustomStringConvertible{
 		
-		public enum IdentifierType: String, Codable {
+		public enum IdentifierType: String, Codable, CustomStringConvertible {
 			case CUSIP 			= "CUSIP"
 			case SEDOL			= "SEDOL"
 			case ISIN			= "ISIN"
 			case RIC			= "RIC"
+			
+			public var description: String{
+				return self.rawValue
+			}
 		}
 		
 		var type: IdentifierType
 		var value: String
+		
+		public var description: String{
+			return String(format: "%@:%@", type.description, value)
+		}
 		
 		public static func cusip(_ value: String)->SecurityID {
 			return SecurityID(type: .CUSIP, value: value)

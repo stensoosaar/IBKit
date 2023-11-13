@@ -1133,42 +1133,62 @@ extension IBExchange: CustomStringConvertible {
 	
 	public var micCode: String?{
 		switch self{
-			case .NASDAQ: 	return "XNAS"
-			case .NYSE: 	return "XNYS"
-			case .IBIS: 	return "XETR"
-			case .AEB: 		return "XAMS"
-			case .BM: 		return "XMAD"
-			case .HEX: 		return "XHEL"
-			case .LSE: 		return "XLON"
-			case .SBF: 		return "XPAR"
-			case .FTA: 		return "XFRA"
-			case .CME: 		return "XCME"
-			case .CBOE: 	return "XCBO"
-			case .CBOT: 	return "XCBT"
-			case .GLOBEX: 	return "GLBX"
-			case .EUREX:	return "XEUR"
-			default: 		return nil
+		case .NASDAQ: 	return "XNAS"
+		case .NYSE: 	return "XNYS"
+		case .IBIS: 	return "XETR"
+		case .AEB: 		return "XAMS"
+		case .BM: 		return "XMAD"
+		case .HEX: 		return "XHEL"
+		case .LSE: 		return "XLON"
+		case .SBF: 		return "XPAR"
+		case .FTA: 		return "XFRA"
+		case .CME: 		return "XCME"
+		case .CBOE: 	return "XCBO"
+		case .CBOT: 	return "XCBT"
+		case .GLOBEX: 	return "GLBX"
+		case .EUREX:	return "XEUR"
+		case .BVME:		return "XMIL"
+		case .SFB:		return "XSTO"
+		case .CPH:		return "XCSE"
+		case .OSE:		return "XOSL"
+		case .BVL:		return "XLIS"
+		case .ENEXT_BE:	return "XBRU"
+		case .ISED:		return "XDUB"
+		case .EBS:		return "XSWX"
+		case .VSE:		return "XWBO"
+		case .BATS:		return "BATS"
+		default: 		return nil
 		}
 	}
 	
 	public init?(micCode: String){
 		
 		switch micCode{
-			case "XNAS": 	self = .NASDAQ
-			case "XNYS":	self = .NYSE
-			case "XETR":	self = .IBIS
-			case "XAMS":	self = .AEB
-			case "XMAD":	self = .BM
-			case "XHEL":	self = .HEX
-			case "XLON":	self = .LSE
-			case "XPAR":	self = .SBF
-			case "XFRA":	self = .FTA
-			case "XCME":	self = .CME
-			case "XCBO":	self = .CBOE
-			case "XCBT":	self = .CBOT
-			case "GLBX":	self = .GLOBEX
-			case "XEUR":	self = .EUREX
-			default: 		return nil
+		case "XNAS": 	self = .NASDAQ
+		case "XNYS":	self = .NYSE
+		case "XETR":	self = .IBIS
+		case "XAMS":	self = .AEB
+		case "XMAD":	self = .BM
+		case "XHEL":	self = .HEX
+		case "XLON":	self = .LSE
+		case "XPAR":	self = .SBF
+		case "XFRA":	self = .FTA
+		case "XCME":	self = .CME
+		case "XCBO":	self = .CBOE
+		case "XCBT":	self = .CBOT
+		case "GLBX":	self = .GLOBEX
+		case "XEUR":	self = .EUREX
+		case "XMIL":	self = .BVME
+		case "XSTO":	self = .SFB
+		case "XCSE":	self = .CPH
+		case "XOSL":	self = .OSE
+		case "XLIS":	self = .BVL
+		case "XBRU":	self = .ENEXT_BE
+		case "XDUB":	self = .ISED
+		case "XSWX":	self = .EBS
+		case "XWBO":	self = .VSE
+		case "BATS":	self = .BATS
+		default: 		return nil
 		}
 		
 	}
