@@ -86,12 +86,13 @@ public struct IBDuration: Codable, CustomStringConvertible {
 			case 86400..<2592000:
 				self.size = Int(interval/86400)
 				self.unit = .day
-			default:
+			case 2592000..<31556926:
 				self.size = Int(interval/2592000)
-				self.unit = .month
-						
+				self.unit = .year
+			default:
+				self.size = Int(interval/31556926)
+				self.unit = .year
 		}
-		
 
 	}
 	
