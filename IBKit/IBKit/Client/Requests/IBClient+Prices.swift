@@ -106,7 +106,7 @@ public extension IBClient {
 		try container.encode(contract)
 		try container.encode(includeExpired)
 
-		encoder.setDateFormat(format: "yyyyMMdd HH:mm:ss")
+		encoder.setDateFormat(format: "yyyyMMdd-HH:mm:ss")
 		try container.encodeOptional(lookback.endDate)
 		try container.encode(size)
 		try container.encode(lookback.description)

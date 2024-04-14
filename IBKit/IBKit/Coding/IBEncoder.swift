@@ -44,7 +44,7 @@ public class IBEncoder {
 		
 		dateFormatter = DateFormatter()
 		dateFormatter.locale = Locale(identifier: "en_US_POSIX")
-		dateFormatter.dateFormat = "yyyyMMdd HH:mm:ss"
+		dateFormatter.dateFormat = "yyyyMMdd-HH:mm:ss"
 		dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
 		
 	}
