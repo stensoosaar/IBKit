@@ -29,8 +29,6 @@ public struct IBDuration: Codable, CustomStringConvertible {
 	
 	public enum Unit: TimeInterval, Codable, CustomStringConvertible, CaseIterable {
 		case second 		= 1
-		case minute			= 60
-		case hour 			= 3600
 		case day 			= 86400
 		case week 			= 604800
 		case month 			= 2678400
@@ -43,8 +41,6 @@ public struct IBDuration: Codable, CustomStringConvertible {
 		public var longName: String {
 			switch self {
 			case .second: 	return "Seconds"
-			case .minute: 	return "Minutes"
-			case .hour: 	return "Hours"
 			case .day: 		return "Days"
 			case .week: 	return "Weeks"
 			case .month: 	return "Months"
@@ -74,15 +70,9 @@ public struct IBDuration: Codable, CustomStringConvertible {
 		
 		switch interval {
 				
-			case 0..<60:
+			case 0..<86400:
 				self.size = Int(interval)
 				self.unit = .second
-			case 60..<3600:
-				self.size = Int(interval/60)
-				self.unit = .minute
-			case 3600..<86400:
-				self.size = Int(interval/3600)
-				self.unit = .hour
 			case 86400..<2592000:
 				self.size = Int(interval/86400)
 				self.unit = .day

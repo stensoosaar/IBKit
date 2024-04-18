@@ -23,12 +23,11 @@ public struct IBPriceHistory: Decodable, IBIndexedEvent {
 		
 		var container = try decoder.unkeyedContainer()
 		self.requestID = try container.decode(Int.self)
-		decoder.setDateFormat(format: "yyyyMMdd HH:mm:ss VV")
+		decoder.setDateFormat(format: "yyyyMMdd-HH:mm:ss")
 		let startDate = try container.decode(Date.self)
 		let endDate = try container.decode(Date.self)
 		self.interval = DateInterval(start: startDate, end: endDate)
 		let count = try container.decode(Int.self)
-		decoder.setDateFormat(format: "yyyyMMdd HH:mm:ss VV")
 		
 		for _ in 0..<count {
 			let obj = try container.decode(IBPriceBar.self)
