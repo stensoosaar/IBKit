@@ -26,6 +26,7 @@ The current version should conform with IB API version 10.18. It is the aim to u
 **IB maintains its servers on Saturday early mornings (GMT) and the service is disrupted for a few hours. They also restart their servers on each morning so your gateway or workstation will be disconnected for a minute or two.**
 - Pay attention to your Master Client ID, host and port as you will need them when initiating new client. You find these values 
 under Configuration>Settings>API>Settings menu.
+- Select UTC format for sending instrument-specific attributes 
 - If you want to submit orders, you shall also uncheck Read Only API from Configuration>Settings>API>Settings menu.
 
 ## Getting Started
