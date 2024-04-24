@@ -8,20 +8,20 @@ import PackageDescription
 let package = Package(
     name: "IBKit",
 	defaultLocalization: "en",
-	platforms: [
-		.macOS(.v12)
-	],
     products: [
         .library(
 			name: "IBKit",
 			targets: ["IBKit"]),
     ],
     dependencies: [
+        .package(url: "https://github.com/apple/swift-nio", from: .init(2, 0, 0))
 	],
     targets: [
         .target(
 			name: "IBKit",
-			dependencies: [],
+			dependencies: [
+                .product(name: "NIO", package: "swift-nio")
+            ],
 			path: "IBKit/IBKit"),
         .testTarget(
 			name: "IBKitTests",
