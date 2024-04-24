@@ -25,148 +25,137 @@
 
 
 import Foundation
-import Network
 import Combine
-
+import NIOCore
+import NIOConcurrencyHelpers
+import NIOPosix
 
 open class IBClient {
-	
-	internal var subject = PassthroughSubject<IBEvent,Never>()
-	
-	lazy public var eventFeed = subject.share().eraseToAnyPublisher()
-	
-	var identifier: Int
-	
-	var connection: IBConnection?
-	
-	let host: NWEndpoint.Host
-	
-	let port: NWEndpoint.Port
-	
-	var serverVersion: Int?
-	
-	public var connectionTime: String?
-	
-	
-	/// Creates new api client.
-	/// - Parameter id: Master API ID, set in IB Gateway or Workstation
-	/// - Parameter address: Address where your IB Gatweay / Worskatation is running
-	
+    internal var subject = PassthroughSubject<IBEvent,Never>()
+    lazy public var eventFeed = subject.share().eraseToAnyPublisher()
+    
+    var identifier: Int
+    var connection: IBConnection?
+    
+    let host: String
+    let port: Int
+    
+    var serverVersion: Int?
+    
+    public var connectionTime: String?
+    
+    
+    /// Creates new api client.
+    /// - Parameter id: Master API ID, set in IB Gateway or Workstation
+    /// - Parameter address: Address where your IB Gatweay / Worskatation is running
+    
 
-	public init(id masterID: Int, address: String, port: UInt16) {
-		
-		guard let host = URL(string: address)?.host else {
-			fatalError("Cant figure out the host to connect")
-		}
-		
-		self.host = NWEndpoint.Host(host)
-		self.port = NWEndpoint.Port(rawValue: port)!
-		self.identifier = masterID
-		
-	}
+    public init(id masterID: Int, address: String, port: Int) {
+        guard let host = URL(string: address)?.host else {
+            fatalError("Cant figure out the host to connect")
+        }
+        
+        self.host = host
+        self.port = port
+        self.identifier = masterID
+        
+    }
 
 
-	var _nextValidID: Int = 0
+    var _nextValidID: Int = 0
 
-	/// Return next valid request identifier you should use to make request or subscription
+    /// Return next valid request identifier you should use to make request or subscription
 
-	public var nextRequestID: Int {
-		let value = _nextValidID
-		_nextValidID += 1
-		return value
-	}
-	
-	/// Disconnect client from IB Gateway or Workstation
-	///
-	public func connect() throws {
-		
-		if connection != nil { throw IBError.connectionError("Already connected")}
-		
-		let newConnection = NWConnection(host: self.host, port: self.port, using: .tcp)
-		connection = IBConnection(newConnection)
-		connection?.didStopCallback = didStopCallback(error:)
-		connection?.delegate = self
-		connection?.start()
-				
-		try self.startAPI(clientID: self.identifier)
-		
-	}
-	
-	/// Disconnect client from IB Gateway or Workstation
-	///
-	public func disconnect() {
-		if connection != nil {
-			connection?.stop()
-			connection = nil
-			subject.send(completion: .finished)
-		}
-	}
-	
-	func send(encoder: IBEncoder) throws {
-		if connection == nil { throw IBError.serverError("No connection found") }
-		let requestDataWithLength = encoder.data.count.toBytes(size: 4) + encoder.data
-		connection?.send(data: requestDataWithLength)
-	}
-	
-	
-	func didStopCallback(error: Error?) {
-		
-		subject.send(completion: .finished)
-		
-		if error == nil {
-			exit(EXIT_SUCCESS)
-		} else {
-			exit(EXIT_FAILURE)
-		}
-		
-	}
-	
+    public var nextRequestID: Int {
+        let value = _nextValidID
+        _nextValidID += 1
+        return value
+    }
+    
+    /// Disconnect client from IB Gateway or Workstation
+    ///
+    public func connect() throws {
+        guard connection == nil else {
+            throw IBError.connectionError("Already connected")
+        }
+
+        let connection = try IBConnection(host: host, port: port)
+        connection.didStopCallback = didStopCallback(error:)
+        connection.delegate = self
+        connection.start()
+        self.connection = connection
+                
+        try self.startAPI(clientID: self.identifier)
+        
+    }
+    
+    /// Disconnect client from IB Gateway or Workstation
+    ///
+    public func disconnect() {
+        guard let connection else { return }
+        connection.disconnect()
+        self.connection = nil
+        subject.send(completion: .finished)
+    }
+    
+    func send(encoder: IBEncoder) throws {
+        guard let connection else {
+            throw IBError.serverError("No connection found")
+        }
+        let requestDataWithLength = encoder.data.count.toBytes(size: 4) + encoder.data
+        connection.send(data: requestDataWithLength)
+    }
+    
+    
+    func didStopCallback(error: Error?) {
+        subject.send(completion: .finished)
+        
+        if error == nil {
+            exit(EXIT_SUCCESS)
+        } else {
+            exit(EXIT_FAILURE)
+        }
+    }
 }
 
-
-
 public extension IBClient {
-	
-	enum ConnectionType{
-		case gateway
-		case workstation
-		
-		internal var host: String{
-			return "https://127.0.0.1"
-		}
-		
-		
-		internal var liveTradingPort: UInt16 {
-			switch self{
-				case .gateway:		return 4001
-				case .workstation:	return 7496
-			}
-		}
-		
-		internal var simulatedTradingPort: UInt16{
-			switch self{
-				case .gateway:		return 4002
-				case .workstation:	return 7497
-			}
-		}
-		
-	}
-	
-	/// Creates new live trading client. All orders you send to broker, will be real and executed.
-	/// - Parameter id: Master API ID, set in IB Gateway or Workstation
-	/// - Parameter type: Connection type you are using.
-	
-	static func live(id: Int, type: ConnectionType = .gateway) -> IBClient {
-		return IBClient(id: id, address: type.host, port: type.liveTradingPort)
-	}
-	
-	/// Creates new paper trading client, with simulated orders.
-	/// - Parameter id: Master API ID, set in IB Gateway or Workstation
-	/// - Parameter type: Connection type you are using.
+    enum ConnectionType {
+        case gateway
+        case workstation
+        
+        internal var host: String {
+            "https://127.0.0.1"
+        }
+        
+        internal var liveTradingPort: Int {
+            switch self{
+                case .gateway:        return 4001
+                case .workstation:    return 7496
+            }
+        }
+        
+        internal var simulatedTradingPort: Int {
+            switch self{
+                case .gateway:        return 4002
+                case .workstation:    return 7497
+            }
+        }
+        
+    }
+    
+    /// Creates new live trading client. All orders you send to broker, will be real and executed.
+    /// - Parameter id: Master API ID, set in IB Gateway or Workstation
+    /// - Parameter type: Connection type you are using.
+    
+    static func live(id: Int, type: ConnectionType = .gateway) -> IBClient {
+        IBClient(id: id, address: type.host, port: type.liveTradingPort)
+    }
+    
+    /// Creates new paper trading client, with simulated orders.
+    /// - Parameter id: Master API ID, set in IB Gateway or Workstation
+    /// - Parameter type: Connection type you are using.
 
-	static func paper(id: Int, type: ConnectionType = .gateway) -> IBClient {
-		return IBClient(id: id, address: type.host, port: type.simulatedTradingPort)
-	}
-	
-	
+    static func paper(id: Int, type: ConnectionType = .gateway) -> IBClient {
+        IBClient(id: id, address: type.host, port: type.simulatedTradingPort)
+    }
 }
