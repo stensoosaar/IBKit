@@ -29,12 +29,16 @@
 	client.eventFeed.sink (
 		receiveCompletion: { completion in
 			PlaygroundPage.current.finishExecution()
-		}, receiveValue: { event in
+		}, receiveValue: { anyEvent in
 		
-			if let event = event as? IBPriceHistory{
+			switch anyEvent{
+			case let event as IBPriceHistory:
 				event.prices.forEach{print($0)}
+				print(String(repeating: "-", count: 30))
+			case let event as IBPriceBarUpdate:
+				print("\(Date()) update", event)
+			default: break
 			}
-
 		}
 	).store(in: &subscriptions)
 
@@ -55,9 +59,12 @@
 */
 	do {
 		let requestID = client.nextRequestID
-		let contract = IBContract.cfd("IBUS500", currency: "USD")
-		let lookback = IBDuration.lookback(30, unit: .day)
-		try client.requestPriceHistory(requestID, contract: contract, barSize: IBBarSize.day, barSource: IBBarSource.bidAsk, lookback: lookback)
+		let cfd = IBContract.cfd("IBUS500", currency: "USD")
+		let crypto = IBContract.crypto("ETH", currency: "USD", exchange: .PAXOS)
+		let lookback = IBDuration.continuousUpdates(60, unit: .second)
+		let resolution = IBBarSize.minute
+		let source = IBBarSource.trades
+		try client.requestPriceHistory(requestID, contract: crypto, barSize: resolution, barSource: source, lookback: lookback)
 	} catch {
 		print(error.localizedDescription)
 	}

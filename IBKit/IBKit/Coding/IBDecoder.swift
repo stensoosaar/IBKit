@@ -38,6 +38,7 @@ public class IBDecoder {
 	public lazy var dateFormatter: DateFormatter = {
 		let df = DateFormatter()
 		df.locale = Locale(identifier: "en_US_POSIX")
+		df.timeZone = TimeZone(secondsFromGMT: 0)
 		df.dateFormat = "yyyyMMdd-HH:mm:ss"
 		return df
 	}()
