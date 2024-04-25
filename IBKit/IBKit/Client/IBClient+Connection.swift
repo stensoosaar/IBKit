@@ -24,8 +24,6 @@
 //
 
 import Foundation
-import Network
-
 
 extension IBClient: IBConnectionDelegate {
 	

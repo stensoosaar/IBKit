@@ -27,12 +27,8 @@
 
 
 import Foundation
-import Network
 
-
-protocol IBConnectionDelegate { 
-	
+protocol IBConnectionDelegate {
 	func connection(_ connection: IBConnection, didConnect date: String, toServer version: Int)
 	func connection(_ connection: IBConnection, didReceiveData data: Data)
-	
 }

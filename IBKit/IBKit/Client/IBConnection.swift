@@ -24,143 +24,185 @@
 //
 
 
-
 import Foundation
 import Network
-
-
-
+import NIOCore
+import NIOConcurrencyHelpers
+import NIOPosix
 
 class IBConnection {
-	
-	let connection: NWConnection
-	
-	let queue = DispatchQueue(label: "IB Connection Queue")
-	
-	init(_ connection: NWConnection) {
-		self.connection = connection
-	}
-	
-	var didStopCallback: ((Error?) -> Void)? = nil
-	
-	var delegate: IBConnectionDelegate?
-	
-	func start() {
-		
-		connection.start(queue: queue)
-		
-		var greeting = Data()
-		let prefix="API\0"
-		if let contentData = prefix.data(using: .ascii, allowLossyConversion: false){
-			greeting += contentData
-		}
-	
-		let versions = "v\(IBServerVersion.range.lowerBound)..\(IBServerVersion.range.upperBound)"
-		greeting += versions.count.toBytes(size: 4)
-		if let contentData = versions.data(using: .ascii, allowLossyConversion: false){
-			greeting += contentData
-		}
-		
-		send(data: greeting)
-		
-		let semaphore = DispatchSemaphore(value: 0)
-
-		connection.receive(minimumIncompleteLength: 4, maximumLength: 4) { (messageLengthData, _, isComplete, error) in
-						
-			guard let data = messageLengthData else {
-				let err = IBError.connectionError("cant read message length")
-				self.stop(error: err)
-				return
-			}
-			
-			let length = Int.fromBytes(data: data)
-			
-			self.connection.receive(minimumIncompleteLength: length, maximumLength: length) { (data, _, isComplete, error) in
-				guard let data = data,
-					let separator = "\0".data(using: .utf8),
-					let range = data.range(of: separator),
-					let versionString = String(data: data.subdata(in: 0..<range.lowerBound),encoding: .utf8),
-					let serverVersion = Int(versionString),
-					let connectionTime = String(data: data.subdata(in: range.upperBound..<data.count-1), encoding: .utf8)
-				else { fatalError("cant read data")}
-				
-				self.delegate?.connection(self, didConnect: connectionTime, toServer: serverVersion)
-				
-				semaphore.signal()
-			}
-			
-		}
-		
-		semaphore.wait()
-		connection.stateUpdateHandler = stateDidChange(to:)
-		receiveNextMessage()
-		
-	}
-	
-	private func stateDidChange(to state: NWConnection.State) {
-		switch state {
-		case .waiting(let error):
-			connectionDidFail(error: error)
-		case .ready:
-			receiveNextMessage()
-		case .failed(let error):
-			connectionDidFail(error: error)
-		case .cancelled:
-			print("Cancelled")
-		default:
-			break
-		}
-	}
-	
-	public func receiveNextMessage() {
-				
-		connection.receive(minimumIncompleteLength: 4, maximumLength: 4) { (messageLengthData, _, isComplete, _) in
-			
-			if isComplete == true { return }
-						
-			guard let data = messageLengthData else { fatalError("cant read message length")}
-			
-			let length = Int.fromBytes(data: data)
-			
-			self.connection.receive(minimumIncompleteLength: length, maximumLength: length) { (data, _, isComplete, error) in
-				guard let data = data else { fatalError("cant read message")}
-				self.delegate?.connection(self, didReceiveData: data)
-				self.receiveNextMessage()
-			}
-			
-		}
-		
-	}
-	 
-	func send(data: Data) {
-					
-		connection.send(content: data, completion: .contentProcessed( { error in
-			if let error = error {
-				self.connectionDidFail(error: error)
-				return
-			}
-		}))
-		
-	}
-	
-	func stop() {
-		stop(error: nil)
-	}
-	
-	private func connectionDidFail(error: Error) {
-		self.stop(error: error)
-	}
-	
-	private func connectionDidEnd() {
-		self.stop(error: nil)
-	}
-	
-	private func stop(error: Error?) {
-		self.connection.stateUpdateHandler = nil
-		self.connection.cancel()
-		if let didStopCallback = self.didStopCallback {
-			self.didStopCallback = nil
-			didStopCallback(error)
-		}
-	}
+    enum State: Equatable {
+        case initializing
+        case connecting(String)
+        case connected
+        case connectedToAPI
+        case disconnecting
+        case disconnected
+    }
+    
+    enum ClientError: Error {
+        case notReady
+        case cantBind
+        case timeout
+        case connectionResetByPeer
+    }
+    
+    private var channel: Channel?
+    private let group = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+    private let lock = NIOLock()
+    private(set) var state = State.initializing {
+        didSet {
+            stateDidChange(to: state)
+        }
+    }
+    
+    init(host: String, port: Int) throws {
+        try lock.withLock {
+            assert(.initializing == self.state)
+            
+            let bootstrap = ClientBootstrap(group: self.group)
+                .channelOption(ChannelOptions.socketOption(.so_reuseaddr), value: 1)
+                .channelInitializer { channel in
+                    channel.pipeline.addHandlers([
+                        ByteToMessageHandler(IBClientFrameDecoder()),
+                        IBMessageHandler(messageFrame: self.receiveMessage)
+                    ])
+                }
+            
+            self.state = .connecting("\(host):\(port)")
+            try bootstrap.connect(host: host, port: port).flatMap { channel in
+                channel.eventLoop.makeSucceededFuture(channel)
+            }.whenComplete { result in
+                switch result {
+                case .success(let channel):
+                    self.lock.withLock {
+                        self.channel = channel
+                        self.state = .connected
+                    }
+                case .failure(let failure):
+                    self.connectionDidFail(error: failure)
+                }
+            }
+        }
+    }
+    
+    
+    deinit {
+        assert(.disconnected == self.state)
+        delegate = nil
+        channel = nil
+    }
+    
+    var didStopCallback: ((Error?) -> Void)? = nil
+    var stateDidChangeCallback: ((IBConnection.State) -> Void)? = nil
+    var delegate: IBConnectionDelegate?
+    
+    private func stateDidChange(to state: IBConnection.State) {
+        switch state {
+        case .initializing:
+            print("initializing")
+        case .connecting(let string):
+            print("connecting:", string)
+        case .connected:
+            print("connected")
+            start()
+        case .disconnecting:
+            print("disconnecting")
+        case .disconnected:
+            print("disconnected")
+        case .connectedToAPI:
+            print("connected to API")
+        }
+        stateDidChangeCallback?(state)
+    }
+     
+    func send(data: Data) {
+        guard let channel else { return }
+        var buffer = channel.allocator.buffer(capacity: data.count)
+        buffer.writeBytes(data)
+        channel
+            .writeAndFlush(buffer)
+            .whenComplete { _ in }
+    }
+    
+    public func receiveMessage(_ data: Data) {
+        if state == .connected {
+            guard let separator = "\0".data(using: .utf8),
+                let range = data.range(of: separator),
+                let versionString = String(data: data.subdata(in: 0..<range.lowerBound),encoding: .utf8),
+                let serverVersion = Int(versionString),
+                let connectionTime = String(data: data.subdata(in: range.upperBound..<data.count-1), encoding: .utf8)
+            else {
+                return
+            }
+            self.state = .connectedToAPI
+            self.delegate?.connection(self, didConnect: connectionTime, toServer: serverVersion)
+        } else if state == .connectedToAPI {
+            self.delegate?.connection(self, didReceiveData: data)
+        }
+    }
+    
+    func disconnect() {
+        stop(error: nil)
+    }
+    
+    private func connectionDidFail(error: Error) {
+        self.stop(error: error)
+    }
+    
+    private func connectionDidEnd() {
+        self.stop(error: nil)
+    }
+    
+    public func disconnectSocket() -> EventLoopFuture<Void> {
+        self.lock.withLock {
+            if .connected != self.state {
+                return self.group.next().makeFailedFuture(ClientError.notReady)
+            }
+            guard let channel = self.channel else {
+                return self.group.next().makeFailedFuture(ClientError.notReady)
+            }
+            self.state = .disconnecting
+            channel.closeFuture.whenComplete { _ in
+                self.lock.withLock {
+                    self.state = .disconnected
+                }
+            }
+            channel.close(promise: nil)
+            return channel.closeFuture
+        }
+    }
+    
+    private func start() {
+        let greeting = createGreeting()
+        send(data: greeting)
+    }
+    
+    private func stop(error: Error?) {
+        disconnectSocket().whenComplete { result in
+            switch result {
+            case .success:
+                self.didStopCallback?(error)
+            case .failure(let failure):
+                self.didStopCallback?(failure)
+            }
+            
+            self.didStopCallback = nil
+        }
+    }
+    
+    private func createGreeting() -> Data {
+        var greeting = Data()
+        let prefix="API\0"
+        if let contentData = prefix.data(using: .ascii, allowLossyConversion: false) {
+            greeting += contentData
+        }
+    
+        let versions = "v\(IBServerVersion.range.lowerBound)..\(IBServerVersion.range.upperBound)"
+        greeting += versions.count.toBytes(size: 4)
+        if let contentData = versions.data(using: .ascii, allowLossyConversion: false) {
+            greeting += contentData
+        }
+        return greeting
+    }
 }
