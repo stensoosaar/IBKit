@@ -35,6 +35,7 @@ class IBConnection {
         case initializing
         case connecting(String)
         case connected
+        case connectedToAPI
         case disconnecting
         case disconnected
     }
@@ -109,6 +110,8 @@ class IBConnection {
             print("disconnecting")
         case .disconnected:
             print("disconnected")
+        case .connectedToAPI:
+            print("connected to API")
         }
         stateDidChangeCallback?(state)
     }
@@ -117,20 +120,26 @@ class IBConnection {
         guard let channel else { return }
         var buffer = channel.allocator.buffer(capacity: data.count)
         buffer.writeBytes(data)
-        _ = channel.writeAndFlush(buffer)
+        channel
+            .writeAndFlush(buffer)
+            .whenComplete { _ in }
     }
     
     public func receiveMessage(_ data: Data) {
-        guard let separator = "\0".data(using: .utf8),
-            let range = data.range(of: separator),
-            let versionString = String(data: data.subdata(in: 0..<range.lowerBound),encoding: .utf8),
-            let serverVersion = Int(versionString),
-            let connectionTime = String(data: data.subdata(in: range.upperBound..<data.count-1), encoding: .utf8)
-        else {
+        if state == .connected {
+            guard let separator = "\0".data(using: .utf8),
+                let range = data.range(of: separator),
+                let versionString = String(data: data.subdata(in: 0..<range.lowerBound),encoding: .utf8),
+                let serverVersion = Int(versionString),
+                let connectionTime = String(data: data.subdata(in: range.upperBound..<data.count-1), encoding: .utf8)
+            else {
+                return
+            }
+            self.state = .connectedToAPI
+            self.delegate?.connection(self, didConnect: connectionTime, toServer: serverVersion)
+        } else if state == .connectedToAPI {
             self.delegate?.connection(self, didReceiveData: data)
-            return
         }
-        self.delegate?.connection(self, didConnect: connectionTime, toServer: serverVersion)
     }
     
     func disconnect() {

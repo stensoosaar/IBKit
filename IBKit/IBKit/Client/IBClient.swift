@@ -116,7 +116,7 @@ open class IBClient {
     
     private func stateDidChange(to state: IBConnection.State) {
         switch state {
-        case .connected:
+        case .connectedToAPI:
             do {
                 try self.startAPI(clientID: self.identifier)
             } catch {

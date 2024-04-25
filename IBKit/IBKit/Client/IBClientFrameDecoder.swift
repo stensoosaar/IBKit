@@ -27,8 +27,6 @@ class IBClientFrameDecoder: ByteToMessageDecoder & NIOSingleStepByteToMessageDec
     typealias InboundIn = ByteBuffer
     typealias InboundOut = ByteBuffer
     
-    private var lastScanOffset = 0
-    
     func decode(context: ChannelHandlerContext, buffer: inout ByteBuffer) throws -> DecodingState {
         if let frame = try self.readFrame(buffer: &buffer) {
             context.fireChannelRead(wrapInboundOut(frame))
@@ -59,37 +57,19 @@ class IBClientFrameDecoder: ByteToMessageDecoder & NIOSingleStepByteToMessageDec
     }
 
     private func readFrame(buffer: inout ByteBuffer) throws -> ByteBuffer? {
-        // Using readableBytesView with lastScanOffset to avoid re-scanning bytes that have already been checked
-        let view = buffer.readableBytesView.dropFirst(self.lastScanOffset)
-
-        // Ensure there are at least 4 bytes available to read the length prefix after the offset
-        if view.count < 4 {
-            return nil  // Not enough bytes to read the length of the frame, wait for more data.
+        guard buffer.readableBytes >= 4 else {
+            return nil
         }
 
-        // Get the length prefix from the adjusted view
-        let lengthData = view.prefix(4)
-        let lengthBytes = Array(lengthData)  // Copy into a new array to ensure alignment
-        var lengthPrefix: Int32 = lengthBytes.withUnsafeBytes { $0.load(as: Int32.self) }
-        lengthPrefix = Int32(bigEndian: lengthPrefix) // Ensure the length is read in big endian format, if necessary.
+        let lengthPrefix = buffer.getInteger(at: buffer.readerIndex, as: Int32.self)!
+        let frameLength = Int(lengthPrefix.littleEndian)
 
-        let frameLength = Int(lengthPrefix)
-        // Check if the buffer has enough bytes for the whole frame (length prefix + payload)
-        if buffer.readableBytes < (frameLength + 4 + self.lastScanOffset) {
-            self.lastScanOffset += view.count
-            return nil  // Wait for more data to arrive
+        guard buffer.readableBytes >= 4 + frameLength else {
+            return nil
         }
 
-        // Reset lastScanOffset as we are about to read a full message
-        self.lastScanOffset = 0
-
-        // Move the reader index past the length prefix
-        buffer.moveReaderIndex(forwardBy: 4 + self.lastScanOffset)
-
-        // Read the message data based on the length prefix
+        buffer.moveReaderIndex(forwardBy: 4)
         let frame = buffer.readSlice(length: frameLength)
-
         return frame
     }
-
 }
