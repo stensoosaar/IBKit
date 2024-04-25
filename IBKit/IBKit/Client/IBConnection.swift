@@ -69,13 +69,19 @@ class IBConnection {
                 }
             
             self.state = .connecting("\(host):\(port)")
-            let _ = try bootstrap.connect(host: host, port: port).flatMap { channel in
-                self.lock.withLock {
-                    self.channel = channel
-                    self.state = .connected
+            try bootstrap.connect(host: host, port: port).flatMap { channel in
+                channel.eventLoop.makeSucceededFuture(channel)
+            }.whenComplete { result in
+                switch result {
+                case .success(let channel):
+                    self.lock.withLock {
+                        self.channel = channel
+                        self.state = .connected
+                    }
+                case .failure(let failure):
+                    self.connectionDidFail(error: failure)
                 }
-                return channel.eventLoop.makeSucceededFuture(self)
-            }.wait()
+            }
         }
     }
     
@@ -87,12 +93,8 @@ class IBConnection {
     }
     
     var didStopCallback: ((Error?) -> Void)? = nil
+    var stateDidChangeCallback: ((IBConnection.State) -> Void)? = nil
     var delegate: IBConnectionDelegate?
-    
-    func start() {
-        let greeting = createGreeting()
-        send(data: greeting)
-    }
     
     private func stateDidChange(to state: IBConnection.State) {
         switch state {
@@ -102,11 +104,13 @@ class IBConnection {
             print("connecting:", string)
         case .connected:
             print("connected")
+            start()
         case .disconnecting:
             print("disconnecting")
         case .disconnected:
             print("disconnected")
         }
+        stateDidChangeCallback?(state)
     }
      
     func send(data: Data) {
@@ -158,6 +162,11 @@ class IBConnection {
             channel.close(promise: nil)
             return channel.closeFuture
         }
+    }
+    
+    private func start() {
+        let greeting = createGreeting()
+        send(data: greeting)
     }
     
     private func stop(error: Error?) {

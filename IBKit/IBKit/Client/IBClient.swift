@@ -81,12 +81,9 @@ open class IBClient {
 
         let connection = try IBConnection(host: host, port: port)
         connection.didStopCallback = didStopCallback(error:)
+        connection.stateDidChangeCallback =  stateDidChange(to:)
         connection.delegate = self
-        connection.start()
         self.connection = connection
-                
-        try self.startAPI(clientID: self.identifier)
-        
     }
     
     /// Disconnect client from IB Gateway or Workstation
@@ -107,13 +104,26 @@ open class IBClient {
     }
     
     
-    func didStopCallback(error: Error?) {
+    private func didStopCallback(error: Error?) {
         subject.send(completion: .finished)
         
         if error == nil {
             exit(EXIT_SUCCESS)
         } else {
             exit(EXIT_FAILURE)
+        }
+    }
+    
+    private func stateDidChange(to state: IBConnection.State) {
+        switch state {
+        case .connected:
+            do {
+                try self.startAPI(clientID: self.identifier)
+            } catch {
+                print(error)
+            }
+        default:
+            break
         }
     }
 }
