@@ -69,7 +69,8 @@ class IBClientFrameDecoder: ByteToMessageDecoder & NIOSingleStepByteToMessageDec
 
         // Get the length prefix from the adjusted view
         let lengthData = view.prefix(4)
-        var lengthPrefix: Int32 = lengthData.withUnsafeBytes { $0.load(as: Int32.self) }
+        let lengthBytes = Array(lengthData)  // Copy into a new array to ensure alignment
+        var lengthPrefix: Int32 = lengthBytes.withUnsafeBytes { $0.load(as: Int32.self) }
         lengthPrefix = Int32(bigEndian: lengthPrefix) // Ensure the length is read in big endian format, if necessary.
 
         let frameLength = Int(lengthPrefix)
@@ -90,4 +91,5 @@ class IBClientFrameDecoder: ByteToMessageDecoder & NIOSingleStepByteToMessageDec
 
         return frame
     }
+
 }
