@@ -182,13 +182,15 @@ extension IBClient: IBConnectionDelegate {
 					self.subject.send(object)
 					
 				case .HISTORICAL_DATA_UPDATE:
-					let object = try decoder.decode(IBPriceBarUpdate.self)
-					self.subject.send(object)
+					let response = try decoder.decode(IBPriceBarHistoryUpdate.self)
+					if let bar = response.bar{
+						let object = IBPriceBarUpdate(requestID: response.requestID, bar: bar)
+						self.subject.send(object)
+					}
 					
 				case .REAL_TIME_BARS:
 					let object = try decoder.decode(IBPriceBarUpdate.self)
-					self.subject.send(object)
-					
+					self.subject.send(object)					
 					
 				//TODO: market rule to conform protocol
 				case .MARKET_RULE:

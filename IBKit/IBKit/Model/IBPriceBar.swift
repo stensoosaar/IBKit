@@ -62,6 +62,17 @@ public struct IBPriceBar: Decodable {
 	public var volume: Double?
 	public var wap: Double?
 	public var count: Int?
+	
+	internal init(date:Date, open: Double, high: Double, low: Double, close: Double, volume: Double?, wap: Double?, count: Int?){
+		self.date = date
+		self.open = open
+		self.high = high
+		self.low = low
+		self.close = close
+		self.wap = wap
+		self.volume = volume
+		self.count = count
+	}
 
 	public init(from decoder: Decoder) throws {
 		var container = try decoder.unkeyedContainer()
