@@ -111,8 +111,8 @@ class IBConnection {
             else {
                 return
             }
-            self.state = .connectedToAPI
             self.delegate?.connection(self, didConnect: connectionTime, toServer: serverVersion)
+            self.state = .connectedToAPI
         } else if state == .connectedToAPI {
             self.delegate?.connection(self, didReceiveData: data)
         }
