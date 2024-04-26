@@ -710,29 +710,28 @@ public struct IBOrder {
 	public var midOffsetAtWhole: Double?
 	
 	public var midOffsetAtHalf: Double?
-
 }
 
 
 public extension IBOrder {
-	
-	
 	static func market(_ action: IBAction, quantity: Double, account: String, validUntil tif: TimeInForce = .day, hidden: Bool = true, extendedTrading:Bool = false) -> IBOrder {
-		return IBOrder(action: action, totalQuantity: quantity, orderType: .market, lmtPrice: nil, auxPrice: nil, tif: tif, outsideRth: extendedTrading, hidden: hidden, account: account)
+		IBOrder(action: action, totalQuantity: quantity, orderType: .market, lmtPrice: nil, auxPrice: nil, tif: tif, outsideRth: extendedTrading, hidden: hidden, account: account)
 	}
 
 	static func limit(_ limit: Double, action: IBAction, quantity: Double, account: String, validUntil tif: TimeInForce = .day, hidden: Bool = true, extendedTrading:  Bool = false) -> IBOrder {
-		return IBOrder(action: action, totalQuantity: quantity, orderType: .limit, lmtPrice: limit, auxPrice: nil, tif: tif, outsideRth: extendedTrading, hidden: hidden, account: account)
+		IBOrder(action: action, totalQuantity: quantity, orderType: .limit, lmtPrice: limit, auxPrice: nil, tif: tif, outsideRth: extendedTrading, hidden: hidden, account: account)
 	}
 
 	
 	static func stop(_ stop: Double, action: IBAction, quantity: Double, account: String, validUntil tif: TimeInForce = .day, hidden: Bool = true, extendedTrading: Bool = false) -> IBOrder {
-		return IBOrder(action: action, totalQuantity: quantity, orderType: .stop, lmtPrice: nil, auxPrice: stop, tif: tif, outsideRth: extendedTrading, hidden: hidden, account: account)
+		IBOrder(action: action, totalQuantity: quantity, orderType: .stop, lmtPrice: nil, auxPrice: stop, tif: tif, outsideRth: extendedTrading, hidden: hidden, account: account)
 	}
 	
 	static func stopLimit(stop: Double, limit: Double, action: IBAction, quantity: Double, account: String, validUntil tif: TimeInForce = .day, hidden: Bool = true, extendedTrading: Bool = false) -> IBOrder {
-		return IBOrder(action: action, totalQuantity: quantity, orderType: .stopLimit, lmtPrice: limit, auxPrice: stop, tif: tif, outsideRth: extendedTrading, hidden: hidden, account: account)
+		IBOrder(action: action, totalQuantity: quantity, orderType: .stopLimit, lmtPrice: limit, auxPrice: stop, tif: tif, outsideRth: extendedTrading, hidden: hidden, account: account)
 	}
-
-	
+    
+    static func trail(trailingPercent: Double, action: IBAction, quantity: Double, account: String, validUntil tif: TimeInForce = .day, hidden: Bool = true, extendedTrading: Bool = false) -> IBOrder {
+        IBOrder(action: action, totalQuantity: quantity, orderType: .trailing, tif: tif, outsideRth: extendedTrading, hidden: hidden, trailingPercent: trailingPercent, account: account)
+    }
 }

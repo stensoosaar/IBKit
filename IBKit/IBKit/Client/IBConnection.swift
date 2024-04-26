@@ -25,7 +25,6 @@
 
 
 import Foundation
-import Network
 import NIOCore
 import NIOConcurrencyHelpers
 import NIOPosix
@@ -49,6 +48,7 @@ class IBConnection {
     
     private var channel: Channel?
     private let group = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+    private var messageQueue: [Data] = []
     private let lock = NIOLock()
     private(set) var state = State.initializing {
         didSet {
@@ -96,33 +96,9 @@ class IBConnection {
     var didStopCallback: ((Error?) -> Void)? = nil
     var stateDidChangeCallback: ((IBConnection.State) -> Void)? = nil
     var delegate: IBConnectionDelegate?
-    
-    private func stateDidChange(to state: IBConnection.State) {
-        switch state {
-        case .initializing:
-            print("initializing")
-        case .connecting(let string):
-            print("connecting:", string)
-        case .connected:
-            print("connected")
-            start()
-        case .disconnecting:
-            print("disconnecting")
-        case .disconnected:
-            print("disconnected")
-        case .connectedToAPI:
-            print("connected to API")
-        }
-        stateDidChangeCallback?(state)
-    }
      
     func send(data: Data) {
-        guard let channel else { return }
-        var buffer = channel.allocator.buffer(capacity: data.count)
-        buffer.writeBytes(data)
-        channel
-            .writeAndFlush(buffer)
-            .whenComplete { _ in }
+        send(data: data, isSystemMessage: false)
     }
     
     public func receiveMessage(_ data: Data) {
@@ -144,6 +120,35 @@ class IBConnection {
     
     func disconnect() {
         stop(error: nil)
+    }
+    
+    private func flushMessageQueue() {
+        lock.withLock {
+            while !messageQueue.isEmpty {
+                let data = messageQueue.removeFirst()
+                send(data: data)
+            }
+        }
+    }
+    
+    private func stateDidChange(to state: IBConnection.State) {
+        switch state {
+        case .initializing:
+            print("initializing")
+        case .connecting(let string):
+            print("connecting:", string)
+        case .connected:
+            print("connected")
+            start()
+        case .disconnecting:
+            print("disconnecting")
+        case .disconnected:
+            print("disconnected")
+        case .connectedToAPI:
+            print("connected to API")
+            flushMessageQueue()
+        }
+        stateDidChangeCallback?(state)
     }
     
     private func connectionDidFail(error: Error) {
@@ -174,8 +179,7 @@ class IBConnection {
     }
     
     private func start() {
-        let greeting = createGreeting()
-        send(data: greeting)
+        send(data: createGreeting(), isSystemMessage: true)
     }
     
     private func stop(error: Error?) {
@@ -189,6 +193,21 @@ class IBConnection {
             
             self.didStopCallback = nil
         }
+    }
+    
+    private func send(data: Data, isSystemMessage: Bool) {
+        guard let channel else { return }
+        guard isSystemMessage || state == .connectedToAPI else {
+            lock.withLockVoid {
+                messageQueue.append(data)
+            }
+            return
+        }
+        var buffer = channel.allocator.buffer(capacity: data.count)
+        buffer.writeBytes(data)
+        channel
+            .writeAndFlush(buffer)
+            .whenComplete { _ in }
     }
     
     private func createGreeting() -> Data {
