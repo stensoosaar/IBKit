@@ -250,6 +250,14 @@ extension IBClient: IBConnectionDelegate {
 				case .NEWS_BULLETINS:
 					let object = try decoder.decode(IBNewsBulletin.self)
 					print(object)
+                
+                case .MARKET_DEPTH:
+                    let object = try decoder.decode(IBMarketDepth.self)
+                    print(object)
+                
+                case .MARKET_DEPTH_L2:
+                    let object = try decoder.decode(IBMarketDepthL2.self)
+                    print(object)
 					
 				default:
 					print("response \(responseType) not handled")
