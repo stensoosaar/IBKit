@@ -40,7 +40,19 @@ open class IBClient {
     let host: String
     let port: Int
     
-    var serverVersion: Int?
+    private let dispatchGroup = DispatchGroup()
+    var _serverVersion: Int?
+    
+    var serverVersion: Int? {
+        get {
+            dispatchGroup.wait()  // Wait until the server version is set
+            return _serverVersion
+        }
+        set {
+            _serverVersion = newValue
+            dispatchGroup.leave()  // Signal that server version is now set
+        }
+    }
     
     public var connectionTime: String?
     
@@ -58,7 +70,7 @@ open class IBClient {
         self.host = host
         self.port = port
         self.identifier = masterID
-        
+        dispatchGroup.enter()
     }
 
 
