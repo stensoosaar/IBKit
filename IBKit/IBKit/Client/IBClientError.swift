@@ -1,5 +1,5 @@
 //
-//  IBError.swift
+//  IBClientError.swift
 //	IBKit
 //
 //	Copyright (c) 2016-2023 Sten Soosaar
@@ -26,6 +26,10 @@
 
 
 import Foundation
+
+
+
+typealias IBError = IBClientError
 
 
 public enum IBClientError: Error {
