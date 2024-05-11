@@ -25,6 +25,7 @@
 import Foundation
 
 
+@available(*, deprecated, renamed: "DateInterval", message: "Use Swift dateInterval instead")
 public struct IBDuration: Codable, CustomStringConvertible {
 	
 	public enum Unit: TimeInterval, Codable, CustomStringConvertible, CaseIterable {

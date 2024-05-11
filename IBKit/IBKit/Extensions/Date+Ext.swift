@@ -31,7 +31,7 @@ public extension Date{
 	static func futureExpiration(year:Int, month: Int) throws -> Date {
 		let comps = DateComponents(year: year, month: month)
 		guard let startOfMonth = Calendar.current.date(from: comps) else {
-			throw IBError.invalidValue("Invalid date components")
+			throw IBClientError.invalidValue("Invalid date components")
 		}
 		return startOfMonth.endOfMonth
 	}
@@ -39,7 +39,7 @@ public extension Date{
 	static func optionExpiration(year:Int, month: Int, day: Int) throws -> Date {
 		let comps = DateComponents(year:year, month: month, day: day)
 		guard let date = Calendar.current.date(from: comps) else {
-			throw IBError.invalidValue("Invalid date components")
+			throw IBClientError.invalidValue("Invalid date components")
 		}
 		return date
 	}
@@ -73,6 +73,14 @@ public extension Date{
 		let monthCode = ["F","G","H","J","K","M","N","Q","U","V","X","Z"][month-1]
 		let yearCode = "\(year)".suffix(1)
 		return "\(monthCode)\(yearCode)"		
+	}
+	
+	init(year: Int, month: Int, day: Int, hour: Int = 0, minute: Int = 0, second: Int = 0) throws {
+		let comps = DateComponents(year: year, month: month, day: day, hour: hour, minute: minute, second: second)
+		guard let date = Calendar.current.date(from: comps) else {
+			throw IBClientError.invalidValue("\(year)-\(month)-\(day) invalid values to make date")
+		}
+		self.init(timeIntervalSince1970: date.timeIntervalSince1970)
 	}
 	
 }

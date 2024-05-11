@@ -680,6 +680,11 @@ public enum IBExchange: String, Codable {
 	
 	/// Eurex
 	case EUREX					= "EUREX"
+	
+	case IBKRATS				= "IBKRATS"
+	
+	case BEST					= "BEST"
+
 
 }
 
@@ -905,6 +910,9 @@ extension IBExchange: CustomStringConvertible {
 			case .JSE:			return  "Johannesburg Securities Exchange"
 			case .PAXOS:		return	"Paxos"
 			case .EUREX:		return  "EUREX"
+			case .IBKRATS:		return "IBKRATS"
+			case .BEST:			return "BEST"
+
 		}
 	}
 	
@@ -1127,7 +1135,8 @@ extension IBExchange: CustomStringConvertible {
 			case .JSE:			return  "Johannesburg Securities Exchange"
 			case .PAXOS:		return	"Paxos"
 			case .EUREX:		return	"Eurex"
-
+			case .IBKRATS:		return "IBKrats"
+			case .BEST:			return "Best"
 		}
 	}
 	

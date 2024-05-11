@@ -28,6 +28,7 @@
 
 import Foundation
 
+/*
 extension IBClient {
 	
 	internal func startAPI(clientID: Int) throws {
@@ -81,3 +82,5 @@ extension IBClient {
 	}
 	
 }
+*/
+

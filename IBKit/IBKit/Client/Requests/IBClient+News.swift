@@ -26,7 +26,7 @@
 
 import Foundation
 
-
+/*
 public extension IBClient {
 	
 	func subscribeNews(_ reqId: Int, contract: IBContract, snapshot: Bool = false, regulatory: Bool = false) throws {
@@ -35,3 +35,4 @@ public extension IBClient {
 
 	
 }
+*/
