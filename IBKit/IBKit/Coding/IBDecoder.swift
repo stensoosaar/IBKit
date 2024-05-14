@@ -46,13 +46,13 @@ public class IBDecoder {
 		self.serverVersion = serverVersion
 	}
 	
-	public enum DateEncodingStrategy: String {
+	public enum DateEncodingStrategy: String, CaseIterable {
 		case futureExpirationFormat 	= "yyyyMM"
 		case optionExpirationFormat 	= "yyyy-MM-dd HH:mm:ss VV"
 		case tradingHourFormat			= "yyyyMMdd:HHmm"
-		case defaultFormat 				= "yyyyMMdd-HH:mm:ss"
 		case timeConditionFormat		= "yyyyMMdd HH:mm:ss zzz"
-
+		case eodPriceHistoryFormat 		= "yyyyMMdd"
+		case defaultFormat 				= "yyyyMMdd-HH:mm:ss"
 
 		public var dateFormatter: DateFormatter {
 			let dateFormatter = DateFormatter()
@@ -104,14 +104,25 @@ extension IBDecoder {
 	}
 	
 	func unwrap(_ type: Date.Type) throws -> Date {
+		
 		let stringValue = try readString().condensedWhitespace
+		
 		if let date = dateDecodingStrategy.dateFormatter.date(from: stringValue) {
 			return date
-		} else if let timestamp = Double(stringValue) {
-			return Date(timeIntervalSince1970: timestamp)
-		} else {
-			throw IBClientError.decodingError("cant unwrap date from \(stringValue), cursor: \(cursor)  \(buffer)")
 		}
+		
+		for strategy in DateEncodingStrategy.allCases.reversed() {
+			if let date = strategy.dateFormatter.date(from: stringValue) {
+				return date
+			}
+		}
+		
+		if let timestamp = Double(stringValue) {
+			return Date(timeIntervalSince1970: timestamp)
+		}
+		
+		throw IBClientError.decodingError("cant unwrap date from \(stringValue), cursor: \(cursor)  \(buffer)")
+		
 	}
 
 

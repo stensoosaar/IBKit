@@ -419,7 +419,8 @@ do {
 }
 
 
-let interval = DateInterval.lookback(1, unit: .day, until: Date.distantFuture)
+
+let interval = DateInterval.lookback(1, unit: .weekOfYear)
 try broker.priceHistoryPublisher(interval, size: IBBarSize.hour, contract: contract)
 	.sink { completion in
 		print(completion)
