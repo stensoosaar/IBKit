@@ -31,12 +31,9 @@
 			PlaygroundPage.current.finishExecution()
 		}, receiveValue: { anyEvent in
 		
-			switch anyEvent{
-			case let event as IBPriceHistory:
-				event.prices.forEach{print($0)}
-				print(String(repeating: "-", count: 30))
-			case let event as IBPriceBarUpdate:
-				print("\(Date()) update", event)
+			switch response {
+			case let event as AnyMarketData:
+				print(event)
 			default: break
 			}
 		}
@@ -48,6 +45,7 @@
 */
 	do {
 		try client.connect()
+		usleep(1_000_000)
 	} catch {
 		print(error.localizedDescription)
 	}
@@ -59,17 +57,13 @@
 */
 	do {
 		let requestID = client.nextRequestID
-		let cfd = IBContract.cfd("IBUS500", currency: "USD")
 		let crypto = IBContract.crypto("ETH", currency: "USD", exchange: .PAXOS)
-		let lookback = IBDuration.continuousUpdates(60, unit: .second)
-		let resolution = IBBarSize.minute
-		let source = IBBarSource.trades
-		try client.requestPriceHistory(requestID, contract: crypto, barSize: resolution, barSource: source, lookback: lookback)
+		try client.requestMarketData(requestID, contract: crypto)
 	} catch {
 		print(error.localizedDescription)
 	}
 
-sleep(5)
+sleep(15)
 client.disconnect()
 
 

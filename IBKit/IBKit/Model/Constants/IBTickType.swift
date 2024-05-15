@@ -346,61 +346,6 @@ public enum IBTickType: Int, Codable {
 	case FinalIPOPrice								= 102
 	
 	
-	var subsccriptionCode: Int? {
-		
-		switch self {
-			case .OptionCallVolume:				return 100
-			case .OptionPutVolume:				return 100
-			case .OptionCallOpenInterest:		return 101
-			case .OptionPutOpenInterest:		return 101
-			case .OptionHistoricalVolatility:	return 104
-			case .AverageOptionVolume:			return 105
-			case .OptionImpliedVolatility:		return 106
-			case .IndexFuturePremium:			return 162
-			case .Low13Weeks:					return 165
-			case .High13Weeks:					return 165
-			case .Low26Weeks:					return 165
-			case .High26Weeks:					return 165
-			case .Low52Weeks:					return 165
-			case .High52Weeks:					return 165
-			case .AverageVolume:				return 165
-			case .AuctionVolume:				return 225
-			case .AuctionPrice:					return 225
-			case .AuctionImbalance:				return 225
-			case .RegulatoryImbalance:			return 225
-			case .MarkPrice:					return 232
-			case .RTVolumeTimeAndSales:			return 233
-			case .Shortable:					return 236
-			case .ShortableShares:				return 236
-			case .News:							return 292
-			case .TradeCount:					return 293
-			case .TradeRate:					return 294
-			case .VolumeRate:					return 295
-			case .LastRTHTrade:					return 318
-			case .RTTradeVolume:				return 375
-			case .RTHistoricalVolatility:		return 411
-			case .Dividends:					return 456
-			case .BondFactorMultiplier:			return 460
-			case .ETFNavBid:					return 576
-			case .ETFNavAsk:					return 576
-			case .ETFNavLast:					return 577
-			case .ETFNavClose:					return 578
-			case .ETFNavPriorClose:				return 578
-			case .EstimatedIPOMidpoint:			return 586
-			case .FinalIPOPrice:				return 586
-			case .FuturesOpenInterest:			return 588
-			case .ShortTermVolume3Minutes:		return 595
-			case .ShortTermVolume5Minutes:		return 595
-			case .ShortTermVolume10Minutes:		return 595
-			case .ETFNavHigh:					return 614
-			case .ETFNavLow:					return 614
-			case .CreditmanSlowMarkPrice:		return 619
-			case .ETFNavFrozenLast:				return 623
-			default: 							return nil
-		}
-		
-	}
-	
 	var isDelayed: Bool {
 		
 		let arr:[IBTickType] = [

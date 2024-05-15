@@ -27,6 +27,8 @@
 
 import Foundation
 
+/*
+
 public extension IBClient {
 	
 	
@@ -139,3 +141,4 @@ public extension IBClient {
 	
 	
 }
+*/

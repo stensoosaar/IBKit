@@ -54,6 +54,12 @@ class IBConnection {
             stateDidChange(to: state)
         }
     }
+
+	var didStopCallback: ((Error?) -> Void)? = nil
+    var stateDidChangeCallback: ((IBConnection.State) -> Void)? = nil
+    var delegate: IBConnectionDelegate?
+	
+	public var debugMode: Bool = false
     
     init(host: String, port: Int) throws {
         lock.withLock {
@@ -90,12 +96,12 @@ class IBConnection {
         delegate = nil
         channel = nil
     }
-    
-    var didStopCallback: ((Error?) -> Void)? = nil
-    var stateDidChangeCallback: ((IBConnection.State) -> Void)? = nil
-    var delegate: IBConnectionDelegate?
      
     func send(data: Data) {
+		if debugMode {
+			print("\(Date()) <- \(String(data:data, encoding: .utf8)) ")
+		}
+
         guard let channel else { return }
         var buffer = channel.allocator.buffer(capacity: data.count)
         buffer.writeBytes(data)

@@ -26,9 +26,9 @@
 
 import Foundation
 
-public struct IBContract {
+public struct IBContract: IBCodable {
 	
-	public var contractID: Int?
+	public var id: Int?
 	
 	public var symbol: String
 	
@@ -61,7 +61,7 @@ public struct IBContract {
 	
 	// Extended fields
 
-	public struct SecurityID: CustomStringConvertible{
+	public struct SecurityID: CustomStringConvertible, IBCodable{
 		
 		public enum IdentifierType: String, Codable, CustomStringConvertible {
 			case CUSIP 			= "CUSIP"
@@ -77,38 +77,65 @@ public struct IBContract {
 		var type: IdentifierType
 		var value: String
 		
+		private init(type: SecurityID.IdentifierType, value: String){
+			self.type = type
+			self.value = value
+		}
+		
 		public var description: String{
 			return String(format: "%@:%@", type.description, value)
 		}
 		
-		public static func cusip(_ value: String)->SecurityID {
+		public static func cusip(_ value: String) -> SecurityID {
 			return SecurityID(type: .CUSIP, value: value)
 		}
 		
-		public static func sedol(_ value: String)->SecurityID {
+		public static func sedol(_ value: String) -> SecurityID {
 			return SecurityID(type: .SEDOL, value: value)
 		}
 		
-		public static func isin(_ value: String)->SecurityID {
+		public static func isin(_ value: String) -> SecurityID {
 			return SecurityID(type: .ISIN, value: value)
 		}
 		
-		public static func ric(_ value: String)->SecurityID {
+		public static func ric(_ value: String) -> SecurityID {
 			return SecurityID(type: .RIC, value: value)
+		}
+		
+		public func encode(to encoder: IBEncoder) throws {
+			var container = encoder.unkeyedContainer()
+			try container.encode(type)
+			try container.encode(value)
+		}
+		
+		public init(from decoder: IBDecoder) throws {
+			var container = try decoder.unkeyedContainer()
+			self.type = try container.decode(SecurityID.IdentifierType.self)
+			self.value = try container.decode(String.self)
 		}
 		
 	}
 	
 	public var secId: SecurityID?
 	
+	public var issuerID: String?
+	
 	public struct ComboLeg {
+		
 		var conId: Int
+		
 		var ratio: Int
+		
 		var action: IBAction
+		
 		var exchange: IBExchange
+		
 		var openClose: Int?
+		
 		var shortSaleSlot: Int?
+		
 		var designatedLocation: String?
+		
 		var exemptCode:Int = -1
 	}
 	
@@ -146,7 +173,7 @@ public struct IBContract {
 	
 	public init(conId: Int? = nil, symbol: String, secType: IBSecuritiesType, currency: String, expiration: Date?=nil, strike: Double?=nil, right: ExecutionRight?=nil, multiplier: Double?=nil, exchange: IBExchange?=nil, primaryExchange: IBExchange?=nil,  localSymbol: String?=nil, tradingClass: String?=nil, isExpired: Bool = false, secId: SecurityID? = nil, comboLegsDescrip: String? = nil, comboLegs: [ComboLeg]? = nil, deltaNeutralContract: DeltaNeutral? = nil){
 		
-		self.contractID = conId
+		self.id = conId
 		self.symbol = symbol
 		self.securitiesType = secType
 		self.expiration = expiration
@@ -166,14 +193,10 @@ public struct IBContract {
 		
 	}
 	
-}
-
-
-extension IBContract: Codable {
 	
-	public init(from decoder: Decoder) throws {
+	public init(from decoder: IBDecoder) throws {
 		var container = try decoder.unkeyedContainer()
-		self.contractID = try container.decode(Int.self)
+		self.id = try container.decode(Int.self)
 		self.symbol = try container.decode(String.self)
 		self.securitiesType = try container.decode(IBSecuritiesType.self)
 		self.expiration = try container.decodeOptional(Date.self)
@@ -187,19 +210,11 @@ extension IBContract: Codable {
 	}
 	
 	
-	public func encode(to encoder: Encoder) throws {
+	public func encode(to encoder: IBEncoder) throws {
 		var container = encoder.unkeyedContainer()
-		try container.encode(contractID ?? 0)
+		try container.encode(id ?? 0)
 		try container.encode(symbol)
 		try container.encode(securitiesType)
-		
-		if let encoder = encoder as? IBEncoder{
-			switch securitiesType{
-				case .future: 	encoder.dateFormatter.dateFormat = "yyyyMM"
-				default: 		encoder.dateFormatter.dateFormat = "yyyyMMdd"
-			}
-		}
-		
 		try container.encodeOptional(expiration)
 		try container.encodeOptional(strike ?? 0)
 		try container.encodeOptional(right)
@@ -216,75 +231,8 @@ extension IBContract: Codable {
 
 
 
-extension IBContract {
-	
-	public static func index(_ symbol:String, currency: String, exchange: IBExchange = .SMART) -> IBContract {
-		return IBContract(symbol: symbol, secType: .index, currency: currency, exchange: exchange)
-	}
-	
-	public static func forex(_ symbol:String, currency: String, exchange: IBExchange = .IDEALPRO) -> IBContract {
-		return IBContract(symbol: symbol, secType: .forex, currency: currency, exchange: exchange)
-	}
-	
-	public static func equity(_ symbol:String, currency: String, exchange: IBExchange = .SMART) -> IBContract {
-		return IBContract(symbol: symbol, secType: .stock, currency: currency, exchange: exchange)
-	}
 
-	public static func fund(_ symbol:String, currency: String, exchange: IBExchange = .FUNDSERV) -> IBContract {
-		return IBContract(symbol: symbol, secType: .fund, currency: currency, exchange: exchange)
-	}
-
-	
-	public static func commodity(_ symbol:String, currency: String, exchange: IBExchange = .SMART) -> IBContract {
-		return IBContract(symbol: symbol, secType: .commodity, currency: currency, exchange: exchange)
-	}
-	
-	public static func bond(_ secID: SecurityID, currency: String, exchange: IBExchange = .SMART) -> IBContract {
-		return IBContract(symbol: secID.value, secType: .debt, currency: currency, exchange: exchange)
-	}
-	
-	public static func crypto(_ symbol:String, currency: String, exchange: IBExchange = .PAXOS) -> IBContract {
-		return IBContract(symbol: symbol, secType: .crypto, currency: currency, exchange: exchange)
-	}
-	
-	public static func future(_ symbol: String, currency: String, expiration: Date, size: Double? = nil, exchange: IBExchange = .CME) -> IBContract {
-		return IBContract(symbol: symbol, secType: .future, currency: currency, expiration: expiration, multiplier: size, exchange: exchange)
-	}
-
-	public static func future(localSymbol: String, currency: String, size: Double? = nil, exchange: IBExchange = .CME) -> IBContract {
-		var con =  IBContract(symbol: "", secType: .future, currency: currency, multiplier: size, exchange: exchange)
-		con.localSymbol = localSymbol
-		return con
-	}
-	
-	public static func call(_ symbol: String, currency: String, expiration: Date, strike: Double, size: Double = 100, exchange: IBExchange = .SMART) -> IBContract {
-		return IBContract(symbol: symbol, secType: .option, currency: currency, expiration: expiration, strike: strike, right: .call, multiplier: size, exchange: exchange)
-	}
-	
-	public static func put(_ symbol: String, currency: String, expiration: Date, strike: Double, size: Double = 100, exchange: IBExchange = .SMART) -> IBContract {
-		return IBContract(symbol: symbol, secType: .option, currency: currency, expiration: expiration, strike: strike, right: .put, multiplier: size, exchange: exchange)
-	}
-	
-	public static func option(localSymbol: String, currency: String, size: Double? = nil, exchange: IBExchange = .CME) -> IBContract {
-		var con =  IBContract(symbol: "", secType: .option, currency: currency, multiplier: size, exchange: exchange)
-		con.localSymbol = localSymbol
-		return con
-	}
-	
-	
-	public static func cfd(_ symbol: String, currency: String, exchange: IBExchange = .SMART) -> IBContract {
-		return IBContract(symbol: symbol, secType: .cfd, currency: currency, exchange: exchange)
-	}
-	
-	public static func spread(_ symbol: String, currency: String, long: ComboLeg, short: ComboLeg) -> IBContract {
-		return IBContract(symbol: symbol, secType: .combo, currency: currency, comboLegs: [long, short])
-	}
-	
-}
-
-
-
-extension IBContract.ComboLeg: Codable {
+extension IBContract.ComboLeg: IBCodable {
 	
 	init(conId: Int, ratio: Int, action: IBAction, exchange: IBExchange) {
 		self.conId = conId
@@ -329,7 +277,7 @@ extension IBContract.ComboLeg: Codable {
 }
 
 
-extension IBContract.DeltaNeutral: Codable {
+extension IBContract.DeltaNeutral: IBCodable {
 	
 	public init(from decoder: Decoder) throws {
 		var container = try decoder.unkeyedContainer()
@@ -344,23 +292,6 @@ extension IBContract.DeltaNeutral: Codable {
 		try container.encode(conId)
 		try container.encode(delta)
 		try container.encode(price)
-	}
-	
-}
-
-
-extension IBContract.SecurityID: Codable {
-	
-	public init(from decoder: Decoder) throws {
-		var container = try decoder.unkeyedContainer()
-		self.type = try container.decode(IdentifierType.self)
-		self.value = try container.decode(String.self)
-	}
-	
-	public func encode(to encoder: Encoder) throws {
-		var container = encoder.unkeyedContainer()
-		try container.encode(type)
-		try container.encode(value)
 	}
 	
 }

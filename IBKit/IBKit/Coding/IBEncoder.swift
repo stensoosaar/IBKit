@@ -30,38 +30,25 @@ import Foundation
 
 public class IBEncoder {
 	
-	public var buffer: [String] = []
+	fileprivate var debugMode: Bool = false
 	
-	fileprivate var separator: String = "\0"
+	private var separator: String {
+		return "\0"
+	}
 	
-	var dateFormatter: DateFormatter
+	fileprivate var buffer: [String] = []
 	
-	public var serverVersion: Int?
-
-	public init(serverVersion: Int?) {
-		
+	let serverVersion: Int?
+	
+	public init(_ serverVersion: Int? = nil) {
 		self.serverVersion = serverVersion
-		
-		dateFormatter = DateFormatter()
-		dateFormatter.locale = Locale(identifier: "en_US_POSIX")
-		dateFormatter.dateFormat = "yyyyMMdd-HH:mm:ss"
-		dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
-		
 	}
 	
-	public func setDateFormat(format: String) {
-		dateFormatter.dateFormat = format
-	}
-	
-	public var description: String {
+	var description: String {
 		return buffer.joined(separator: separator)+separator
 	}
 	
-	public var length: Int{
-		return description.count
-	}
-	
-	public var data: Data {
+	var data: Data {
 		var response = Data()
 		if let content = description.data(using: .ascii) {
 			response += content
@@ -69,108 +56,202 @@ public class IBEncoder {
 		return response
 	}
 	
-	public var dataWithLength: Data {
-		var response = Data()
-		response += Data(length.toBytes(size: 4))
-		if let content = description.data(using: .utf8, allowLossyConversion: false) {
-			response += content
+	public enum DateEncodingStrategy: String {
+		case futureExpirationFormat 	= "yyyyMM"
+		case optionExpirationFormat 	= "yyyy-MM-dd HH:mm:ss VV"
+		case tradingHourFormat			= "yyyyMMdd:HHmm"
+		case timeConditionFormat		= "yyyyMMdd HH:mm:ss zzz"
+		case defaultFormat 				= "yyyyMMdd-HH:mm:ss"
+
+		public var dateFormatter: DateFormatter {
+			let dateFormatter = DateFormatter()
+			dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+			dateFormatter.dateFormat = self.rawValue
+			dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+			return dateFormatter
 		}
-		return response
 	}
-	
-	public func encode<T:Encodable>(_ value:T) throws {
-		buffer.append("\(value)")
-	}
-	
+		
+	public var dateEncodingStrategy: DateEncodingStrategy = .defaultFormat
+
 }
 
 
-public extension IBEncoder {
+extension IBEncoder {
 	
-	static func encode(_ value: Encodable, serverVersion: Int) throws -> Data {
-		let encoder = IBEncoder(serverVersion: serverVersion)
-		try value.encode(to: encoder)
-		return encoder.data
+	func wrap(_ value: String) throws {
+		buffer.append(value)
 	}
-	
+
 	func wrap(_ value: Bool) throws {
-		buffer.append(value == true ? "1" : "0")
+		buffer.append(value ? "1" : "0")
 	}
-	
+
 	func wrap(_ value: Double) throws {
-		buffer.append( String(format:"%.2f", value ))
+		buffer.append(String(format: "%.2f", value))
 	}
 	
 	func wrap(_ value: Int) throws {
-		buffer.append( String(format:"%d", value ))
+		buffer.append(String(format: "%d", value))
 	}
-	
+
 	func wrap(_ value: Int64) throws {
-		buffer.append( String(format:"%ld", value ))
+		buffer.append(String(format: "%ld", value))
 	}
 	
-	func wrap(_ value: String) throws {
-		buffer.append( value )
+	func wrap(_ value: Float) throws {
+		buffer.append(String(format: "%.2f", value))
 	}
 	
-	func wrap(_ value: Character) throws {
-	   buffer.append( String(value) )
+	func wrap(_ value: any RawRepresentable) throws {
+		guard let rawValue = value.rawValue as? Encodable else {
+			throw IBClientError.encodingError("enum raw value is not encodable type")
+		}
+		try encode(rawValue)
 	}
 	
 	func wrap(_ value: Date) throws {
-		buffer.append(self.dateFormatter.string(from: value))
+		let string = dateEncodingStrategy.dateFormatter.string(from: value)
+		try encode(string)
 	}
 	
-	func encode(_ encodable: Encodable) throws {
-								
-		switch encodable {
-			
-		case let value as String:
-			try wrap(value)
-			
-		case let value as Int:
-			try wrap(value)
-			
-		case let value as Int64:
-			try wrap(value)
-			
-		case let value as Double:
-			try wrap(value)
-			
-		case let value as Bool:
-			try wrap(value)
-			
-		case let value as Date:
-			try wrap(value)
-			
-		case let value as IBEncodable:
-			try value.encode(to: self)
-			
-		case let value as (any RawRepresentable):
-			if let rawValue = value.rawValue as? Encodable {
-				try encode(rawValue)
-			}
+	func wrapNil(){
+		buffer.append("")
+	}
 
-		default:
-			try encodable.encode(to: self)
-		}
+	func encode(_ encodable: Encodable) throws {
 		
+		if debugMode{
+			print("encoding \(encodable)")
+		}
+
+		switch encodable {
+		case let value as Int:						try wrap(Int64(value))
+		case let value as Float:					try wrap(value)
+		case let value as Double:					try wrap(value)
+		case let value as Bool:						try wrap(value)
+		case let value as String:					try wrap(value)
+		case let value as Date:						try wrap(value)
+		case let value as any RawRepresentable: 	try wrap(value)
+		case let value as IBEncodable:				try value.encode(to: self)
+		default:
+			throw IBClientError.encodingError("no conforming \(encodable) type to IBEncodable")
+			
+		}
 	}
 	
 }
 
 
-public extension IBEncoder {
+
+extension IBEncoder: Encoder {
 	
-	enum Error: Swift.Error, LocalizedError {
-		case typeNotConformingToIBEncodable(Encodable.Type)
-		case typeNotConformingToEncodable(Any.Type)
+	public var codingPath: [CodingKey] { return [] }
+	
+	public var userInfo: [CodingUserInfoKey : Any] { return [:] }
+	
+	public func container<Key>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> where Key : CodingKey {
+		return KeyedEncodingContainer(KeyedContainer<Key>(encoder: self))
+	}
+	
+	public func unkeyedContainer() -> UnkeyedEncodingContainer {
+		return UnkeyedContanier(encoder: self)
+	}
+	
+	public func singleValueContainer() -> SingleValueEncodingContainer {
+		return UnkeyedContanier(encoder: self)
+	}
+	
+	public func encode<T: Encodable>(_ value: T) throws -> Data {
+		let container = UnkeyedContanier(encoder: self)
+		try container.encode(value)
+		return self.data
+	}
+
+	
+	private struct KeyedContainer<Key: CodingKey>: KeyedEncodingContainerProtocol {
+		var encoder: IBEncoder
 		
-		public var errorDescription: String? {
-			switch self {
-				case .typeNotConformingToIBEncodable(let type):		return "\(type) does not conform with IBDecoder"
-				case .typeNotConformingToEncodable(let type):		return "\(type) does not conform with Decoder"
+		var codingPath: [CodingKey] { return [] }
+		
+		func encode<T>(_ value: T, forKey key: Key) throws where T : Encodable {
+			try encoder.encode(value)
+		}
+		
+		func encodeNil(forKey key: Key) throws {}
+		
+		func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type, forKey key: Key) -> KeyedEncodingContainer<NestedKey> where NestedKey : CodingKey {
+			return encoder.container(keyedBy: keyType)
+		}
+		
+		func nestedUnkeyedContainer(forKey key: Key) -> UnkeyedEncodingContainer {
+			return encoder.unkeyedContainer()
+		}
+		
+		func superEncoder() -> Encoder {
+			return encoder
+		}
+		
+		func superEncoder(forKey key: Key) -> Encoder {
+			return encoder
+		}
+	}
+	
+	private struct UnkeyedContanier: UnkeyedEncodingContainer, SingleValueEncodingContainer {
+		
+		var encoder: IBEncoder
+		
+		var codingPath: [CodingKey] { return [] }
+		
+		var count: Int { return 0 }
+
+		func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type) -> KeyedEncodingContainer<NestedKey> where NestedKey : CodingKey {
+			return encoder.container(keyedBy: keyType)
+		}
+		
+		func nestedUnkeyedContainer() -> UnkeyedEncodingContainer {
+			return self
+		}
+		
+		func superEncoder() -> Encoder {
+			return encoder
+		}
+		
+		func encodeNil() throws {
+			try encode("")
+		}
+		
+		func encode<T:Encodable>(_ value: T) throws {
+			try encoder.encode(value)
+		}
+		
+		func encodeIfPresent<T: Encodable>(_ value: T?) throws {
+			if let value = value { try encode(value) }
+			try encodeNil()
+		}
+
+	}
+}
+
+
+public extension UnkeyedEncodingContainer {
+	
+	mutating func encodeOptional<T:Encodable>(_ value:T?) throws {
+				
+		switch value {
+		case .none:
+			if type(of: value) == Int?.self {
+				try encode("")
+			} else if type(of: value) == Double?.self {
+				try encode("")
+			} else if type(of: value) == Date?.self {
+				try encode("")
+			} else {
+				try encode("")
 			}
+			
+		case .some(let wrapped):
+			try encode(wrapped)
 		}
 	}
 	

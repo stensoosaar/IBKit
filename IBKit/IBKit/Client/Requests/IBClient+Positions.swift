@@ -26,7 +26,7 @@
 import Foundation
 
 
-
+/*
 public extension IBClient {
 	
 	func subscribePositionsMulti(_ index: Int, account: String, modelCode: String = "") throws {
@@ -97,3 +97,4 @@ public extension IBClient {
 	}
 	
 }
+*/

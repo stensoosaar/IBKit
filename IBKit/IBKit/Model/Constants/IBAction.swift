@@ -34,7 +34,11 @@ public enum IBAction: String, Codable {
 	///Closing long position
 	case sell 		= "SELL"
 	
-	///Opening short position
+	///For institutional account configured with Long/Short account segments or clearing with a separate account
 	case short 		= "SSHORT"
+	
+	///For specially-configured institutional accounts to indicate that long position not yet delivered is being sold
+	case long 		= "SSLONG"
+
 	
 }
