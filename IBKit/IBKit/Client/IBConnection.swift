@@ -30,6 +30,7 @@ import NIOConcurrencyHelpers
 import NIOPosix
 
 class IBConnection {
+    
     enum State: Equatable {
         case initializing
         case connecting(String)
@@ -47,8 +48,11 @@ class IBConnection {
     }
     
     private var channel: Channel?
+    
     private let group = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+    
     private let lock = NIOLock()
+    
     private(set) var state = State.initializing {
         didSet {
             stateDidChange(to: state)
@@ -56,7 +60,9 @@ class IBConnection {
     }
 
 	var didStopCallback: ((Error?) -> Void)? = nil
+    
     var stateDidChangeCallback: ((IBConnection.State) -> Void)? = nil
+    
     var delegate: IBConnectionDelegate?
 	
 	public var debugMode: Bool = false
