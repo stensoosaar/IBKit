@@ -23,18 +23,24 @@
  you create subscription and assign received events to event handlers...
 */
 	let client = IBClient.paper(id: 999)
-
+	client.debugMode = true
+	
 	var subscriptions: [AnyCancellable] = []
 
 	client.eventFeed.sink (
 		receiveCompletion: { completion in
 			PlaygroundPage.current.finishExecution()
-		}, receiveValue: { anyEvent in
-		
-			switch response {
-			case let event as AnyMarketData:
+		}, receiveValue: { response in
+			switch response{
+			case let event as IBPriceHistory:
+				event.prices.forEach({print($0)})
+				print(String(repeating: "-", count: 30))
+			case let event as IBPriceBarUpdate:
+				print(event.bar)
+			case let event as (any IBAnyMarketData):
 				print(event)
-			default: break
+			default:
+				print(response)
 			}
 		}
 	).store(in: &subscriptions)
@@ -57,8 +63,11 @@
 */
 	do {
 		let requestID = client.nextRequestID
-		let crypto = IBContract.crypto("ETH", currency: "USD", exchange: .PAXOS)
-		try client.requestMarketData(requestID, contract: crypto)
+		let contract = IBContract.crypto("BTC", currency: "USD")
+		let interval = try DateInterval.lookback(1, unit: .hour, until: .distantFuture)
+		let size = IBBarSize.minute
+		let request = IBPriceHistoryRequest(requestID: requestID, contract: contract, size: size, source: .trades, lookback: interval, extendedTrading: true, includeExpired: false)
+		try client.send(request: request)
 	} catch {
 		print(error.localizedDescription)
 	}

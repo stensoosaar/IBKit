@@ -32,7 +32,7 @@ import Foundation
 
 struct IBTickString: Decodable {
 	
-	var tick: any AnyMarketData
+	var tick: any IBAnyMarketData
 	
 	init(from decoder: Decoder) throws {
 		

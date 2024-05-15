@@ -38,18 +38,7 @@ extension String: IBDecodable {}
 
 
 
-public protocol AnyMarketData: IBIndexedEvent {
-	
-	associatedtype ResultType: Any
-	
-	var requestID: Int 				{get}
-	var type: IBTickType 			{get}
-	var value: ResultType			{get}
-	
-}
-
-
-public struct IBTick: AnyMarketData{
+public struct IBTick: IBAnyMarketData{
 	
 	public typealias ResultType = Double
 	
@@ -60,7 +49,7 @@ public struct IBTick: AnyMarketData{
 
 }
 
-public struct IBTickTimestamp: AnyMarketData {
+public struct IBTickTimestamp: IBAnyMarketData {
 	public typealias TickValue = TimeInterval
 	public var requestID: Int
 	public var type: IBTickType
@@ -70,7 +59,7 @@ public struct IBTickTimestamp: AnyMarketData {
 
 
 
-public struct IBTickExchange: AnyMarketData {
+public struct IBTickExchange: IBAnyMarketData {
 	public typealias TickValue = String
 	public var requestID: Int
 	public var type: IBTickType
@@ -79,7 +68,7 @@ public struct IBTickExchange: AnyMarketData {
 
 
 
-public struct IBDividend: AnyMarketData {
+public struct IBDividend: IBAnyMarketData {
 	
 	public struct Report: IBDecodable {
 		public var paidDividends: String?
@@ -110,7 +99,7 @@ public struct IBDividend: AnyMarketData {
 }
 
 
-public struct IBRealTimeSales: AnyMarketData{
+public struct IBRealTimeSales: IBAnyMarketData{
 	
 	public struct LastTrade: IBDecodable {
 		public var timestamp: String?
@@ -147,7 +136,7 @@ public struct IBRealTimeSales: AnyMarketData{
 
 
 
-public struct IBTradingStatus: AnyMarketData{
+public struct IBTradingStatus: IBAnyMarketData{
 	
 	public enum Status: Int, IBDecodable {
 		case unknown 			= -1
@@ -164,7 +153,7 @@ public struct IBTradingStatus: AnyMarketData{
 
 
 
-public struct IBShortable: AnyMarketData{
+public struct IBShortable: IBAnyMarketData{
 	
 	public typealias TickValue = Double
 	public let requestID: Int

@@ -116,7 +116,12 @@ public enum BrokerError: LocalizedError{
 	case somethingWentWrong(_ details: String)
 }
 
-struct QuoteEvent{
+public protocol AnyQuote{
+	var contract: IBContract {get}
+}
+
+
+struct QuoteEvent: AnyQuote{
 	
 	var contract: IBContract
 	var date: Date
@@ -131,6 +136,29 @@ struct QuoteEvent{
 	}
 	
 }
+
+struct QuoteTimestap: AnyQuote{
+	var contract: IBContract
+	var date: Date
+}
+
+struct QuoteExchange: AnyQuote{
+	var contract: IBContract
+	var exchange: String
+}
+
+struct QuoteDataType: AnyQuote{
+	var contract: IBContract
+	var type: IBMarketDataType
+	
+	public init(contract: IBContract,type: IBMarketDataType) {
+		self.contract = contract
+		self.type = type
+	}
+}
+
+
+
 
 public protocol IBAnyOrderEvent{}
 
@@ -240,14 +268,13 @@ class SimulatedBroker {
 		
 	}
 	
-	
 		
 	/// publishes 5 sec bars
 	/// - Parameters:
 	/// - contract: security definition
 	/// - extendedSession: include data from extended trading hours
 	/// - Returns PriceHistory, PriceUpdate or BrokerError publisher
-	func priceBarPublisher(for contract: IBContract, extendedSession: Bool = false) throws -> AnyPublisher<any AnyPriceUpdate, BrokerError>{
+	func priceBarPublisher(for contract: IBContract, interval:DateInterval? = nil, extendedSession: Bool = false) throws -> AnyPublisher<any AnyPriceUpdate, BrokerError>{
 		
 		let requestID = api.nextRequestID
 		let source: IBBarSource = [.cfd, .forex, .crypto].contains{$0 == contract.securitiesType} ? .midpoint : .trades
@@ -283,7 +310,7 @@ class SimulatedBroker {
 	/// - Parameters:
 	/// - contract: security description
 	/// - extendedSession: include data from extended trading hours
-	func quotePublisher(for contract: IBContract, extendedSession: Bool = true) throws -> AnyPublisher<QuoteEvent, BrokerError> {
+	func quotePublisher(for contract: IBContract, extendedSession: Bool = true) throws -> AnyPublisher<AnyQuote, BrokerError> {
 		
 		let requestID = api.nextRequestID
 		let request = IBMarketDataRequest(requestID: requestID, contract: contract)
@@ -293,11 +320,17 @@ class SimulatedBroker {
 			.setFailureType(to: BrokerError.self)
 			.compactMap { $0 as? IBIndexedEvent }
 			.filter { $0.requestID == requestID }
-			.tryMap { response -> QuoteEvent in
+			.tryMap { response -> AnyQuote in
 						
 				switch response {
 				case let event as IBTick:
 					return QuoteEvent(date: event.date, contract: contract, type: event.type, value: event.value)
+				case let event as IBTickTimestamp:
+					return QuoteTimestap(contract: contract,date: Date(timeIntervalSince1970: event.value))
+				case let event as IBTickExchange:
+					return QuoteExchange(contract: contract, exchange: event.value)
+				case let event as IBCurrentMarketDataType:
+					return QuoteDataType(contract: contract, type: event.type)
 				case let event as IBServerError:
 					throw BrokerError.requestError(event.message)
 				default:
@@ -410,7 +443,7 @@ do {
 		.sink { completion in
 			print(completion)
 		} receiveValue: { response in
-			print(response.contract.symbol, response.date, response.type, response.value)
+			print(response)
 		}
 		.store(in: &subscriptions)
 

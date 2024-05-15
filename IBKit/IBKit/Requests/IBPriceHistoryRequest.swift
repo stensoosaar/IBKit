@@ -57,10 +57,10 @@ public struct IBPriceHistoryRequest: IBIndexedRequest, IBEncodable {
 		try container.encode(includeExpired)
 		
 
-		if Calendar.current.compare(Date(), to: lookback.end, toGranularity: .day) == .orderedAscending{
+		if Calendar.current.compare(Date(), to: lookback.end, toGranularity: .day) == .orderedDescending{
 			try container.encodeOptional(Date())
 		} else {
-			try container.encodeOptional(lookback.end)
+			try container.encodeOptional("")
 		}
 		
 		try container.encode(size)

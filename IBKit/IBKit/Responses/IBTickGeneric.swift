@@ -23,7 +23,7 @@ import Foundation
 
 struct IBTickGeneric: Decodable{
 	
-	var tick: any AnyMarketData
+	var tick: any IBAnyMarketData
 
 	init(from decoder: Decoder) throws {
 		

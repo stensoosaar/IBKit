@@ -13,7 +13,7 @@ import Foundation
 struct IBHistoricalTickLast: Decodable {
 	
 	var requestID: Int
-	var ticks: [any AnyMarketData] = []
+	var ticks: [any IBAnyMarketData] = []
 	var done: Bool
 
 	
@@ -36,7 +36,7 @@ struct IBHistoricalTickLast: Decodable {
 			let exchange = try container.decode(String.self)
 			_ = try container.decode(String.self)
 			
-			let temp: [any AnyMarketData] = [
+			let temp: [any IBAnyMarketData] = [
 				IBTick(requestID: requestID, type: .LastPrice, value: price, date: Date(timeIntervalSince1970: time)),
 				IBTick(requestID: requestID, type: .LastSize, value: size, date: Date(timeIntervalSince1970: time)),
 				IBTickExchange(requestID: requestID, type: .LastExchange, value: exchange)

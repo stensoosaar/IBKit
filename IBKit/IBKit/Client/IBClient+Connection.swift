@@ -190,10 +190,8 @@ extension IBClient: IBConnectionDelegate {
 					
 			case .HISTORICAL_DATA_UPDATE:
 				let response = try decoder.decode(IBPriceBarHistoryUpdate.self)
-				if let bar = response.bar{
-					let object = IBPriceBarUpdate(requestID: response.requestID, bar: bar)
-					self.subject.send(object)
-				}
+				let object = IBPriceBarUpdate(requestID: response.requestID, bar: response.bar)
+				self.subject.send(object)
 					
 			case .REAL_TIME_BARS:
 				let object = try decoder.decode(IBPriceBarUpdate.self)
@@ -203,10 +201,15 @@ extension IBClient: IBConnectionDelegate {
 				let object = try decoder.decode(IBMarketRule.self)
 				self.subject.send(object)
 					
+			// TODO: - mask as quote type.
 			case .MARKET_DATA_TYPE:
 				let object = try decoder.decode(IBCurrentMarketDataType.self)
 				self.subject.send(object)
 				
+			case .TICK_REQ_PARAMS:
+				let object = try decoder.decode(IBTickParameters.self)
+				//self.subject.send(object)
+
 			case .NEWS_BULLETINS:
 				let object = try decoder.decode(IBNewsBulletin.self)
 				self.subject.send(object)
@@ -259,10 +262,6 @@ extension IBClient: IBConnectionDelegate {
 				let message = try decoder.decode(IBOptionComputation.self)
 				self.subject.send(message)
 					
-			case .TICK_REQ_PARAMS:
-				let object = try decoder.decode(IBTickParameters.self)
-				self.subject.send(object)
-
 			default:
 				print("Unknown response \(responseType) received: \(String(data:data, encoding: .utf8))")
 			}

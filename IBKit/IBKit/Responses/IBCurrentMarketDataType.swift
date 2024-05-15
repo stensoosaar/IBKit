@@ -9,7 +9,7 @@ import Foundation
 
 
 
-struct IBCurrentMarketDataType: IBResponse, IBIndexedEvent {
+public struct IBCurrentMarketDataType: IBResponse, IBIndexedEvent {
 	
 	public var requestID: Int
 	public var type: IBMarketDataType

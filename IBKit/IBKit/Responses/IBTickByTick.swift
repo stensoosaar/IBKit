@@ -10,7 +10,7 @@ import Foundation
 
 struct IBTickByTick: Decodable {
 
-	public var ticks: [any AnyMarketData] = []
+	public var ticks: [any IBAnyMarketData] = []
 	
 	init(from decoder: Decoder) throws {
 		
