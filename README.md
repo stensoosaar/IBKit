@@ -7,7 +7,7 @@ IBKit is open source Interactive Brokers API library written in Swift. It allows
 The software is not an official API and is not affiliated or related with Interactive Brokers.
 
 ## Conformance
-The current version should conform with IB API version 10.18. It is the aim to update the software with to MacOS major releases and include also better bites from TWS API.
+The current version should conform with IB API version 10.24. It is the aim to update the software with to MacOS major releases and include also better bites from TWS API.
 
 ## Current status
 - Common features seems to work fine but complex orders may generate errors. 
@@ -46,11 +46,60 @@ While the api calls closely resemble IB's own API, the responses are provided by
 
 	do {
 		let requestID = client.getNextID()
-		let lookback = IBDuration.lookback(30, unit: .day)
-		try client.requestPriceHistory(requestID, contract: 	contract, barSize: IBBarSize.day, barSource: IBBarSource.bidAsk, lookback: lookback)
+		let interval = DateInterval.lookback(10, unit: .minute, until: .distantFuture)
+		try client.requestPriceHistory(requestID, contract: contract, barSize: IBBarSize.day, barSource: IBBarSource.bidAsk, lookback: interval)
 	} catch {
 		print(error.localizedDescription)
 	}
+```
+For more complex tasks it might be convient to create your own custom publishers pairing request and response data or handle object mapping. 
+
+ ```
+class SimulatedBroker{
+
+	var api: IBClient
+
+	func priceUpdatePublisher(_ interval: DateInterval, size: IBBarSize, contract: IBContract, extendedSession: Bool = false) throws -> AnyPublisher<AnyPriceUpdate, CustomAPIError>{
+			
+		let requestID = api.nextRequestID
+		let source: IBBarSource = [.cfd, .forex, .crypto].contains{$0 == contract.securitiesType} ? .midpoint : .trades
+		let request = IBPriceHistoryRequest(requestID: requestID, contract: contract, size: size, source: source, lookback: interval, extendedTrading: extendedSession)
+		try api.send(request: request)
+		
+		return AnyPublisher(self.api.eventFeed
+			.setFailureType(to: CustomAPIError.self)
+			.compactMap { $0 as? IBIndexedEvent }
+			.filter { $0.requestID == requestID }
+			.tryMap{ response -> (any AnyPriceUpdate) in
+				switch response {
+				   // handle response / error here 
+				}
+			.mapError { $0 as! CustomAPIError }
+			.eraseToAnyPublisher()
+		)
+			
+	}
+}
+
+
+let broker = SimulatedBroker(id: 0)
+var subscriptions: [AnyCancellable] = []
+broker.api.connect()
+
+do{
+	let contract = IBContract.future(localSymbol: "MESM4", currency: "USD")
+	let interval = DateInterval.lookback(10, unit: .minute, until: .distantFuture)
+	try broker.priceUpdatePublisher(interval, size: .minute, contract: contract)
+		.sink { completion in
+			print(completion)
+		} receiveValue: { response in
+			print(respinse)
+		}
+		.store(in: &subscriptions)
+} catch{
+	print(error.localizedDescription)
+}
+
 ```
 
 **Most of IB market data messages are stripped down from context (e.g. contract symbol, bar size, bar source) and if you are using multiple contracts and / or multiple timeframes you should store your request first and map the incoming messages to stored request parameters by using requestID.**
