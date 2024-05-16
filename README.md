@@ -59,7 +59,7 @@ class SimulatedBroker{
 
 	var api: IBClient
 
-	func priceUpdatePublisher(_ interval: DateInterval, size: IBBarSize, contract: IBContract, extendedSession: Bool = false) throws -> AnyPublisher<AnyPriceUpdate, CustomAPIError>{
+	func priceHistoryPublisher(_ interval: DateInterval, size: IBBarSize, contract: IBContract, extendedSession: Bool = false) throws -> AnyPublisher<AnyPriceUpdate, CustomAPIError>{
 			
 		let requestID = api.nextRequestID
 		let source: IBBarSource = [.cfd, .forex, .crypto].contains{$0 == contract.securitiesType} ? .midpoint : .trades
@@ -89,7 +89,7 @@ broker.api.connect()
 do{
 	let contract = IBContract.future(localSymbol: "MESM4", currency: "USD")
 	let interval = DateInterval.lookback(10, unit: .minute, until: .distantFuture)
-	try broker.priceUpdatePublisher(interval, size: .minute, contract: contract)
+	try broker.priceHistoryPublisher(interval, size: .minute, contract: contract)
 		.sink { completion in
 			print(completion)
 		} receiveValue: { response in
