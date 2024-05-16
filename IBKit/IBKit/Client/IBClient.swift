@@ -30,47 +30,57 @@ import NIOCore
 import NIOConcurrencyHelpers
 import NIOPosix
 
-
 open class IBClient: IBAnyClient, IBRequestWrapper {
-	
-	internal var subject = PassthroughSubject<IBEvent,Never>()
-	lazy public var eventFeed = subject.share().eraseToAnyPublisher()
-	
-	var identifier: Int
-	
-	var connection: IBConnection?
-	
-	let host: String
-	
-	let port: Int
-	
-	public var serverVersion: Int?
-	
+    
+    internal var subject = PassthroughSubject<IBEvent,Never>()
+    lazy public var eventFeed = subject.share().eraseToAnyPublisher()
+    
+    var identifier: Int
+    
+    var connection: IBConnection?
+    
+    let host: String
+    
+    let port: Int
+    
+    private let dispatchGroup = DispatchGroup()
+    var _serverVersion: Int?
+    
+    public var serverVersion: Int? {
+        get {
+            dispatchGroup.wait()  // Wait until the server version is set
+            return _serverVersion
+        }
+        set {
+            _serverVersion = newValue
+            dispatchGroup.leave()  // Signal that server version is now set
+        }
+    }
+
 	public var debugMode: Bool = false{
 		willSet{
 			self.connection?.debugMode = newValue
 		}
 	}
-	
-	public var connectionTime: String?
-	
-	
-	/// Creates new api client.
-	/// - Parameter id: Master API ID, set in IB Gateway or Workstation
-	/// - Parameter address: Address where your IB Gatweay / Worskatation is running
-	
+    
+    public var connectionTime: String?
+    
+    
+    /// Creates new api client.
+    /// - Parameter id: Master API ID, set in IB Gateway or Workstation
+    /// - Parameter address: Address where your IB Gatweay / Worskatation is running
+    
 
-	public init(id masterID: Int, address: String, port: Int) {
-		
-		guard let host = URL(string: address)?.host else {
-			fatalError("Cant figure out the host to connect")
-		}
-		
-		self.host = host
-		self.port = port
-		self.identifier = masterID
-		
-	}
+    public init(id masterID: Int, address: String, port: Int) {
+        guard let host = URL(string: address)?.host else {
+            fatalError("Cant figure out the host to connect")
+        }
+        
+        self.host = host
+        self.port = port
+        self.identifier = masterID
+        dispatchGroup.enter()
+    }
 
 	var _nextValidID: Int = 0
 
