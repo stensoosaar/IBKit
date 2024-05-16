@@ -21,9 +21,9 @@ public struct IBPriceBarHistoryUpdate: IBResponse {
 
 		let date = try container.decode(Date.self)
 		let open = try container.decode(Double.self)
+		let close = try container.decode(Double.self)
 		let high = try container.decode(Double.self)
 		let low = try container.decode(Double.self)
-		let close = try container.decode(Double.self)
 		let wap = try container.decodeOptional(Double.self)
 		let volume = try container.decodeOptional(Double.self)
 			

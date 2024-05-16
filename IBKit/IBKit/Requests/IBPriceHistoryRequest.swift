@@ -56,11 +56,13 @@ public struct IBPriceHistoryRequest: IBIndexedRequest, IBEncodable {
 		try container.encode(contract)
 		try container.encode(includeExpired)
 		
+		let test = Calendar.current.compare(Date(), to: lookback.end, toGranularity: .day) == .orderedAscending
+		
 
-		if Calendar.current.compare(Date(), to: lookback.end, toGranularity: .day) == .orderedDescending{
-			try container.encodeOptional(Date())
-		} else {
+		if test == true {
 			try container.encodeOptional("")
+		} else {
+			try container.encodeOptional(Date())
 		}
 		
 		try container.encode(size)
@@ -84,7 +86,7 @@ public struct IBPriceHistoryRequest: IBIndexedRequest, IBEncodable {
 			}
 		}
 		
-		try container.encode(lookback.end == .distantFuture)
+		try container.encode(test)
 		try container.encode("")
 	}
 	

@@ -222,7 +222,43 @@ class SimulatedBroker {
 		
 		
 	}
-	
+
+	// publishes one time event
+	// fails at noncritical ib error as it arrives before content
+	func priceUpdatePublisher(_ interval: DateInterval, size: IBBarSize, contract: IBContract, extendedSession: Bool = false) throws -> AnyPublisher<any AnyPriceUpdate, BrokerError>{
+		
+		let requestID = api.nextRequestID
+		let source: IBBarSource = [.cfd, .forex, .crypto].contains{$0 == contract.securitiesType} ? .midpoint : .trades
+		let request = IBPriceHistoryRequest(requestID: requestID, contract: contract, size: size, source: source, lookback: interval, extendedTrading: extendedSession)
+		try api.send(request: request)
+		
+		return AnyPublisher(self.api.eventFeed
+			.setFailureType(to: BrokerError.self)
+			.compactMap { $0 as? IBIndexedEvent }
+			.filter { $0.requestID == requestID }
+			.tryMap{ response -> (any AnyPriceUpdate) in
+				switch response {
+				case let event as IBPriceHistory:
+					let resolution = size.timeInterval
+					let series:[PriceBar] = event.prices.map({$0.convertToProperBar(with: resolution)})
+					return PriceHistory(contract: contract, resolution: resolution, prices: series)
+				case let event as IBPriceBarUpdate:
+					let resolution = size.timeInterval
+					let bar = event.bar.convertToProperBar(with: resolution)
+					return PriceUpdate(contract: contract, resolution: resolution, prices: bar)
+				case let event as IBServerError:
+					throw BrokerError.requestError(event.message)
+				default:
+					let message = "this should never happen but received anyway \(response)"
+					throw BrokerError.somethingWentWrong(message)
+				}
+			}
+			.mapError { $0 as! BrokerError }
+			.eraseToAnyPublisher())
+
+		
+	}
+
 	
 	// publishes one time event
 	// fails at noncritical ib error as it arrives before content
@@ -274,7 +310,7 @@ class SimulatedBroker {
 	/// - contract: security definition
 	/// - extendedSession: include data from extended trading hours
 	/// - Returns PriceHistory, PriceUpdate or BrokerError publisher
-	func priceBarPublisher(for contract: IBContract, interval:DateInterval? = nil, extendedSession: Bool = false) throws -> AnyPublisher<any AnyPriceUpdate, BrokerError>{
+	func priceBarPublisher(for contract: IBContract, extendedSession: Bool = false) throws -> AnyPublisher<any AnyPriceUpdate, BrokerError>{
 		
 		let requestID = api.nextRequestID
 		let source: IBBarSource = [.cfd, .forex, .crypto].contains{$0 == contract.securitiesType} ? .midpoint : .trades
@@ -427,15 +463,41 @@ var subscriptions: [AnyCancellable] = []
 broker.connect()
 usleep(1_000_000)
 
-let contract = IBContract.equity("AAPL", currency: "USD")
+let contract = IBContract.future(localSymbol: "MESM4", currency: "USD")
 
-try broker.validateContract(contract)
-   .sink { completion in
-	   print(completion)
-   } receiveValue: { response in
-	   print(response)
-   }
-   .store(in: &subscriptions)
+
+let interval = DateInterval.lookback(10, unit: .minute, until: Date.distantFuture)
+try broker.priceUpdatePublisher(interval, size: .minute, contract: contract)
+	.sink { completion in
+		print(completion)
+	} receiveValue: { response in
+		switch response{
+		case let event as PriceHistory:
+			event.prices.forEach({print($0)})
+			print(String(repeating:"-", count:80))
+		case let event as PriceUpdate:
+			print(event.prices)
+		default: break
+		}
+	}
+	.store(in: &subscriptions)
+
+
+
+/*
+
+
+
+
+ try broker.validateContract(contract)
+	.sink { completion in
+		print(completion)
+	} receiveValue: { response in
+		print(response)
+	}
+	.store(in: &subscriptions)
+
+
 
 
 do {
@@ -462,7 +524,6 @@ try broker.priceHistoryPublisher(interval, size: IBBarSize.hour, contract: contr
 	}
 	.store(in: &subscriptions)
 
-
 try broker.priceBarPublisher(for: contract)
 	.sink { completion in
 		print(completion)
@@ -471,6 +532,7 @@ try broker.priceBarPublisher(for: contract)
 	}
 	.store(in: &subscriptions)
 
+ */
 
 
 
