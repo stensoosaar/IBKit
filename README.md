@@ -52,7 +52,7 @@ While the api calls closely resemble IB's own API, the responses are provided by
 		print(error.localizedDescription)
 	}
 ```
-For more complex tasks it might be convient to create your own custom publishers pairing request and response data or handle object mapping. 
+Most response messages are stripped down from request context (e.g., bar size or source), and you need to pair requests and responses using a unique requestID. One way to achieve that is to create your own custom publisher and map the data against your own data model.
 
  ```
 class SimulatedBroker{
@@ -102,6 +102,4 @@ do{
 
 ```
 
-**Most of IB market data messages are stripped down from context (e.g. contract symbol, bar size, bar source) and if you are using multiple contracts and / or multiple timeframes you should store your request first and map the incoming messages to stored request parameters by using requestID.**
-
-See also included playgrounds
+See also included playground pages.
