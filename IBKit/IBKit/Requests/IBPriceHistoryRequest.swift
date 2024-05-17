@@ -91,3 +91,20 @@ public struct IBPriceHistoryRequest: IBIndexedRequest, IBEncodable {
 	}
 	
 }
+
+public struct IBIBPriceHistoryCancellationRequest: IBIndexedRequest{
+    public let version: Int = 1
+    public let type: IBRequestType = .cancelHistoricalData
+    public var requestID: Int
+    
+    public init(requestID: Int) {
+        self.requestID = requestID
+    }
+    
+    public func encode(to encoder: IBEncoder) throws {
+        var container = encoder.unkeyedContainer()
+        try container.encode(type)
+        try container.encode(version)
+        try container.encode(requestID)
+    }
+}
