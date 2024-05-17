@@ -41,7 +41,7 @@ public struct IBContractSearchResult: IBResponse, IBEvent {
 				availableTypes.append(obj)
 			}
 			
-			if serverVersion > IBServerVersion.BOND_ISSUERID{
+			if serverVersion >= IBServerVersion.BOND_ISSUERID{
 				self.description = try container.decode(String.self)
 				self.issuerID = try container.decode(String.self)
 			}
