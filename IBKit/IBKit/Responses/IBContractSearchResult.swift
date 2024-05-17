@@ -19,8 +19,15 @@ public struct IBContractSearchResult: IBResponse, IBEvent {
 		let primaryExchange: String
 		let currency: String
 		var availableTypes: [IBSecuritiesType]
+		var description: String?
+		var issuerID: String?
 		
 		public init(from decoder: IBDecoder) throws {
+			
+			guard let serverVersion = decoder.serverVersion else {
+				throw IBClientError.decodingError("Server value expected")
+			}
+			
 			var container = try decoder.unkeyedContainer()
 			self.contractID = try container.decode(Int.self)
 			self.symbol = try container.decode(String.self)
@@ -33,6 +40,13 @@ public struct IBContractSearchResult: IBResponse, IBEvent {
 				let obj = try container.decode(IBSecuritiesType.self)
 				availableTypes.append(obj)
 			}
+			
+			if serverVersion > IBServerVersion.BOND_ISSUERID{
+				self.description = try container.decode(String.self)
+				self.issuerID = try container.decode(String.self)
+			}
+			
+			
 		}
 
 	}
