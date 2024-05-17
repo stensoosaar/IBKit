@@ -13,14 +13,14 @@ public struct IBContractSearchResult: IBResponse, IBEvent {
 	
 	public struct Contract: IBDecodable {
 		
-		let contractID: Int
-		let symbol: String
-		let type: IBSecuritiesType
-		let primaryExchange: String
-		let currency: String
-		var availableTypes: [IBSecuritiesType]
-		var description: String?
-		var issuerID: String?
+        public let contractID: Int
+        public let symbol: String
+        public let type: IBSecuritiesType
+        public let primaryExchange: String
+        public let currency: String
+        public var availableTypes: [IBSecuritiesType]
+        public var description: String?
+        public var issuerID: String?
 		
 		public init(from decoder: IBDecoder) throws {
 			
@@ -41,19 +41,15 @@ public struct IBContractSearchResult: IBResponse, IBEvent {
 				availableTypes.append(obj)
 			}
 			
-			if serverVersion > IBServerVersion.BOND_ISSUERID{
+			if serverVersion > IBServerVersion.BOND_ISSUERID {
 				self.description = try container.decode(String.self)
 				self.issuerID = try container.decode(String.self)
 			}
-			
-			
 		}
-
 	}
 	
-	let requestId: Int
-	
-	var values: [Contract] = []
+    public let requestId: Int
+    public var values: [Contract] = []
 	
 	public init(from decoder: IBDecoder) throws {
 		var container = try decoder.unkeyedContainer()
@@ -64,7 +60,4 @@ public struct IBContractSearchResult: IBResponse, IBEvent {
 			values.append(object)
 		}
 	}
-
 }
-
-
