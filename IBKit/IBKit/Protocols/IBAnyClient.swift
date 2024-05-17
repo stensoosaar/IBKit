@@ -332,6 +332,11 @@ public extension IBRequestWrapper where Self: IBAnyClient {
 		try send(request: request)
 	}
 	
+    func cancelHistoricalData(_ requestID: Int) throws {
+        let request = IBMarketDataCancellationRequest(requestID: requestID, type: .cancelHistoricalData)
+        try send(request: request)
+    }
+    
 	func subscribeMarketDepth(_ requestID: Int, contract: IBContract, rows: Int, smart: Bool = false) throws {
 		let request = IBMarketDepthRequest(requestID: requestID, contract: contract, rows: rows, smart: smart)
 		try send(request: request)
