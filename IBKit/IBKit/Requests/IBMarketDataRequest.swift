@@ -128,14 +128,12 @@ public struct IBMarketDataRequest: IBIndexedRequest{
 
 
 public struct IBMarketDataCancellationRequest: IBIndexedRequest{
-	
 	public let version: Int = 2
-	public var type: IBRequestType
+	public let type: IBRequestType = .cancelMarketData
 	public var requestID: Int
 	
-	public init(requestID: Int, type: IBRequestType = .cancelMarketData) {
+	public init(requestID: Int) {
 		self.requestID = requestID
-        self.type = type
 	}
 	
 	public func encode(to encoder: IBEncoder) throws {
@@ -144,5 +142,4 @@ public struct IBMarketDataCancellationRequest: IBIndexedRequest{
 		try container.encode(version)
 		try container.encode(requestID)
 	}
-	
 }

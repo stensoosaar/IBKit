@@ -333,7 +333,7 @@ public extension IBRequestWrapper where Self: IBAnyClient {
 	}
 	
     func cancelHistoricalData(_ requestID: Int) throws {
-        let request = IBMarketDataCancellationRequest(requestID: requestID, type: .cancelHistoricalData)
+        let request = IBIBPriceHistoryCancellationRequest(requestID: requestID)
         try send(request: request)
     }
     
