@@ -11,8 +11,7 @@ The current version should conform with IB API version 10.24. It is the aim to u
 
 ## Current status
 - Common features seems to work fine but complex orders may generate errors. 
-- Some tick events (like dividends) needs better implementation as separate event.
-- FA Accounts are not currently sypported
+- FA Accounts are not currently supported
 
 ## Requirements
 - [IB Gateway](https://www.interactivebrokers.com/en/trading/ibgateway-stable.php).
