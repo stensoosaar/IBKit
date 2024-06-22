@@ -65,7 +65,7 @@ The OCC options symbol can be used to define an option contract in the API throu
 
 let watchlist: [IBContract] = [
 	//forex,
-	//aapl,
+	aapl,
 	//dax,
 	//cfd,
 	//gold,
@@ -74,7 +74,7 @@ let watchlist: [IBContract] = [
 	//porsche,
 	//aaplBond,
 	//miniSPX,
-	microSPX,
+	//microSPX,
 	//daxFutures,
 	//callAAPL,
 	//callTSLA
