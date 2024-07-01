@@ -62,7 +62,7 @@ public struct IBPriceHistoryRequest: IBIndexedRequest, IBEncodable {
 		if test == true {
 			try container.encodeOptional("")
 		} else {
-			try container.encodeOptional(Date())
+			try container.encodeOptional(lookback.end)
 		}
 		
 		try container.encode(size)

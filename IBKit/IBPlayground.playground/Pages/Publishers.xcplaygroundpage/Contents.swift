@@ -463,7 +463,17 @@ var subscriptions: [AnyCancellable] = []
 broker.connect()
 usleep(1_000_000)
 
-let contract = IBContract.future(localSymbol: "MESM4", currency: "USD")
+let contract = IBContract.equity("AAPL", currency: "USD")
+
+
+try broker.validateContract(contract)
+   .sink { completion in
+	   print(completion)
+   } receiveValue: { response in
+	   print(response)
+   }
+   .store(in: &subscriptions)
+
 
 
 let interval = DateInterval.lookback(10, unit: .minute, until: Date.distantFuture)
@@ -484,22 +494,6 @@ try broker.priceUpdatePublisher(interval, size: .minute, contract: contract)
 
 
 
-/*
-
-
-
-
- try broker.validateContract(contract)
-	.sink { completion in
-		print(completion)
-	} receiveValue: { response in
-		print(response)
-	}
-	.store(in: &subscriptions)
-
-
-
-
 do {
 	try broker.quotePublisher(for: contract)
 		.sink { completion in
@@ -515,7 +509,7 @@ do {
 
 
 
-let interval = DateInterval.lookback(1, unit: .weekOfYear)
+let interval = DateInterval.lookback(1, unit: .weekOfYear, until: Date(year:2023, month:12, day:31))
 try broker.priceHistoryPublisher(interval, size: IBBarSize.hour, contract: contract)
 	.sink { completion in
 		print(completion)
@@ -532,7 +526,7 @@ try broker.priceBarPublisher(for: contract)
 	}
 	.store(in: &subscriptions)
 
- */
+
 
 
 
