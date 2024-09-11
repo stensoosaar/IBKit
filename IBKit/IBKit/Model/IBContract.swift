@@ -74,8 +74,8 @@ public struct IBContract: IBCodable {
 			}
 		}
 		
-		var type: IdentifierType
-		var value: String
+		public var type: IdentifierType
+		public var value: String
 		
 		private init(type: SecurityID.IdentifierType, value: String){
 			self.type = type
