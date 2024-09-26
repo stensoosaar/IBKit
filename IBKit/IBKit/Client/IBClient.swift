@@ -79,7 +79,6 @@ open class IBClient: IBAnyClient, IBRequestWrapper {
         self.host = host
         self.port = port
         self.identifier = masterID
-        dispatchGroup.enter()
     }
 
 	var _nextValidID: Int = 0
@@ -98,6 +97,8 @@ open class IBClient: IBAnyClient, IBRequestWrapper {
 		guard connection == nil else {
 			throw IBClientError.connectionError("Already connected")
 		}
+
+		dispatchGroup.enter()
 
 		let connection = try IBConnection(host: host, port: port)
 		connection.stateDidChangeCallback =  stateDidChange(to:)
