@@ -10,7 +10,7 @@ import Foundation
 
 
 
-struct IBHistoricalTickLast: Decodable {
+struct IBHistoricalTickLast: IBResponse, IBThrottledMarketDataResponse {
 	
 	var requestID: Int
 	var ticks: [any IBAnyMarketData] = []

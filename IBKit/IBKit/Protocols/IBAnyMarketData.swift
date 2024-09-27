@@ -17,3 +17,8 @@ public protocol IBAnyMarketData: IBIndexedEvent {
 	var value: ResultType			{get}
 	
 }
+
+
+public protocol IBThrottledMarketDataRequest: IBIndexedRequest{}
+
+public protocol IBThrottledMarketDataResponse: IBIndexedEvent{}

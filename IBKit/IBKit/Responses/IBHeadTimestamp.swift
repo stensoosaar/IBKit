@@ -12,7 +12,7 @@ import Foundation
 /**
  First data point date for respective contract / bar source combination
  */
-public struct IBHeadTimestamp: IBResponse, IBIndexedEvent {
+public struct IBHeadTimestamp: IBResponse, IBIndexedEvent, IBThrottledMarketDataResponse {
 	
 	public var requestID: Int
 	

@@ -55,6 +55,7 @@ extension IBClient: IBConnectionDelegate {
 			case .ERR_MSG:
 				let object = try decoder.decode(IBServerError.self)
 				subject.send(object)
+				removeRequest(object)
 					
 			case .NEXT_VALID_ID:
 				let object = try decoder.decode(IBNextRequestID.self)
@@ -179,14 +180,19 @@ extension IBClient: IBConnectionDelegate {
 			case .FUNDAMENTAL_DATA:
 				let object = try decoder.decode(IBFinancialReport.self)
 				self.subject.send(object)
+				
 										
 			case .HEAD_TIMESTAMP:
 				let object = try decoder.decode(IBHeadTimestamp.self)
 				self.subject.send(object)
+				removeRequest(object)
+
 				
 			case .HISTORICAL_DATA:
 				let object = try decoder.decode(IBPriceHistory.self)
 				self.subject.send(object)
+				removeRequest(object)
+
 					
 			case .HISTORICAL_DATA_UPDATE:
 				let response = try decoder.decode(IBPriceBarHistoryUpdate.self)
@@ -208,7 +214,7 @@ extension IBClient: IBConnectionDelegate {
 				
 			case .TICK_REQ_PARAMS:
 				let object = try decoder.decode(IBTickParameters.self)
-				//self.subject.send(object)
+				self.subject.send(object)
 
 			case .NEWS_BULLETINS:
 				let object = try decoder.decode(IBNewsBulletin.self)
@@ -223,44 +229,48 @@ extension IBClient: IBConnectionDelegate {
 				self.subject.send(object)
 				
 			case .TICK_PRICE:
-				let message = try decoder.decode(IBTickPrice.self)
-				message.tick.forEach({self.subject.send($0)})
+				let object = try decoder.decode(IBTickPrice.self)
+				object.tick.forEach({self.subject.send($0)})
 
 			case .TICK_SIZE:
-				let message = try decoder.decode(IBTickSize.self)
-				self.subject.send(message.tick)
+				let object = try decoder.decode(IBTickSize.self)
+				self.subject.send(object.tick)
 
 			case .TICK_GENERIC:
-				let message = try decoder.decode(IBTickGeneric.self)
-				self.subject.send(message.tick)
+				let object = try decoder.decode(IBTickGeneric.self)
+				self.subject.send(object.tick)
 
 			case .TICK_STRING:
-				let message = try decoder.decode(IBTickString.self)
-				self.subject.send(message.tick)
+				let object = try decoder.decode(IBTickString.self)
+				self.subject.send(object.tick)
 
 			case .HISTORICAL_TICKS:
-				let message = try decoder.decode(IBHistoricTick.self)
-				message.ticks.forEach({self.subject.send($0)})
+				let object = try decoder.decode(IBHistoricTick.self)
+				object.ticks.forEach({self.subject.send($0)})
+				removeRequest(object)
 
 			case .HISTORICAL_TICKS_BID_ASK:
-				let message = try decoder.decode(IBHistoricalTickBidAsk.self)
-				message.ticks.forEach({self.subject.send($0)})
+				let object = try decoder.decode(IBHistoricalTickBidAsk.self)
+				object.ticks.forEach({self.subject.send($0)})
+				removeRequest(object)
+
 
 			case .HISTORICAL_TICKS_LAST:
-				let message = try decoder.decode(IBHistoricalTickLast.self)
-				message.ticks.forEach({self.subject.send($0)})
+				let object = try decoder.decode(IBHistoricalTickLast.self)
+				object.ticks.forEach({self.subject.send($0)})
+				removeRequest(object)
 
 			case .TICK_BY_TICK:
-				let message = try decoder.decode(IBTickByTick.self)
-				message.ticks.forEach({self.subject.send($0)})
+				let object = try decoder.decode(IBTickByTick.self)
+				object.ticks.forEach({self.subject.send($0)})
 
 			case .TICK_EFP:
-				let message = try decoder.decode(IBEFPEvent.self)
-				self.subject.send(message)
+				let object = try decoder.decode(IBEFPEvent.self)
+				self.subject.send(object)
 					
 			case .TICK_OPTION_COMPUTATION:
-				let message = try decoder.decode(IBOptionComputation.self)
-				self.subject.send(message)
+				let object = try decoder.decode(IBOptionComputation.self)
+				self.subject.send(object)
 					
 			default:
 				print("Unknown response \(responseType) received: \(String(data:data, encoding: .utf8))")

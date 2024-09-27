@@ -32,10 +32,13 @@ import NIOPosix
 
 open class IBClient: IBAnyClient, IBRequestWrapper {
     
-    internal var subject = PassthroughSubject<IBEvent,Never>()
+    internal let subject = PassthroughSubject<IBEvent,Never>()
+	
     lazy public var eventFeed = subject.share().eraseToAnyPublisher()
+	
+	private var requestQueue = PassthroughSubject<IBRequest,Never>()
     
-    var identifier: Int
+	var identifier: Int
     
     var connection: IBConnection?
     
@@ -44,6 +47,7 @@ open class IBClient: IBAnyClient, IBRequestWrapper {
     let port: Int
     
     private let dispatchGroup = DispatchGroup()
+	
     var _serverVersion: Int?
     
     public var serverVersion: Int? {
@@ -64,6 +68,10 @@ open class IBClient: IBAnyClient, IBRequestWrapper {
 	}
     
     public var connectionTime: String?
+	
+	private var requestMonitor: Cancellable?
+	
+	private var maxRequestsPerSecond = 50
     
     
     /// Creates new api client.
@@ -105,10 +113,32 @@ open class IBClient: IBAnyClient, IBRequestWrapper {
 		connection.delegate = self
 		connection.debugMode = debugMode
 		self.connection = connection
+		
+		let requestInterval: Int = 1/maxRequestsPerSecond * 1000
+		
+		// tws api accpets max 50 requests per second
+		requestMonitor = requestQueue.buffer(size: .max, prefetch: .byRequest, whenFull: .dropNewest)
+			.flatMap(maxPublishers: .max(1)) {
+				Just($0).delay(for: .milliseconds(requestInterval), scheduler: DispatchQueue.main)
+			}
+			.tryMap({ request -> Data in
+				let encoder = IBEncoder(self.serverVersion)
+				try encoder.encode(request)
+				let data = encoder.data
+				let dataWithLength = data.count.toBytes(size: 4) + data
+				self.addRequest(request)
+				return dataWithLength
+			})
+		   .sink(receiveCompletion: { completion in
+			   print(completion)
+		   }, receiveValue: { requestData in
+			   self.connection?.send(data: requestData)
+		   })
+		
 	}
+		
 	
 	/// Disconnect client from IB Gateway or Workstation
-	///
 	public func disconnect() {
 		guard let connection else { return }
 		connection.disconnect()
@@ -116,17 +146,11 @@ open class IBClient: IBAnyClient, IBRequestWrapper {
 		subject.send(completion: .finished)
 	}
 	
+	
 	public func send(request: IBRequest) throws {
-	
-		let encoder = IBEncoder(serverVersion)
-		try encoder.encode(request)
-		let data = encoder.data
-		let dataWithLength = data.count.toBytes(size: 4) + data
-		
-		connection?.send(data: dataWithLength)
-
+		requestQueue.send(request)
 	}
-	
+
 	
 	private func stateDidChange(to state: IBConnection.State) {
 		switch state {
@@ -141,6 +165,7 @@ open class IBClient: IBAnyClient, IBRequestWrapper {
 		}
 	}
 	
+
 	private func startAPI() throws {
 		let version: Int = 2
 		let encoder = IBEncoder()
@@ -153,7 +178,36 @@ open class IBClient: IBAnyClient, IBRequestWrapper {
 		connection?.send(data: dataWithLength)
 	}
 	
+	
+	//MARK: - track concurrent historical market data request count.
+	
+	private var pendingRequests: [IBIndexedRequest] = []
+	
+	private let pendingRequestCountSubject = CurrentValueSubject<Int, Never>(0)
+	
+	lazy public var pendingRequestCountPublisher = pendingRequestCountSubject.share().eraseToAnyPublisher()
+	
+	func addRequest(_ request: IBRequest) {
+		if let throttledRequest = request as? IBThrottledMarketDataRequest {
+			pendingRequests.append(throttledRequest)
+			publishRequestCount()
+		}
+	}
+	
+	func removeRequest(_ response: IBResponse) {
+		if let event = response as? IBThrottledMarketDataResponse{
+			pendingRequests.removeAll { $0.requestID == event.requestID }
+			publishRequestCount()
+		}
+	}
+	
+	private func publishRequestCount() {
+		pendingRequestCountSubject.send(pendingRequests.count)
+	}
+	
 }
+
+
 
 public extension IBClient {
 	enum ConnectionType {

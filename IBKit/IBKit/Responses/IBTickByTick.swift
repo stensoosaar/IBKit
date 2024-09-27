@@ -8,14 +8,15 @@
 import Foundation
 
 
-struct IBTickByTick: Decodable {
+struct IBTickByTick: Decodable, IBThrottledMarketDataResponse {
 
+	public var requestID: Int
 	public var ticks: [any IBAnyMarketData] = []
 	
 	init(from decoder: Decoder) throws {
 		
 		var container = try decoder.unkeyedContainer()
-		let requestID = try container.decode(Int.self)
+		requestID = try container.decode(Int.self)
 		let time = try container.decode(Double.self)
 		let tickType = try container.decode(Int.self)
 
