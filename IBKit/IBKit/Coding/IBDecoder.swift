@@ -111,7 +111,6 @@ extension IBDecoder {
 			throw IBError.invalidValue("Empty value")
 		}
 
-		
 		if let date = dateDecodingStrategy.dateFormatter.date(from: stringValue) {
 			return date
 		}

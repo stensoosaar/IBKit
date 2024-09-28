@@ -30,6 +30,6 @@ import Foundation
 
 protocol IBConnectionDelegate {
 	func connection(_ connection: IBConnection, didConnect date: String, toServer version: Int)
-	func connection(_ connection: IBConnection, didReceiveData data: Data)
+	func connection(_ connection: IBConnection, didReceiveData data: Data) -> IBServerError?
 	func connection(_ connection: IBConnection, didStopCallback error: Error?)
 }

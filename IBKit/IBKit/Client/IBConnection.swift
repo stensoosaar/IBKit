@@ -34,8 +34,10 @@ class IBConnection {
     enum State: Equatable {
         case initializing
         case connecting(String)
+        case handshake
         case connected
-        case connectedToAPI
+		case broken
+		case lostSubscriptions
         case disconnecting
         case disconnected
     }
@@ -83,12 +85,14 @@ class IBConnection {
             self.state = .connecting("\(host):\(port)")
             bootstrap.connect(host: host, port: port).flatMap { channel in
                 channel.eventLoop.makeSucceededFuture(channel)
-            }.whenComplete { result in
+            }.whenComplete { [weak self] result in
+				guard let self = self else { return }
+
                 switch result {
                 case .success(let channel):
                     self.lock.withLock {
                         self.channel = channel
-                        self.state = .connected
+                        self.state = .handshake
                     }
                 case .failure(let failure):
                     self.connectionDidFail(error: failure)
@@ -117,7 +121,12 @@ class IBConnection {
     }
     
     public func receiveMessage(_ data: Data) {
-        if state == .connected {
+		
+		if debugMode {
+			print("\(Date()) -> \(String(data:data, encoding: .utf8)) ")
+		}
+		
+        if state == .handshake {
             guard let separator = "\0".data(using: .utf8),
                 let range = data.range(of: separator),
                 let versionString = String(data: data.subdata(in: 0..<range.lowerBound),encoding: .utf8),
@@ -127,9 +136,22 @@ class IBConnection {
                 return
             }
             self.delegate?.connection(self, didConnect: connectionTime, toServer: serverVersion)
-            self.state = .connectedToAPI
-        } else if state == .connectedToAPI {
-            self.delegate?.connection(self, didReceiveData: data)
+            self.state = .connected
+        } else if state == .connected {
+			if let error = self.delegate?.connection(self, didReceiveData: data) {
+				
+				switch error.code {
+				case 1100:  	print(error)
+				case 1101:		print(error)
+				case 1102:		print(error)
+				case 1103:		print(error)
+				default: 		break
+				}
+				
+				
+				
+			}
+			
         }
     }
     
@@ -143,16 +165,20 @@ class IBConnection {
             print("initializing")
         case .connecting(let string):
             print("connecting:", string)
-        case .connected:
-            print("connected")
+        case .handshake:
+            print("performing handshake")
             start()
+		case .connected:
+			print("connected")
         case .disconnecting:
             print("disconnecting")
         case .disconnected:
             print("disconnected")
-        case .connectedToAPI:
-            print("connected to API")
-        }
+		case .broken:
+			print("connected but server connection is broken")
+		case .lostSubscriptions:
+			print("connection resumed but data lost")
+		}
         stateDidChangeCallback?(state)
     }
     
@@ -166,7 +192,7 @@ class IBConnection {
     
     public func disconnectSocket() -> EventLoopFuture<Void> {
         self.lock.withLock {
-            if .connected != self.state {
+            if .handshake != self.state {
                 return self.group.next().makeFailedFuture(ClientError.notReady)
             }
             guard let channel = self.channel else {

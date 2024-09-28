@@ -9,13 +9,13 @@ import Foundation
 
 
 
-public struct IBServerError: IBResponse, IBIndexedEvent, Error {
+public struct IBServerError: IBResponse, IBIndexedEvent {
 	public let requestID: Int
 	public let code: Int
 	public let message: String
 	public let userInfo: String?
 	
-	public init(requestID: Int, code: Int, message: String, userInfo: String? = nil){
+	public init(requestID: Int, code: Int, message: String, userInfo: String? = nil) {
 		self.requestID = requestID
 		self.code = code
 		self.message = message
@@ -33,7 +33,7 @@ public struct IBServerError: IBResponse, IBIndexedEvent, Error {
 		self.requestID = try container.decode(Int.self)
 		self.code = try container.decode(Int.self)
 		self.message = try container.decode(String.self)
-		self.userInfo = serverVersion >= IBServerVersion.ADVANCED_ORDER_REJECT ? try container.decode(String.self) : nil
+		self.userInfo = serverVersion >= IBServerVersion.ADVANCED_ORDER_REJECT ? try container.decodeOptional(String.self) : nil
 		
 	}
 	

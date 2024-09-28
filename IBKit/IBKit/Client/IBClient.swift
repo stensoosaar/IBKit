@@ -31,10 +31,10 @@ import NIOConcurrencyHelpers
 import NIOPosix
 
 open class IBClient: IBAnyClient, IBRequestWrapper {
-    
+	
     internal let subject = PassthroughSubject<IBEvent,Never>()
 	
-    lazy public var eventFeed = subject.share().eraseToAnyPublisher()
+    lazy public var responses = subject.share().eraseToAnyPublisher()
 	
 	private var requestQueue = PassthroughSubject<IBRequest,Never>()
     
@@ -140,7 +140,7 @@ open class IBClient: IBAnyClient, IBRequestWrapper {
 	
 	/// Disconnect client from IB Gateway or Workstation
 	public func disconnect() {
-		guard let connection else { return }
+		guard let connection = connection else { return }
 		connection.disconnect()
 		self.connection = nil
 		subject.send(completion: .finished)
@@ -154,7 +154,7 @@ open class IBClient: IBAnyClient, IBRequestWrapper {
 	
 	private func stateDidChange(to state: IBConnection.State) {
 		switch state {
-		case .connectedToAPI:
+		case .connected:
 			do {
 				try self.startAPI()
 			} catch {
@@ -188,20 +188,35 @@ open class IBClient: IBAnyClient, IBRequestWrapper {
 	lazy public var pendingRequestCountPublisher = pendingRequestCountSubject.share().eraseToAnyPublisher()
 	
 	func addRequest(_ request: IBRequest) {
-		if let throttledRequest = request as? IBThrottledMarketDataRequest {
-			pendingRequests.append(throttledRequest)
+		if let request = request as? IBThrottledMarketDataRequest {
+			if debugMode{
+				print("adding request \(request.requestID)")
+			}
+			pendingRequests.append(request)
 			publishRequestCount()
 		}
 	}
 	
 	func removeRequest(_ response: IBResponse) {
-		if let event = response as? IBThrottledMarketDataResponse{
-			pendingRequests.removeAll { $0.requestID == event.requestID }
+		if let response = response as? IBThrottledMarketDataResponse{
+			if debugMode{
+				print("removing request \(response.requestID)")
+			}
+			pendingRequests.removeAll { $0.requestID == response.requestID }
+			publishRequestCount()
+		} else if let error = response as? IBServerError {
+			if debugMode {
+				print("removing error \(error.requestID)")
+			}
+			pendingRequests.removeAll { $0.requestID == error.requestID }
 			publishRequestCount()
 		}
 	}
 	
 	private func publishRequestCount() {
+		if debugMode{
+			print("pending requests: \(pendingRequests.count)")
+		}
 		pendingRequestCountSubject.send(pendingRequests.count)
 	}
 	
