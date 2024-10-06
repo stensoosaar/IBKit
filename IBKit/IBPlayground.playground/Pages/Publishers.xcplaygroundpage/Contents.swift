@@ -178,7 +178,7 @@ class SimulatedBroker {
 	
 	init(id: Int){
 		api = IBClient.paper(id: id)
-		api.debugMode = false
+		api.debugMode = true
 	}
 	
 	func connect(){
@@ -198,7 +198,7 @@ class SimulatedBroker {
 	
 	func subscribeAccountUpdates(){
 		
-		api.eventFeed.sink { completion in
+		api.responses.sink { completion in
 			print(completion)
 		} receiveValue: { accountEvent in
 			switch accountEvent{
@@ -232,7 +232,7 @@ class SimulatedBroker {
 		let request = IBPriceHistoryRequest(requestID: requestID, contract: contract, size: size, source: source, lookback: interval, extendedTrading: extendedSession)
 		try api.send(request: request)
 		
-		return AnyPublisher(self.api.eventFeed
+		return AnyPublisher(self.api.responses
 			.setFailureType(to: BrokerError.self)
 			.compactMap { $0 as? IBIndexedEvent }
 			.filter { $0.requestID == requestID }
@@ -271,7 +271,7 @@ class SimulatedBroker {
 		
 		return Future { promise in
 			self.subscriptions.append(
-				self.api.eventFeed
+				self.api.responses
 					.setFailureType(to: BrokerError.self)
 					.compactMap { $0 as? IBIndexedEvent }
 					.filter { $0.requestID == requestID }
@@ -317,7 +317,7 @@ class SimulatedBroker {
 		let request = IBRealTimeBarRequest(requestID: requestID, contract: contract, source: source, extendedTrading: extendedSession)
 		try api.send(request: request)
 			
-		return AnyPublisher( api.eventFeed
+		return AnyPublisher( api.responses
 			.setFailureType(to: BrokerError.self)
 			.compactMap { $0 as? IBIndexedEvent }
 			.filter { $0.requestID == requestID }
@@ -352,7 +352,7 @@ class SimulatedBroker {
 		let request = IBMarketDataRequest(requestID: requestID, contract: contract)
 		try api.send(request: request)
 		
-		return AnyPublisher( api.eventFeed
+		return AnyPublisher( api.responses
 			.setFailureType(to: BrokerError.self)
 			.compactMap { $0 as? IBIndexedEvent }
 			.filter { $0.requestID == requestID }
@@ -391,7 +391,7 @@ class SimulatedBroker {
 		
 		return Future { promise in
 			self.subscriptions.append(
-				self.api.eventFeed
+				self.api.responses
 					.setFailureType(to: BrokerError.self)
 					.compactMap { $0 as? IBIndexedEvent }
 					.filter { $0.requestID == requestID }
@@ -428,7 +428,7 @@ class SimulatedBroker {
 		let requestID = broker.api.nextRequestID
 		try api.placeOrder(requestID, order: order)
 		
-		return AnyPublisher( api.eventFeed
+		return AnyPublisher( api.responses
 			.setFailureType(to: BrokerError.self)
 			.compactMap { $0 as? IBIndexedEvent }
 			.filter { $0.requestID == requestID }
@@ -476,8 +476,8 @@ try broker.validateContract(contract)
 
 
 
-let interval = DateInterval.lookback(10, unit: .minute, until: Date.distantFuture)
-try broker.priceUpdatePublisher(interval, size: .minute, contract: contract)
+let interval1 = DateInterval.lookback(10, unit: .minute, until: Date.distantFuture)
+try broker.priceUpdatePublisher(interval1, size: .minute, contract: contract)
 	.sink { completion in
 		print(completion)
 	} receiveValue: { response in
@@ -509,8 +509,8 @@ do {
 
 
 
-let interval = DateInterval.lookback(1, unit: .weekOfYear, until: Date(year:2023, month:12, day:31))
-try broker.priceHistoryPublisher(interval, size: IBBarSize.hour, contract: contract)
+let interval2 = DateInterval.lookback(1, unit: .weekOfYear, until: try Date(year:2023, month:12, day:31))
+try broker.priceHistoryPublisher(interval2, size: IBBarSize.hour, contract: contract)
 	.sink { completion in
 		print(completion)
 	} receiveValue: { response in

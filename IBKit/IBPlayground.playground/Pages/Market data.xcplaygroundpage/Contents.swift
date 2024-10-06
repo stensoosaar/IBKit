@@ -27,7 +27,7 @@
 	
 	var subscriptions: [AnyCancellable] = []
 
-	client.eventFeed.sink (
+	client.responses.sink (
 		receiveCompletion: { completion in
 			PlaygroundPage.current.finishExecution()
 		}, receiveValue: { response in

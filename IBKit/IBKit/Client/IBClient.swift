@@ -71,7 +71,7 @@ open class IBClient: IBAnyClient, IBRequestWrapper {
 	
 	private var requestMonitor: Cancellable?
 	
-	private var maxRequestsPerSecond = 50
+	private var maxRequestsPerSecond = 40
     
     
     /// Creates new api client.
@@ -119,9 +119,11 @@ open class IBClient: IBAnyClient, IBRequestWrapper {
 		// tws api accpets max 50 requests per second
 		requestMonitor = requestQueue.buffer(size: .max, prefetch: .byRequest, whenFull: .dropNewest)
 			.flatMap(maxPublishers: .max(1)) {
-				Just($0).delay(for: .milliseconds(requestInterval), scheduler: DispatchQueue.main)
+				print("...delaying")
+				return Just($0).delay(for: .milliseconds(requestInterval), scheduler: DispatchQueue.main)
 			}
 			.tryMap({ request -> Data in
+				print("...Mapping")
 				let encoder = IBEncoder(self.serverVersion)
 				try encoder.encode(request)
 				let data = encoder.data
@@ -132,6 +134,7 @@ open class IBClient: IBAnyClient, IBRequestWrapper {
 		   .sink(receiveCompletion: { completion in
 			   print(completion)
 		   }, receiveValue: { requestData in
+			   print("...sending")
 			   self.connection?.send(data: requestData)
 		   })
 		

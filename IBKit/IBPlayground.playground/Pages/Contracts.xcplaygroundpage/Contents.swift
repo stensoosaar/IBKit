@@ -64,7 +64,7 @@ The OCC options symbol can be used to define an option contract in the API throu
 
 
 let watchlist: [IBContract] = [
-	//forex,
+	forex,
 	aapl,
 	//dax,
 	//cfd,
@@ -82,17 +82,18 @@ let watchlist: [IBContract] = [
 
 
 let client = IBClient.paper(id: 0)
-client.connect()
+client.debugMode = true
+try client.connect()
 var cancellables: [AnyCancellable] = []
 
-client.eventFeed
+client.responses
 	.compactMap({$0 as? IBContractDetails})
 	.sink{print($0)}
 	.store(in: &cancellables)
 
 for contract in watchlist{
 	let index = client.nextRequestID
-	client.contractDetails(index, contract: contract)
+	try client.contractDetails(index, contract: contract)
 }
 
 client.disconnect()
