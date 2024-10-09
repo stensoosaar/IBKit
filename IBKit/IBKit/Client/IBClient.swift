@@ -114,16 +114,13 @@ open class IBClient: IBAnyClient, IBRequestWrapper {
 		connection.debugMode = debugMode
 		self.connection = connection
 		
-		let requestInterval: Int = 1/maxRequestsPerSecond * 1000
 		
 		// tws api accpets max 50 requests per second
 		requestMonitor = requestQueue.buffer(size: .max, prefetch: .byRequest, whenFull: .dropNewest)
 			.flatMap(maxPublishers: .max(1)) {
-				print("...delaying")
-				return Just($0).delay(for: .milliseconds(requestInterval), scheduler: DispatchQueue.main)
+				Just($0).delay(for: .milliseconds(20), scheduler: DispatchQueue.main)
 			}
 			.tryMap({ request -> Data in
-				print("...Mapping")
 				let encoder = IBEncoder(self.serverVersion)
 				try encoder.encode(request)
 				let data = encoder.data
