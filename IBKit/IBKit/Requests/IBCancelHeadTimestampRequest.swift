@@ -15,7 +15,7 @@ public struct IBCancelHeadTimestampRequest: IBIndexedRequest {
 	public var type: IBRequestType = .cancelHeadTimestamp
 	public var requestID: Int
 	
-	init(requestID: Int) {
+	public init(requestID: Int) {
 		self.requestID = requestID
 	}
 	
