@@ -32,6 +32,7 @@ public enum IBSecuritiesType: String, Codable {
 	case forex          	= "CASH"
 	case index          	= "IND"
 	case future         	= "FUT"
+	case continousFuture	= "CONTFUT"
 	case debt           	= "BOND"
 	case fund           	= "FUND"
 	case etf            	= "ETF"
@@ -56,6 +57,7 @@ extension IBSecuritiesType: CustomStringConvertible {
 			case .forex:          		return "FOREX"
 			case .index:          		return "INDEX"
 			case .future:         		return "FUTURE"
+			case .continousFuture:		return "CONT. FUTURE"
 			case .debt:           		return "BOND"
 			case .fund:           		return "FUND"
 			case .etf:            		return "ETF"
@@ -90,7 +92,7 @@ extension IBSecuritiesType {
 			case .index:
 				return [.trades, .historicalVolatility, .impliedOptionVolatility, .schedule]
 
-			case .future:
+			case .future, .continousFuture:
 				return [.trades, .midpoint, .bid, .ask, .bidAsk, .schedule]
 
 			case .debt:

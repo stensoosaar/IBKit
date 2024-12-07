@@ -34,10 +34,15 @@ public struct IBTradingHour: Codable {
 	
 	public var close: Date
 	
-	public enum Status: String, Codable {
+	public enum Status: String, Codable, CustomStringConvertible {
 		case closed 	= "CLOSED"
 		case open 		= "OPEN"
 		case halted 	= "HALTED"
+		
+		public var description: String{
+			return self.rawValue
+		}
+		
 	}
 	
 	public var status: Status

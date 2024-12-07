@@ -23,21 +23,24 @@
  you create subscription and assign received events to event handlers...
 */
 	let client = IBClient.paper(id: 999)
-
+	client.debugMode = true
+	
 	var subscriptions: [AnyCancellable] = []
 
 	client.eventFeed.sink (
 		receiveCompletion: { completion in
 			PlaygroundPage.current.finishExecution()
-		}, receiveValue: { anyEvent in
-		
-			switch anyEvent{
+		}, receiveValue: { response in
+			switch response{
 			case let event as IBPriceHistory:
-				event.prices.forEach{print($0)}
+				event.prices.forEach({print($0)})
 				print(String(repeating: "-", count: 30))
 			case let event as IBPriceBarUpdate:
-				print("\(Date()) update", event)
-			default: break
+				print(event.bar)
+			case let event as (any IBAnyMarketData):
+				print(event)
+			default:
+				print(response)
 			}
 		}
 	).store(in: &subscriptions)
@@ -48,6 +51,7 @@
 */
 	do {
 		try client.connect()
+		usleep(1_000_000)
 	} catch {
 		print(error.localizedDescription)
 	}
@@ -59,17 +63,16 @@
 */
 	do {
 		let requestID = client.nextRequestID
-		let cfd = IBContract.cfd("IBUS500", currency: "USD")
-		let crypto = IBContract.crypto("ETH", currency: "USD", exchange: .PAXOS)
-		let lookback = IBDuration.continuousUpdates(60, unit: .second)
-		let resolution = IBBarSize.minute
-		let source = IBBarSource.trades
-		try client.requestPriceHistory(requestID, contract: crypto, barSize: resolution, barSource: source, lookback: lookback)
+		let contract = IBContract.crypto("BTC", currency: "USD")
+		let interval = try DateInterval.lookback(1, unit: .hour, until: .distantFuture)
+		let size = IBBarSize.minute
+		let request = IBPriceHistoryRequest(requestID: requestID, contract: contract, size: size, source: .trades, lookback: interval, extendedTrading: true, includeExpired: false)
+		try client.send(request: request)
 	} catch {
 		print(error.localizedDescription)
 	}
 
-sleep(5)
+sleep(15)
 client.disconnect()
 
 

@@ -1,5 +1,5 @@
 //
-//  IBConnection.swift
+//    IBMessageHandler.swift
 //    IBKit
 //
 //    Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -24,19 +24,21 @@
 import Foundation
 import NIOCore
 
-class IBMessageHandler: ChannelInboundHandler {
-    typealias InboundIn = ByteBuffer
-    typealias InboundOut = ByteBuffer
 
-    var messageFrame: (Data) -> Void
-    
-    init(messageFrame: @escaping (Data) -> Void) {
-        self.messageFrame = messageFrame
-    }
-    
-    func channelRead(context: ChannelHandlerContext, data: NIOAny) {
-        let buffer = self.unwrapInboundIn(data)
-        let data = Data(buffer.readableBytesView)
-        messageFrame(data)
-    }
+
+class IBMessageHandler: ChannelInboundHandler {
+	typealias InboundIn = ByteBuffer
+	typealias InboundOut = ByteBuffer
+
+	var messageFrame: (Data) -> Void
+	
+	init(messageFrame: @escaping (Data) -> Void) {
+		self.messageFrame = messageFrame
+	}
+	
+	func channelRead(context: ChannelHandlerContext, data: NIOAny) {
+		let buffer = self.unwrapInboundIn(data)
+		let data = Data(buffer.readableBytesView)
+		messageFrame(data)
+	}
 }

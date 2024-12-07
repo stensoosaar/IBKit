@@ -30,6 +30,7 @@ import NIOConcurrencyHelpers
 import NIOPosix
 
 class IBConnection {
+    
     enum State: Equatable {
         case initializing
         case connecting(String)
@@ -47,17 +48,27 @@ class IBConnection {
     }
     
     private var channel: Channel?
+    
     private let group = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
-    private var messageQueue: [Data] = []
+    
     private let lock = NIOLock()
+    
     private(set) var state = State.initializing {
         didSet {
             stateDidChange(to: state)
         }
     }
+
+	var didStopCallback: ((Error?) -> Void)? = nil
+    
+    var stateDidChangeCallback: ((IBConnection.State) -> Void)? = nil
+    
+    var delegate: IBConnectionDelegate?
+	
+	public var debugMode: Bool = false
     
     init(host: String, port: Int) throws {
-        try lock.withLock {
+        lock.withLock {
             assert(.initializing == self.state)
             
             let bootstrap = ClientBootstrap(group: self.group)
@@ -70,7 +81,7 @@ class IBConnection {
                 }
             
             self.state = .connecting("\(host):\(port)")
-            try bootstrap.connect(host: host, port: port).flatMap { channel in
+            bootstrap.connect(host: host, port: port).flatMap { channel in
                 channel.eventLoop.makeSucceededFuture(channel)
             }.whenComplete { result in
                 switch result {
@@ -86,19 +97,23 @@ class IBConnection {
         }
     }
     
-    
     deinit {
         assert(.disconnected == self.state)
         delegate = nil
         channel = nil
     }
-    
-    var didStopCallback: ((Error?) -> Void)? = nil
-    var stateDidChangeCallback: ((IBConnection.State) -> Void)? = nil
-    var delegate: IBConnectionDelegate?
      
     func send(data: Data) {
-        send(data: data, isSystemMessage: false)
+		if debugMode {
+			print("\(Date()) <- \(String(data:data, encoding: .utf8)) ")
+		}
+
+        guard let channel else { return }
+        var buffer = channel.allocator.buffer(capacity: data.count)
+        buffer.writeBytes(data)
+        channel
+            .writeAndFlush(buffer)
+            .whenComplete { _ in }
     }
     
     public func receiveMessage(_ data: Data) {
@@ -111,8 +126,8 @@ class IBConnection {
             else {
                 return
             }
-            self.state = .connectedToAPI
             self.delegate?.connection(self, didConnect: connectionTime, toServer: serverVersion)
+            self.state = .connectedToAPI
         } else if state == .connectedToAPI {
             self.delegate?.connection(self, didReceiveData: data)
         }
@@ -120,15 +135,6 @@ class IBConnection {
     
     func disconnect() {
         stop(error: nil)
-    }
-    
-    private func flushMessageQueue() {
-        lock.withLock {
-            while !messageQueue.isEmpty {
-                let data = messageQueue.removeFirst()
-                send(data: data)
-            }
-        }
     }
     
     private func stateDidChange(to state: IBConnection.State) {
@@ -146,7 +152,6 @@ class IBConnection {
             print("disconnected")
         case .connectedToAPI:
             print("connected to API")
-            flushMessageQueue()
         }
         stateDidChangeCallback?(state)
     }
@@ -179,7 +184,7 @@ class IBConnection {
     }
     
     private func start() {
-        send(data: createGreeting(), isSystemMessage: true)
+        send(data: createGreeting())
     }
     
     private func stop(error: Error?) {
@@ -193,21 +198,6 @@ class IBConnection {
             
             self.didStopCallback = nil
         }
-    }
-    
-    private func send(data: Data, isSystemMessage: Bool) {
-        guard let channel else { return }
-        guard isSystemMessage || state == .connectedToAPI else {
-            lock.withLockVoid {
-                messageQueue.append(data)
-            }
-            return
-        }
-        var buffer = channel.allocator.buffer(capacity: data.count)
-        buffer.writeBytes(data)
-        channel
-            .writeAndFlush(buffer)
-            .whenComplete { _ in }
     }
     
     private func createGreeting() -> Data {

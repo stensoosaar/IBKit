@@ -28,6 +28,21 @@
 import Foundation
 
 
+public protocol IBRequest: IBEncodable {
+	var type: IBRequestType			{ get }
+}
+
+
+public protocol IBIndexedRequest: IBRequest {
+	var requestID: Int				{ get }
+}
+
+
+public protocol IBResponse: IBDecodable{
+	
+}
+
+
 public protocol IBEvent { }
 
 public protocol IBIndexedEvent: IBEvent {
