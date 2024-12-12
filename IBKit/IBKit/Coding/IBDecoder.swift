@@ -52,7 +52,8 @@ public class IBDecoder {
 		case tradingHourFormat			= "yyyyMMdd:HHmm"
 		case timeConditionFormat		= "yyyyMMdd HH:mm:ss zzz"
 		case eodPriceHistoryFormat 		= "yyyyMMdd"
-		case defaultFormat 				= "yyyyMMdd-HH:mm:ss"
+        case defaultFormat              = "yyyyMMdd-HH:mm:ss"
+        case historicalNewsFormat       = "yyyy-MM-dd HH:mm:ss.S"
 
 		public var dateFormatter: DateFormatter {
 			let dateFormatter = DateFormatter()
@@ -126,7 +127,7 @@ extension IBDecoder {
 			return Date(timeIntervalSince1970: timestamp)
 		}
 		
-		throw IBClientError.decodingError("cant unwrap date from \(stringValue), cursor: \(cursor)  \(buffer)")
+        throw IBClientError.decodingError("cant unwrap date from \(stringValue) using format \(dateDecodingStrategy), cursor: \(cursor)  \(buffer)")
 		
 	}
 

@@ -22,6 +22,7 @@ public struct IBHistoricalNews: IBResponse, IBIndexedEvent {
 	public var headline: String
 	
 	public init(from decoder: IBDecoder) throws {
+        decoder.dateDecodingStrategy = .historicalNewsFormat
 		var container = try decoder.unkeyedContainer()
 		requestID = try container.decode(Int.self)
 		date = try container.decode(Date.self)
