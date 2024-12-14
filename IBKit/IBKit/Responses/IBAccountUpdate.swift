@@ -8,9 +8,9 @@
 import Foundation
 
 
-public struct IBAccountUpdate: IBResponse, IBEvent {
+public struct IBAccountUpdate: IBResponse, IBEvent, Sendable {
 	
-	public enum AccountKey: String, Codable {
+	public enum AccountKey: String, Codable, Sendable {
 		
 		///The account ID number
 		case AccountCode						= "AccountCode"

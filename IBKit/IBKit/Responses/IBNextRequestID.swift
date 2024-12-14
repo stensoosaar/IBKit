@@ -30,7 +30,7 @@ import Foundation
 
 
 
-public struct IBNextRequestID: IBResponse, IBEvent {
+public struct IBNextRequestID: IBResponse, IBEvent, Sendable {
 
 	public let value: Int
 	

@@ -8,19 +8,19 @@
 import Foundation
 
 
-public struct IBOrderStatus: IBResponse, IBIndexedEvent {
+public struct IBOrderStatus: IBResponse, IBIndexedEvent, Sendable {
 	
-	public var requestID: Int
-	public var status: IBOrder.Status
-	public var filled: Double
-	public var remaining: Double
-	public var avgFillPrice: Double
-	public var permID: Int
-	public var parentID: Int
-	public var lastFillPrice: Double
-	public var clientID: Int
-	public var whyHeld: String
-	public var mktCapPrice: Double?
+	public let requestID: Int
+	public let status: IBOrder.Status
+	public let filled: Double
+	public let remaining: Double
+	public let avgFillPrice: Double
+	public let permID: Int
+	public let parentID: Int
+	public let lastFillPrice: Double
+	public let clientID: Int
+	public let whyHeld: String
+	public let mktCapPrice: Double?
 	
 	public init(from decoder: IBDecoder) throws {
 		
@@ -44,10 +44,7 @@ public struct IBOrderStatus: IBResponse, IBIndexedEvent {
 		lastFillPrice = try container.decode(Double.self)
 		clientID = try container.decode(Int.self)
 		whyHeld = try container.decode(String.self)
-		
-		if serverVersion >= IBServerVersion.MARKET_CAP_PRICE {
-			mktCapPrice = try container.decode(Double.self)
-		}
+		mktCapPrice = serverVersion >= IBServerVersion.MARKET_CAP_PRICE ? try container.decode(Double.self) : nil
 	}
 	
 	

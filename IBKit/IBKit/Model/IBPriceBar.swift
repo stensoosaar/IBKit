@@ -31,7 +31,7 @@ import Foundation
 
 
 
-public enum IBBarSource: String, Encodable {
+public enum IBBarSource: String, Encodable, Sendable {
 	case trades						= "TRADES"
 	case midpoint					= "MIDPOINT"
 	case bid						= "BID"
@@ -52,7 +52,7 @@ public enum IBBarSource: String, Encodable {
 
 
 
-public struct IBPriceBar: Decodable {
+public struct IBPriceBar: Decodable , Sendable{
 	
 	public var date: Date
 	public var open: Double

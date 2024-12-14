@@ -9,12 +9,12 @@ import Foundation
 
 
 
-public struct IBNewsBulletin: IBResponse, IBEvent {
+public struct IBNewsBulletin: IBResponse, IBEvent, Sendable {
 	
-	public var messageID: Int
-	public var messageType: Int
-	public var message: String
-	public var source: String
+	public let messageID: Int
+	public let messageType: Int
+	public let message: String
+	public let source: String
 	
 	
 	public init(from decoder: IBDecoder) throws {

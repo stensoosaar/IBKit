@@ -30,7 +30,7 @@ import Foundation
 
 
 
-public struct IBScanningQuery {
+public struct IBScanningQuery: Sendable {
 		
 	/// The instrument's type for the scan. I.e. STK, FUT.HK, etc.
 	public var instrument: String?

@@ -8,16 +8,16 @@
 import Foundation
 
 
-public struct IBMarketRule: IBResponse, IBEvent {
+public struct IBMarketRule: IBResponse, IBEvent, Sendable {
 	
-	var marketRuleId: Int
+	public var marketRuleId: Int
 	
-	struct PriceIncrement: IBDecodable {
+	public struct PriceIncrement: IBDecodable, Sendable {
 		var lowerBound: Double
 		var step: Double
 	}
 	
-	var values: [PriceIncrement] = []
+	public var values: [PriceIncrement] = []
 	
 	public init(from decoder: IBDecoder) throws {
 		

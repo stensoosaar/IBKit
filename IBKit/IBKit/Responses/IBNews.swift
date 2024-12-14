@@ -8,14 +8,14 @@
 import Foundation
 
 
-public struct IBNews: IBResponse, IBEvent {
+public struct IBNews: IBResponse, IBEvent, Sendable {
 	
-	public var tickerID: Int
-	public var date: Date
-	public var providerCode: String
-	public var articleId: String
-	public var headline: String
-	public var extraData: String
+	public let tickerID: Int
+	public let date: Date
+	public let providerCode: String
+	public let articleId: String
+	public let headline: String
+	public let extraData: String
 
 	public init(from decoder: IBDecoder) throws {
 		var container = try decoder.unkeyedContainer()

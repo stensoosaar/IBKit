@@ -27,7 +27,7 @@ import Foundation
 
 
 
-public struct IBPositionPNL: IBResponse, IBIndexedEvent {
+public struct IBPositionPNL: IBResponse, IBIndexedEvent, Sendable {
 	
 	public var requestID: Int
 	public var contractID: Int?

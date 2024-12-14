@@ -27,7 +27,7 @@
 import Foundation
 
 
-public enum IBExchange: String, Codable {	
+public enum IBExchange: String, Codable, Sendable {	
 	
 	/// Interactive Brokers Smart Routing seeks the best firm price and to immediately execute an order electronically
 	case SMART 					= "SMART"

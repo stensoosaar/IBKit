@@ -20,7 +20,7 @@ public protocol IBAnyMarketDepth: IBResponse, IBIndexedEvent{
 }
 
 
-public struct IBMarketDepth: IBAnyMarketDepth{
+public struct IBMarketDepth: IBAnyMarketDepth, Sendable{
 	
 	public let requestID: Int
 	public let position: Int
@@ -46,7 +46,7 @@ public struct IBMarketDepth: IBAnyMarketDepth{
 
 
 
-public struct IBMarketDepthLevel2: IBAnyMarketDepth{
+public struct IBMarketDepthLevel2: IBAnyMarketDepth, Sendable{
 	
 	public let requestID: Int
 	public let position: Int

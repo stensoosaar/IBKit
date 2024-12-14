@@ -8,7 +8,7 @@
 import Foundation
 
 
-public struct IBCommissionReport: IBResponse, IBEvent  {
+public struct IBCommissionReport: IBResponse, IBEvent, Sendable {
 	
 	public var executionID: String
 	public var commission: Double

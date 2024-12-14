@@ -14,7 +14,7 @@ import Foundation
 ///
 /// A private agreement between two parties allowing for one party to swap a futures contract for the actual underlying asse
 
-struct IBEFPEvent: IBResponse, IBIndexedEvent {
+struct IBEFPEvent: IBResponse, IBIndexedEvent, Sendable {
 	
 	public var requestID: Int
 	

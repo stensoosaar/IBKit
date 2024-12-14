@@ -8,13 +8,13 @@
 import Foundation
 
 
-public struct IBOptionChain: IBResponse, IBIndexedEvent {
+public struct IBOptionChain: IBResponse, IBIndexedEvent, Sendable {
 	
-	public var requestID: Int
-	public var exchange: String
-	public var underlyingContractId: Int
-	public var tradingClass : String
-	public var multiplier: String
+	public let requestID: Int
+	public let exchange: String
+	public let underlyingContractId: Int
+	public let tradingClass : String
+	public let multiplier: String
 	public var expirations: [Date] = []
 	public var strikes: [Double] = []
 

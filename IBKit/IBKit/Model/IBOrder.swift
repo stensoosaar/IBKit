@@ -30,9 +30,9 @@ import Foundation
 
 
 
-public struct IBOrder {
+public struct IBOrder: Sendable {
 	
-	public enum Status: String, Codable {
+	public enum Status: String, Codable, Sendable {
 		case apiPending 			= "ApiPending"
 		case apiCancelled			= "ApiCancelled"
 		case preSubmitted			= "PreSubmitted"
@@ -45,7 +45,7 @@ public struct IBOrder {
 		case unknown				= "Unknown"
 	}
 	
-	public struct OrderState: IBCodable {
+	public struct OrderState: IBCodable, Sendable {
 		
 		public var status: IBOrder.Status
 		public var initMarginBefore: Double?
@@ -124,7 +124,7 @@ public struct IBOrder {
 	/// The number of positions being bought/sold.
 	public var totalQuantity: Double = 0
 	
-	public enum OrderType: String, Codable {
+	public enum OrderType: String, Codable, Sendable {
 		case MARKET                 = "MKT"
 		case LIMIT        	        = "LMT"
 		case STOP                   = "STP"
@@ -177,7 +177,7 @@ public struct IBOrder {
 	/// Generic field to contain the stop price for STP LMT orders, trailing amount, etc.
 	public var auxPrice: Double?
 	
-	public enum TimeInForce: String, Codable {
+	public enum TimeInForce: String, Codable, Sendable {
 		
 		/// Valid for the day only.
 		case day 					= "DAY"
@@ -213,7 +213,7 @@ public struct IBOrder {
 	/// One-Cancels-All group identifier.
 	public var ocaGroup:String?            // one cancels all group name
 	
-	public enum OCAType: Int, Codable {
+	public enum OCAType: Int, Codable, Sendable {
 		
 		/// Cancel all remaining orders with block.
 		case cancelBlock 			= 1
@@ -249,7 +249,7 @@ public struct IBOrder {
 	/// The publicly disclosed order size, used when placing Iceberg orders.
 	public var displaySize: Int?
 	
-	public enum TriggerMethod: Int, Codable {
+	public enum TriggerMethod: Int, Codable, Sendable {
 				
 		/// stop orders are triggered based on two consecutive bid or ask prices.
 		case doubleBidAsk 			= 1
@@ -287,7 +287,7 @@ public struct IBOrder {
 	/// The trade's "Good Till Date," format "YYYYMMDD hh:mm:ss (optional time zone)".
 	public var goodTillDate:Date?
 	
-	public enum Rule80A: String, Codable {
+	public enum Rule80A: String, Codable, Sendable {
 		case individual				= "I"
 		case agency					= "A"
 		case agentOtherMember		= "W"
@@ -343,7 +343,7 @@ public struct IBOrder {
 	/// Used only when short sale slot is set to 2 (which means that the shares to short are held elsewhere and not with IB).
 	public var designatedLocation: String?
 	
-	public enum OpenClose:String, Codable{
+	public enum OpenClose:String, Codable, Sendable{
 		case open 				= "O"
 		case close 				= "C"
 	}
@@ -353,7 +353,7 @@ public struct IBOrder {
 	/// When Action = "BUY" and OpenClose = "C" this will close an existing short position.
 	public var openClose: OpenClose?
 	
-	public enum Origin: Int, Codable {
+	public enum Origin: Int, Codable, Sendable {
 		case customer 			= 0
 		case firm 				= 1
 		case unknown 			= 2
@@ -363,7 +363,7 @@ public struct IBOrder {
 	public var origin: Origin = .customer
 	
 	/// For institutions only. Valid values are: 1 (broker holds shares) or 2 (shares come from elsewhere).
-	public enum Custody: Int, Codable {
+	public enum Custody: Int, Codable, Sendable {
 		case broker 			= 1
 		case external 			= 2
 	}
@@ -395,7 +395,7 @@ public struct IBOrder {
 	
 	//MARK:  -BOX exchange orders only
 	
-	public enum AuctionStrategy: Int, Codable {
+	public enum AuctionStrategy: Int, Codable , Sendable{
 		case unset				= 0
 		case match				= 1
 		case improvement		= 2
@@ -431,7 +431,7 @@ public struct IBOrder {
 	
 	//MARK: -VOLATILITY ORDERS ONLY
 	
-	public enum VolaitilityType: Int, Codable {
+	public enum VolaitilityType: Int, Codable, Sendable {
 		case daily 				= 1
 		case annual 			= 2
 	}
@@ -473,7 +473,7 @@ public struct IBOrder {
 	
 	public var continuousUpdate:Bool = false
 	
-	public enum ReferencePriceType: Int, Codable{
+	public enum ReferencePriceType: Int, Codable, Sendable {
 		case average 				= 1
 		case bidOrAsk 				= 2
 	}
@@ -518,7 +518,7 @@ public struct IBOrder {
 	
 	//MARK: -HEDGE ORDERS
 	
-	public enum HedgeType: String, Codable {
+	public enum HedgeType: String, Codable, Sendable{
 		case delta				= "D"
 		case beta 				= "B"
 		case forex 				= "F"
@@ -553,7 +553,7 @@ public struct IBOrder {
 	
 	/// For exeuction-only clients to know where do they want their shares to be cleared at.
 	/// Valid values are: IB, Away, and PTA (post trade allocation).
-	public enum ClearingIntent: String, Codable {
+	public enum ClearingIntent: String, Codable, Sendable {
 		case ib						= "IB"
 		case away					= "Away"
 		case postTradeAllocation 	= "PTA"
@@ -563,7 +563,7 @@ public struct IBOrder {
 	
 	//MARK: -ALGO ORDERS ONLY
 	
-	public enum AlgoStrategy: String, Codable {
+	public enum AlgoStrategy: String, Codable, Sendable {
 		case arrivalPrive 					= "arrivalPx"
 		case darkIce 						= "DarkIce"
 		case volumePercentage 				= "PctVol"
@@ -607,7 +607,7 @@ public struct IBOrder {
 	public var modelCode:String?
 	
 	
-	public struct SoftDollarTier: IBCodable {
+	public struct SoftDollarTier: IBCodable, Sendable {
 		
 		var value: String
 		var name: String
@@ -640,7 +640,7 @@ public struct IBOrder {
 	
 	//MARK: -order combo legs
 	
-	public struct ComboLeg: IBCodable {
+	public struct ComboLeg: IBCodable, Sendable {
 		
 		/// The order's leg's price.
 		public var price:Double

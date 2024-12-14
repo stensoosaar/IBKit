@@ -9,7 +9,7 @@ import Foundation
 
 
 
-struct IBOptionComputation: IBResponse, IBIndexedEvent{
+struct IBOptionComputation: IBResponse, IBIndexedEvent, Sendable {
 	
 	public var requestID: Int
 	
@@ -33,7 +33,7 @@ struct IBOptionComputation: IBResponse, IBIndexedEvent{
 	
 	public var underlyingPrice: Double?
 	
-	public enum CalculationBase: Int, Codable {
+	public enum CalculationBase: Int, Codable, Sendable {
 		case returnBased 	= 0
 		case priceBased		= 1
 	}

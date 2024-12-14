@@ -9,9 +9,9 @@ import Foundation
 
 
 
-public struct IBContractSearchResult: IBResponse, IBEvent {
+public struct IBContractSearchResult: IBResponse, IBEvent, Sendable {
 	
-	public struct Contract: IBDecodable {
+	public struct Contract: IBDecodable, Sendable {
 		
         public let contractID: Int
         public let symbol: String

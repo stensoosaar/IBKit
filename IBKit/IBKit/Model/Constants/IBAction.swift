@@ -26,7 +26,7 @@
 
 import Foundation
 
-public enum IBAction: String, Codable {
+public enum IBAction: String, Codable, Sendable {
 	
 	//Opening long position or closing short position
 	case buy 		= "BUY"

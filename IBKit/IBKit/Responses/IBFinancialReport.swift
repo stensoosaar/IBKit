@@ -9,11 +9,11 @@ import Foundation
 
 
 
-public struct IBFinancialReport: IBResponse, IBIndexedEvent {
+public struct IBFinancialReport: IBResponse, IBIndexedEvent, Sendable {
 	
-	public var requestID: Int
+	public let requestID: Int
 
-	public var content: String
+	public let content: String
 	
 	public init(from decoder: IBDecoder) throws {
 		

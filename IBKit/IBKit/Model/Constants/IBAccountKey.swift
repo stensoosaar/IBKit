@@ -29,7 +29,7 @@
 import Foundation
 
 
-public enum IBAccountKey: String, CaseIterable, Codable {
+public enum IBAccountKey: String, CaseIterable, Codable, Sendable {
 	
 	///Identifies the IB account structure
 	case accountType 				= "AccountType"

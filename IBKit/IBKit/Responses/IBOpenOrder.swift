@@ -31,7 +31,7 @@ import Foundation
 
 
 
-public struct IBOpenOrder: IBResponse, IBIndexedEvent {
+public struct IBOpenOrder: IBResponse, IBIndexedEvent, Sendable {
 	
 	public var requestID: Int {
 		return order.orderID
@@ -56,7 +56,7 @@ public struct IBOpenOrder: IBResponse, IBIndexedEvent {
 
 
 
-public struct IBOpenOrderEnd: IBResponse, IBEvent{
+public struct IBOpenOrderEnd: IBResponse, IBEvent, Sendable{
 	
 	public init(from decoder: IBDecoder) throws {
 		var container = try decoder.unkeyedContainer()

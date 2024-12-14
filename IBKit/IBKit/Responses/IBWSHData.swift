@@ -8,16 +8,16 @@
 import Foundation
 
 
-public struct IBWSHData: IBResponse, IBEvent {
+public struct IBWSHData: IBResponse, IBEvent, Sendable{
 	
-	public var contractID: Int
-	public var filter: String
-	public var fillWatchlist: Bool
-	public var fillPortfolio: Bool
-	public var fillCompetitors: Bool
-	public var startDate: Date
-	public var endDate: Date
-	public var totalLimit: Int
+	public let contractID: Int
+	public let filter: String
+	public let fillWatchlist: Bool
+	public let fillPortfolio: Bool
+	public let fillCompetitors: Bool
+	public let startDate: Date
+	public let endDate: Date
+	public let totalLimit: Int
 	
 	
 	public init(from decoder: IBDecoder) throws {

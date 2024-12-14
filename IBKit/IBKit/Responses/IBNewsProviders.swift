@@ -8,7 +8,7 @@
 import Foundation
 
 
-public struct IBNewsProviders: IBResponse, IBEvent {
+public struct IBNewsProviders: IBResponse, IBEvent, Sendable {
 	
 	public var values: [String:String] = [:]
 	

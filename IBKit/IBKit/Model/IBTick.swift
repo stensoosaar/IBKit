@@ -9,7 +9,7 @@ import Foundation
 
 
 
-public enum IBTickAttribute: String, IBDecodable {
+public enum IBTickAttribute: String, IBDecodable, Sendable {
 	
 	/// The Bid price is lower than the day's lowest value or the ask price is higher than the highest ask.
 	case pastLimit 			= "pastLimit"
@@ -38,7 +38,7 @@ extension String: IBDecodable {}
 
 
 
-public struct IBTick: IBAnyMarketData{
+public struct IBTick: IBAnyMarketData, Sendable{
 	
 	public typealias ResultType = Double
 	
@@ -49,7 +49,7 @@ public struct IBTick: IBAnyMarketData{
 
 }
 
-public struct IBTickTimestamp: IBAnyMarketData {
+public struct IBTickTimestamp: IBAnyMarketData, Sendable {
 	public typealias TickValue = TimeInterval
 	public var requestID: Int
 	public var type: IBTickType
@@ -59,7 +59,7 @@ public struct IBTickTimestamp: IBAnyMarketData {
 
 
 
-public struct IBTickExchange: IBAnyMarketData {
+public struct IBTickExchange: IBAnyMarketData, Sendable{
 	public typealias TickValue = String
 	public var requestID: Int
 	public var type: IBTickType
@@ -68,9 +68,9 @@ public struct IBTickExchange: IBAnyMarketData {
 
 
 
-public struct IBDividend: IBAnyMarketData {
+public struct IBDividend: IBAnyMarketData, Sendable {
 	
-	public struct Report: IBDecodable {
+	public struct Report: IBDecodable, Sendable {
 		public var paidDividends: String?
 		public var expectedDividends: String?
 		public var nextDividendDate: String?
@@ -99,9 +99,9 @@ public struct IBDividend: IBAnyMarketData {
 }
 
 
-public struct IBRealTimeSales: IBAnyMarketData{
+public struct IBRealTimeSales: IBAnyMarketData, Sendable{
 	
-	public struct LastTrade: IBDecodable {
+	public struct LastTrade: IBDecodable, Sendable {
 		public var timestamp: String?
 		public var price: String?
 		public var size: String?
@@ -136,9 +136,9 @@ public struct IBRealTimeSales: IBAnyMarketData{
 
 
 
-public struct IBTradingStatus: IBAnyMarketData{
+public struct IBTradingStatus: IBAnyMarketData, Sendable{
 	
-	public enum Status: Int, IBDecodable {
+	public enum Status: Int, IBDecodable, Sendable {
 		case unknown 			= -1
 		case active  			= 0
 		case generalHalt 		= 1
@@ -153,7 +153,7 @@ public struct IBTradingStatus: IBAnyMarketData{
 
 
 
-public struct IBShortable: IBAnyMarketData{
+public struct IBShortable: IBAnyMarketData, Sendable{
 	
 	public typealias TickValue = Double
 	public let requestID: Int

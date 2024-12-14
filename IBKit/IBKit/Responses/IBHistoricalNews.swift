@@ -9,17 +9,17 @@ import Foundation
 
 
 
-public struct IBHistoricalNews: IBResponse, IBIndexedEvent {
+public struct IBHistoricalNews: IBResponse, IBIndexedEvent, Sendable {
 	
-	public var requestID: Int
+	public let requestID: Int
 	
-	public var date: Date
+	public let date: Date
 	
-	public var providerCode: String
+	public let providerCode: String
 	
-	public var articleId: String
+	public let articleId: String
 	
-	public var headline: String
+	public let headline: String
 	
 	public init(from decoder: IBDecoder) throws {
         decoder.dateDecodingStrategy = .historicalNewsFormat
@@ -34,11 +34,11 @@ public struct IBHistoricalNews: IBResponse, IBIndexedEvent {
 }
 
 
-public struct IBHistoricalNewsEnd: IBResponse, IBIndexedEvent {
+public struct IBHistoricalNewsEnd: IBResponse, IBIndexedEvent, Sendable {
 	
-	public var requestID: Int
+	public let requestID: Int
 	
-	public var hasMore: Bool
+	public let hasMore: Bool
 	
 	public init(from decoder: IBDecoder) throws {
 		var container = try decoder.unkeyedContainer()

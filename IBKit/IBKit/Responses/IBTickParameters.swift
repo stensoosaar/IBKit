@@ -8,12 +8,12 @@
 import Foundation
 
 
-public struct IBTickParameters: IBResponse, IBIndexedEvent {
+public struct IBTickParameters: IBResponse, IBIndexedEvent, Sendable{
 	
-	public var requestID: Int
-	public var tickSize: Double
-	public var BBOExchange: String
-	public var snapshotPermissions: Int
+	public let requestID: Int
+	public let tickSize: Double
+	public let BBOExchange: String
+	public let snapshotPermissions: Int
 	
 	public init(from decoder: IBDecoder) throws {
 		var container = try decoder.unkeyedContainer()

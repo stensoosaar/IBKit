@@ -8,7 +8,7 @@
 import Foundation
 
 
-public struct IBAccountUpdateTime: IBResponse, IBEvent {
+public struct IBAccountUpdateTime: IBResponse, IBEvent, Sendable {
 	
 	public var timmestamp: Date
 	

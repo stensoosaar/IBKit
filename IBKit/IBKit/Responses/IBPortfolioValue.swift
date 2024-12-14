@@ -9,7 +9,7 @@ import Foundation
 
 
 
-public struct IBPortfolioValue: IBResponse, IBEvent {
+public struct IBPortfolioValue: IBResponse, IBEvent, Sendable {
 	
 	public let contract: IBContract
 	public let position: Double

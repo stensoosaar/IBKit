@@ -9,7 +9,7 @@ import Foundation
 
 
 
-public struct IBServerError: IBResponse, IBIndexedEvent, Error {
+public struct IBServerError: IBResponse, IBIndexedEvent, Error, Sendable {
 	public let requestID: Int
 	public let code: Int
 	public let message: String

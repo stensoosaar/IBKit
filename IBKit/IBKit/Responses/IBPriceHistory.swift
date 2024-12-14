@@ -9,7 +9,7 @@ import Foundation
 
 
 
-public struct IBPriceHistory: IBResponse, IBIndexedEvent {
+public struct IBPriceHistory: IBResponse, IBIndexedEvent, Sendable {
 	
 	public var requestID: Int
 	public var interval: DateInterval

@@ -27,13 +27,13 @@ import Foundation
 
 
 
-public struct IBNewsArticle: IBResponse, IBIndexedEvent {
+public struct IBNewsArticle: IBResponse, IBIndexedEvent, Sendable {
 	
-	public var requestID: Int
+	public let requestID: Int
 	
-	public var articleType: Int
+	public let articleType: Int
 	
-	public var articleText: String
+	public let articleText: String
 		
 	public init(from decoder: IBDecoder) throws {
 		var container = try decoder.unkeyedContainer()

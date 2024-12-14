@@ -12,11 +12,11 @@ import Foundation
 /**
  First data point date for respective contract / bar source combination
  */
-public struct IBHeadTimestamp: IBResponse, IBIndexedEvent {
+public struct IBHeadTimestamp: IBResponse, IBIndexedEvent, Sendable {
 	
-	public var requestID: Int
+	public let requestID: Int
 	
-	public var date: Date
+	public let date: Date
 		
 	public init(from decoder: IBDecoder) throws {
 		var container = try decoder.unkeyedContainer()

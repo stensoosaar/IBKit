@@ -28,7 +28,7 @@
 import Foundation
 
 
-public enum IBResponseType: Int, IBDecodable {
+public enum IBResponseType: Int, IBDecodable, Sendable {
 	case TICK_PRICE                					= 1
 	case TICK_SIZE                 					= 2
 	case ORDER_STATUS              					= 3

@@ -9,7 +9,7 @@ import Foundation
 
 
 
-public struct IBPosition: IBResponse, IBEvent {
+public struct IBPosition: IBResponse, IBEvent, Sendable {
 	  
 	public var accountName: String
 	public var contract: IBContract
@@ -28,7 +28,7 @@ public struct IBPosition: IBResponse, IBEvent {
 }
 
 
-public struct IBPositionEnd: IBResponse, IBEvent {
+public struct IBPositionEnd: IBResponse, IBEvent, Sendable {
 	
 	public var requestID: Int
 	
@@ -41,7 +41,7 @@ public struct IBPositionEnd: IBResponse, IBEvent {
 
 
 
-public struct IBPositionMulti: IBResponse, IBIndexedEvent {
+public struct IBPositionMulti: IBResponse, IBIndexedEvent, Sendable {
 
 	public var requestID: Int
 	public var account: String
@@ -64,7 +64,7 @@ public struct IBPositionMulti: IBResponse, IBIndexedEvent {
 }
 
 
-public struct IBPositionMultiEnd: IBResponse, IBIndexedEvent {
+public struct IBPositionMultiEnd: IBResponse, IBIndexedEvent, Sendable {
 	
 	public var requestID: Int
 	

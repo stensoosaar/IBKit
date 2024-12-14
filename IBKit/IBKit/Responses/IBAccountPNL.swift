@@ -8,7 +8,7 @@
 import Foundation
 
 
-public struct IBAccountPNL: IBResponse, IBIndexedEvent {
+public struct IBAccountPNL: IBResponse, IBIndexedEvent, Sendable {
 	
 	public var requestID: Int
 	public var daily: Double

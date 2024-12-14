@@ -28,9 +28,9 @@
 import Foundation
 
 
-public struct IBManagedAccounts: IBResponse, IBEvent {
+public struct IBManagedAccounts: IBResponse, IBEvent, Sendable {
 	
-	public var identifiers: [String]
+	public let identifiers: [String]
 	
 	public init(from decoder: IBDecoder) throws {
 		var container = try decoder.unkeyedContainer()

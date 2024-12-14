@@ -29,7 +29,7 @@
 import Foundation
 
 
-public struct IBContractDetails: IBResponse, IBIndexedEvent {
+public struct IBContractDetails: IBResponse, IBIndexedEvent, Sendable {
 	
 	public var requestID: Int
 	

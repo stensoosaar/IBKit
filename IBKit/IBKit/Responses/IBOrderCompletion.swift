@@ -8,7 +8,7 @@
 import Foundation
 
 
-public struct IBOrderCompletion: IBResponse, IBIndexedEvent {
+public struct IBOrderCompletion: IBResponse, IBIndexedEvent, Sendable {
 	
 	
 	public var requestID: Int{
