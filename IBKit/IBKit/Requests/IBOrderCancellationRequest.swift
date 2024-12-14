@@ -8,7 +8,7 @@
 import Foundation
 
 
-public struct IBCancelOrderRequest: IBIndexedRequest {
+public struct IBCancelOrderRequest: IBIndexedRequest, Hashable {
 	
 	public let version: Int = 1
 	public let type: IBRequestType = .cancelOrder

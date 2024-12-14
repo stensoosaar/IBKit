@@ -9,7 +9,7 @@ import Foundation
 
 
 
-public struct IBFundamantalsRequest: IBIndexedRequest {
+public struct IBFundamantalsRequest: IBIndexedRequest, Hashable, Equatable {
 
 	public let version: Int = 2
 	public var type: IBRequestType = .fundamentalData

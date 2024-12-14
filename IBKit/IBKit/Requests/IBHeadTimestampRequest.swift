@@ -8,7 +8,7 @@
 import Foundation
 
 
-public struct IBHeadTimestampRequest: IBIndexedRequest {
+public struct IBHeadTimestampRequest: IBIndexedRequest, Hashable {
 	
 	public let type: IBRequestType = .headTimestamp
 	public let requestID: Int

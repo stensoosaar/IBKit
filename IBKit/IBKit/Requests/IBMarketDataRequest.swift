@@ -12,7 +12,7 @@ import Foundation
 
 
 
-public struct IBMarketDataRequest: IBIndexedRequest{
+public struct IBMarketDataRequest: IBIndexedRequest, Hashable, Equatable {
 	
 	public enum SubscriptionType: Int, Encodable {
 	case OptionVolume					= 100

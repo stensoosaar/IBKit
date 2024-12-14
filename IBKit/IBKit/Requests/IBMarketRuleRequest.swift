@@ -10,7 +10,7 @@ import Foundation
 
 
 
-public struct IBMarketRuleRequest: IBIndexedRequest {
+public struct IBMarketRuleRequest: IBIndexedRequest, Hashable {
 
 	public var type: IBRequestType = .marketRule
 	public var requestID: Int

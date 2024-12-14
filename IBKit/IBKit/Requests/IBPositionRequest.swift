@@ -11,7 +11,7 @@ import Foundation
 
 
 
-public struct IBMultiPositionRequest: IBIndexedRequest {
+public struct IBMultiPositionRequest: IBIndexedRequest, Hashable {
 	
 	public var version: Int = 1
 	public var type: IBRequestType = .positionsMulti

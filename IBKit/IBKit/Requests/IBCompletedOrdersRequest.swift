@@ -9,7 +9,7 @@ import Foundation
 
 
 
-public struct IBCompletedOrdersRequest: IBRequest{
+public struct IBCompletedOrdersRequest: IBRequest, Hashable {
 	public var type: IBRequestType = .completedOrders
 	public var apiOnly: Bool
 

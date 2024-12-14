@@ -8,7 +8,7 @@
 import Foundation
 
 
-public struct IBContractDetailsRequest: IBIndexedRequest {
+public struct IBContractDetailsRequest: IBIndexedRequest, Hashable {
 	
 	let version: Int = 8
 	public let type: IBRequestType = .contractData

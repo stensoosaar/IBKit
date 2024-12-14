@@ -1,4 +1,12 @@
 //
+//  IBResponse.swift
+//  IBKit
+//
+//  Created by Sten Soosaar on 14.12.2024.
+//
+
+
+//
 //  IBEvent.swift
 //	IBKit
 //
@@ -28,23 +36,14 @@
 import Foundation
 
 
-public protocol IBRequest: IBEncodable {
-	var type: IBRequestType			{ get }
-}
-
-
-public protocol IBIndexedRequest: IBRequest {
-	var requestID: Int				{ get }
-}
-
-
-public protocol IBResponse: IBDecodable{
-	
-}
+public protocol IBResponse: IBDecodable{}
 
 
 public protocol IBEvent { }
 
+
 public protocol IBIndexedEvent: IBEvent {
 	var requestID: Int				{ get }
 }
+
+

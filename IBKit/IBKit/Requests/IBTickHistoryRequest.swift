@@ -8,7 +8,7 @@
 import Foundation
 
 
-public struct IBTickHistoryRequest: IBIndexedRequest {
+public struct IBTickHistoryRequest: IBIndexedRequest, Hashable, Equatable {
 	
 	public enum TickSource: String, Encodable {
 		case trades			= "TRADES"

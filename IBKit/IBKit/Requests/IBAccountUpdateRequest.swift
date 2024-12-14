@@ -8,7 +8,7 @@
 import Foundation
 
 
-public struct IBAccountUpdateRequest: IBRequest {
+public struct IBAccountUpdateRequest: IBRequest, Hashable {
 	
 	public let version: Int = 2
 	public let type: IBRequestType = .managedAccounts

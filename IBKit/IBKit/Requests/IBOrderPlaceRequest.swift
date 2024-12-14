@@ -9,7 +9,7 @@ import Foundation
 
 
 
-public struct IBPlaceOrderRequest: IBIndexedRequest{
+public struct IBPlaceOrderRequest: IBIndexedRequest, Hashable, Equatable {
 	
 	public var type: IBRequestType = .placeOrder
 	public var requestID: Int

@@ -9,7 +9,7 @@ import Foundation
 
 
 
-public struct IBAccountSummaryRequest: IBIndexedRequest{
+public struct IBAccountSummaryRequest: IBIndexedRequest, Hashable {
 	
 	let version: Int = 1
 	public let type: IBRequestType = .accountSummary

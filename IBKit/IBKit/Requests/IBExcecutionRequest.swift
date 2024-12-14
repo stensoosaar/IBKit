@@ -8,7 +8,7 @@
 import Foundation
 
 
-public struct IBExcecutionRequest: IBIndexedRequest{
+public struct IBExcecutionRequest: IBIndexedRequest, Hashable{
 	
 	public let version: Int = 3
 	public let requestID: Int

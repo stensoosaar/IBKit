@@ -8,7 +8,7 @@
 import Foundation
 
 
-public struct IBRealTimeBarRequest: IBIndexedRequest{
+public struct IBRealTimeBarRequest: IBIndexedRequest, Hashable, Equatable {
 	
 	public let version: Int = 3
 	public let requestID: Int

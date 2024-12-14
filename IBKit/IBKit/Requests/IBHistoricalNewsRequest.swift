@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct IBHistoricalNewsRequest: IBIndexedRequest {
+public struct IBHistoricalNewsRequest: IBIndexedRequest, Hashable {
     
     public var requestID: Int
     public var type: IBRequestType = .historicalNews
@@ -45,6 +45,6 @@ public struct IBHistoricalNewsRequest: IBIndexedRequest {
         try container.encode(startDateTime)
         try container.encode(endDateTime)
         try container.encode(totalResults)
-        try encoder.wrapNil()
+		encoder.wrapNil()
     }
 }
