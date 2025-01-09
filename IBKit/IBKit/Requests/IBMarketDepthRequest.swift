@@ -8,7 +8,7 @@
 import Foundation
 
 
-public struct IBMarketDepthExchanges: IBRequest{
+public struct IBMarketDepthExchanges: IBRequest, Hashable{
 	
 	public var type: IBRequestType = .marketDepthExchanges
 	

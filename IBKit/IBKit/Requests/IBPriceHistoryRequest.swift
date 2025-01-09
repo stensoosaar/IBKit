@@ -8,7 +8,7 @@
 import Foundation
 
 
-public struct IBPriceHistoryRequest: IBIndexedRequest, IBEncodable {
+public struct IBPriceHistoryRequest: IBIndexedRequest, IBEncodable, Hashable, Equatable {
 	let version: Int = 6
 	public let type: IBRequestType = .historicalData
 	public let requestID: Int

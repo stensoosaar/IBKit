@@ -9,7 +9,7 @@ import Foundation
 
 
 
-public struct IBOptionChainRequest: IBIndexedRequest {
+public struct IBOptionChainRequest: IBIndexedRequest, Hashable {
 	
 	public var type: IBRequestType = .optionParameters
 	public var requestID: Int

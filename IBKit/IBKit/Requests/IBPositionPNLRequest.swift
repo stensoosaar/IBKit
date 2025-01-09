@@ -8,7 +8,7 @@
 import Foundation
 
 
-public struct IBPositionPNLRequest: IBIndexedRequest {
+public struct IBPositionPNLRequest: IBIndexedRequest, Hashable {
 	
 	public let type: IBRequestType = .singlePNL
 	public let requestID: Int

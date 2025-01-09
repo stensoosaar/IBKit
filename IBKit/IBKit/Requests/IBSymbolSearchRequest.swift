@@ -8,7 +8,7 @@
 import Foundation
 
 
-public struct IBSymbolSearchRequest: IBIndexedRequest {
+public struct IBSymbolSearchRequest: IBIndexedRequest, Hashable {
 	
 	public let type: IBRequestType = .matchingSymbols
 	public let requestID: Int

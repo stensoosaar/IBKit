@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct IBOpenOrderRequest: IBRequest {
+public struct IBOpenOrderRequest: IBRequest, Hashable {
 	
 	public var version: Int
 	public var type: IBRequestType
