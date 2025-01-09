@@ -269,6 +269,12 @@ extension IBClient: IBConnectionDelegate {
             case .HISTORICAL_NEWS_END:
                 let message = try decoder.decode(IBHistoricalNewsEnd.self)
                 self.subject.send(message)
+                
+            case .SCANNER_PARAMETERS:
+                let message = try decoder.decode(IBScannerParameters.self)
+                self.subject.send(message)
+                
+            
 					
 			default:
 				print("Unknown response \(responseType) received: \(String(data:data, encoding: .utf8))")
