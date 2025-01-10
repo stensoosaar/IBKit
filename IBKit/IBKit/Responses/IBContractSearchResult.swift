@@ -9,8 +9,7 @@ import Foundation
 
 
 
-public struct IBContractSearchResult: IBResponse, IBEvent {
-	
+public struct IBContractSearchResult: IBResponse, IBIndexedEvent {
 	public struct Contract: IBDecodable {
 		
         public let contractID: Int
@@ -48,12 +47,11 @@ public struct IBContractSearchResult: IBResponse, IBEvent {
 		}
 	}
 	
-    public let requestId: Int
     public var values: [Contract] = []
-	
+    public var requestID: Int
 	public init(from decoder: IBDecoder) throws {
 		var container = try decoder.unkeyedContainer()
-		requestId = try container.decode(Int.self)
+        requestID = try container.decode(Int.self)
 		let resultCount = try container.decode(Int.self)
 		for _ in 0..<resultCount {
 			let object = try container.decode(Contract.self)
