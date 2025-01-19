@@ -167,9 +167,11 @@ class IBConnection {
     public func disconnectSocket() -> EventLoopFuture<Void> {
         self.lock.withLock {
             if .connected != self.state {
+                self.state = .disconnected
                 return self.group.next().makeFailedFuture(ClientError.notReady)
             }
             guard let channel = self.channel else {
+                self.state = .disconnected
                 return self.group.next().makeFailedFuture(ClientError.notReady)
             }
             self.state = .disconnecting
