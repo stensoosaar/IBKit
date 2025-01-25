@@ -117,14 +117,15 @@ open class IBClient: IBAnyClient, IBRequestWrapper {
 	}
 	
 	public func send(request: IBRequest) throws {
-	
+        guard let connection, connection.state == .connected else {
+            throw IBClientError.failedToSend("Client not connected")
+        }
 		let encoder = IBEncoder(serverVersion)
 		try encoder.encode(request)
 		let data = encoder.data
 		let dataWithLength = data.count.toBytes(size: 4) + data
 		
-		connection?.send(data: dataWithLength)
-
+		connection.send(data: dataWithLength)
 	}
 	
 	
