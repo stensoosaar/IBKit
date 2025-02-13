@@ -117,7 +117,7 @@ open class IBClient: IBAnyClient, IBRequestWrapper {
 	}
 	
 	public func send(request: IBRequest) throws {
-        guard let connection, connection.state == .connected else {
+        guard let connection, [.connected, .connectedToAPI].contains(connection.state) else {
             throw IBClientError.failedToSend("Client not connected")
         }
 		let encoder = IBEncoder(serverVersion)
