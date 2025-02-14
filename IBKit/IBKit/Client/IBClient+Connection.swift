@@ -47,8 +47,13 @@ extension IBClient: IBConnectionDelegate {
 		do {
 			
 			let decoder = IBDecoder(serverVersion)
-			let responseValue = try decoder.decode(Int.self, from: data)
-			let responseType = IBResponseType(rawValue: responseValue)
+
+			guard
+				let responseValue = try? decoder.decode(Int.self, from: data),
+				let responseType = IBResponseType(rawValue: responseValue)
+			else {
+				fatalError("failed to reas response type")
+			}
 			
 			switch responseType {
 					
@@ -273,15 +278,66 @@ extension IBClient: IBConnectionDelegate {
             case .SCANNER_PARAMETERS:
                 let message = try decoder.decode(IBScannerParameters.self)
                 self.subject.send(message)
-                
-            
-					
-			default:
-				print("Unknown response \(responseType) received: \(String(data:data, encoding: .utf8))")
+				
+			case .TICK_SNAPSHOT_END:
+				fatalError("\(responseType)")
+			case .RECEIVE_FA:
+				fatalError("\(responseType)")
+			case .BOND_CONTRACT_DATA:
+				fatalError("\(responseType)")
+			case .SCANNER_DATA:
+				fatalError("\(responseType)")
+			case .DELTA_NEUTRAL_VALIDATION:
+				fatalError("\(responseType)")
+			case .VERIFY_MESSAGE_API:
+				fatalError("\(responseType)")
+			case .VERIFY_COMPLETED:
+				fatalError("\(responseType)")
+			case .DISPLAY_GROUP_LIST:
+				fatalError("\(responseType)")
+			case .DISPLAY_GROUP_UPDATED:
+				fatalError("\(responseType)")
+			case .VERIFY_AND_AUTH_MESSAGE_API:
+				fatalError("\(responseType)")
+			case .VERIFY_AND_AUTH_COMPLETED:
+				fatalError("\(responseType)")
+			case .SOFT_DOLLAR_TIERS:
+				fatalError("\(responseType)")
+			case .FAMILY_CODES:
+				fatalError("\(responseType)")
+			case .MKT_DEPTH_EXCHANGES:
+				fatalError("\(responseType)")
+			case .SMART_COMPONENTS:
+				fatalError("\(responseType)")
+			case .NEWS_ARTICLE:
+				fatalError("\(responseType)")
+			case .TICK_NEWS:
+				fatalError("\(responseType)")
+			case .NEWS_PROVIDERS:
+				fatalError("\(responseType)")
+			case .HISTOGRAM_DATA:
+				fatalError("\(responseType)")
+			case .REROUTE_MKT_DATA_REQ:
+				fatalError("\(responseType)")
+			case .REROUTE_MKT_DEPTH_REQ:
+				fatalError("\(responseType)")
+			case .ORDER_BOUND:
+				fatalError("\(responseType)")
+			case .REPLACE_FA_END:
+				fatalError("\(responseType)")
+			case .WSH_META_DATA:
+				fatalError("\(responseType)")
+			case .WSH_EVENT_DATA:
+				fatalError("\(responseType)")
+			case .HISTORICAL_SCHEDULE:
+				fatalError("\(responseType)")
+			case .USER_INFO:
+				fatalError("\(responseType)")
 			}
 			
 		} catch {
 			print(error.localizedDescription)
+			fatalError()
 		}
 		
 	}

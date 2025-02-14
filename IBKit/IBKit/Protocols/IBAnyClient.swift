@@ -533,6 +533,7 @@ public extension IBRequestWrapper where Self: IBAnyClient {
 				case let event as IBTick: return event
 				case let event as IBTickParameters: return event
 				case let event as IBCurrentMarketDataType: return event
+				case let event as IBTickExchange: return event
 				case let event as IBServerError: throw event
 				default: fatalError("\(#function) uknown event type received\n\(response)")
 				}
