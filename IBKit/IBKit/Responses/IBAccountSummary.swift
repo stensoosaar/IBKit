@@ -8,7 +8,7 @@
 import Foundation
 
 
-public struct IBAccountSummary: IBResponse, IBIndexedEvent {
+public struct IBAccountSummary:  IBResponse, IBIndexedEvent, Sendable, AnyAccountSummary {
 	
 	public var requestID: Int
 	public var accountName: String
@@ -38,7 +38,7 @@ public struct IBAccountSummary: IBResponse, IBIndexedEvent {
 }
 
 
-public struct IBAccountSummaryEnd: IBResponse, IBIndexedEvent {
+public struct IBAccountSummaryEnd:  IBResponse, IBIndexedEvent, Sendable, AnyAccountSummary {
 	
 	public var requestID: Int
 	
@@ -52,7 +52,7 @@ public struct IBAccountSummaryEnd: IBResponse, IBIndexedEvent {
 }
 
 
-public struct IBAccountSummaryMulti: IBResponse, IBIndexedEvent {
+public struct IBAccountSummaryMulti:  IBResponse, IBIndexedEvent, Sendable, AnyAccountSummary {
 
 	public var requestID: Int
 	public var accountName: String
@@ -75,7 +75,7 @@ public struct IBAccountSummaryMulti: IBResponse, IBIndexedEvent {
 }
 
 
-public struct IBAccountSummaryMultiEnd: IBResponse, IBIndexedEvent {
+public struct IBAccountSummaryMultiEnd:  IBResponse, IBIndexedEvent, Sendable, AnyAccountSummary {
 	
 	public var requestID: Int
 

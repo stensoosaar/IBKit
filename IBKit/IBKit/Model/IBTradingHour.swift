@@ -28,13 +28,13 @@
 import Foundation
 
 
-public struct IBTradingHour: Codable {
+public struct IBTradingHour: Codable, Sendable {
 	
 	public var open: Date
 	
 	public var close: Date
 	
-	public enum Status: String, Codable, CustomStringConvertible {
+	public enum Status: String, Codable, CustomStringConvertible, Sendable {
 		case closed 	= "CLOSED"
 		case open 		= "OPEN"
 		case halted 	= "HALTED"

@@ -47,3 +47,54 @@ public protocol IBIndexedEvent: IBEvent {
 }
 
 
+
+
+
+public protocol IBAnyMarketData: IBEvent {
+	
+}
+
+public protocol IBAnyTickData: IBAnyMarketData{
+	
+	associatedtype ResultType: Any
+	
+	var type: IBTickType 			{get}
+	var value: ResultType			{get}
+	
+}
+
+
+
+
+
+public protocol IBAnyPriceObservation {
+	
+}
+
+
+public protocol AnyOrderUpdate{}
+
+
+public protocol AnyAccountSummary{}
+
+
+public protocol AnyAccountUpdate{
+	var accountName: String {get}
+}
+
+
+public protocol AnyContractDetails{
+	var requestID: Int {get}
+}
+
+
+public protocol IBAnyMarketDepth: IBResponse{
+	
+	var requestID: Int 	{ get }
+	var position: Int	{ get }
+	var operation: Int	{ get }
+	var side: Int		{ get }
+	var price: Double	{ get }
+	var size: Double	{ get }
+
+}

@@ -26,7 +26,7 @@
 import Foundation
 
 
-public enum IBBarSize: String, Encodable, CaseIterable{
+public enum IBBarSize: String, Encodable, CaseIterable, Sendable{
 	case second 					= "1 secs"
 	case fiveSeconds 				= "5 secs"
 	case tenSeconds					= "10 secs"

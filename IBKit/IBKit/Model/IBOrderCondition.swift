@@ -34,19 +34,19 @@ import Foundation
 
 
 
-public struct IBOrderCondition: IBCodable {
+public struct IBOrderCondition: IBCodable, Sendable {
 	
-	public enum Connector: Int, Codable, Hashable {
+	public enum Connector: Int, Codable, Hashable, Sendable {
 		case and 					= 1
 		case or 					= 0
 	}
 	
-	public enum Argument: Int, Codable {
+	public enum Argument: Int, Codable, Sendable {
 		case isGreater 				= 1
 		case isLess					= 0
 	}
 	
-	public enum ConditionType: IBCodable {
+	public enum ConditionType: IBCodable, Sendable {
 		case price(_ argument: Argument, price: Double, trigger: IBOrder.TriggerMethod, contractID: Int, exchange: IBExchange)
 		case time(_ argument: Argument, date: Date)
 		case margin(_ argument: Argument, value: Double)

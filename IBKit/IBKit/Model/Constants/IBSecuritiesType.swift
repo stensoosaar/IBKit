@@ -26,7 +26,7 @@
 
 import Foundation
 
-public enum IBSecuritiesType: String, Codable {
+public enum IBSecuritiesType: String, Codable, Sendable {
 	case stock          	= "STK"
 	case option         	= "OPT"
 	case forex          	= "CASH"

@@ -9,7 +9,7 @@ import Foundation
 
 
 
-public struct IBOrderExecution: IBResponse,IBIndexedEvent {
+public struct IBOrderExecution:  IBResponse, IBIndexedEvent, Sendable, AnyOrderUpdate {
 	
 	public var requestID: Int
 	
@@ -49,7 +49,7 @@ public struct IBOrderExecution: IBResponse,IBIndexedEvent {
 	
 	public var modelCode: String?
 	
-	public enum LiquidityType: Int, Decodable {
+	public enum LiquidityType: Int, Decodable, Sendable {
 		case none 				= 0
 		case added 				= 1
 		case removed 			= 2
@@ -103,7 +103,7 @@ public struct IBOrderExecution: IBResponse,IBIndexedEvent {
 }
 
 
-public struct IBOrderExecutionEnd: IBResponse, IBIndexedEvent {
+public struct IBOrderExecutionEnd: IBResponse, IBIndexedEvent, Sendable, AnyOrderUpdate{
 	
 	public var requestID: Int
 	

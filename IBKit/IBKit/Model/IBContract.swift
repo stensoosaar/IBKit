@@ -26,7 +26,7 @@
 
 import Foundation
 
-public struct IBContract: IBCodable {
+public struct IBContract: IBCodable, Sendable {
 	
 	public var id: Int?
 	
@@ -38,7 +38,7 @@ public struct IBContract: IBCodable {
 	
 	public var strike: Double?
 	
-	public enum ExecutionRight: String, Codable {
+	public enum ExecutionRight: String, Codable, Sendable {
 		case call 		= "C"
 		case put 		= "P"
 	}
@@ -61,9 +61,9 @@ public struct IBContract: IBCodable {
 	
 	// Extended fields
 
-	public struct SecurityID: CustomStringConvertible, IBCodable{
+	public struct SecurityID: CustomStringConvertible, IBCodable, Sendable{
 		
-		public enum IdentifierType: String, Codable, CustomStringConvertible {
+		public enum IdentifierType: String, Codable, CustomStringConvertible, Sendable {
 			case CUSIP 			= "CUSIP"
 			case SEDOL			= "SEDOL"
 			case ISIN			= "ISIN"
@@ -120,7 +120,7 @@ public struct IBContract: IBCodable {
 	
 	public var issuerID: String?
 	
-	public struct ComboLeg {
+	public struct ComboLeg: Sendable {
 		
 		var conId: Int
 		
@@ -143,7 +143,7 @@ public struct IBContract: IBCodable {
 	
 	public var comboLegs: [ComboLeg]?
 	
-	public struct DeltaNeutral {
+	public struct DeltaNeutral: Sendable {
 		var conId: Int
 		var delta: Double
 		var price: Double

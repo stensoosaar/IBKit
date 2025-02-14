@@ -145,7 +145,7 @@ extension IBClient: IBConnectionDelegate {
 				self.subject.send(object)
 					
 			case .COMPLETED_ORDERS_END:
-				let object = try decoder.decode(IBOrderCompetionEnd.self)
+				let object = try decoder.decode(IBOrderCompletionEnd.self)
 				self.subject.send(object)
 					
 			case .EXECUTION_DATA:
@@ -208,7 +208,7 @@ extension IBClient: IBConnectionDelegate {
 				
 			case .TICK_REQ_PARAMS:
 				let object = try decoder.decode(IBTickParameters.self)
-				//self.subject.send(object)
+				self.subject.send(object)
 
 			case .NEWS_BULLETINS:
 				let object = try decoder.decode(IBNewsBulletin.self)

@@ -10,7 +10,7 @@ import Foundation
 
 
 
-public struct IBPriceBarUpdate: IBResponse, IBIndexedEvent {
+public struct IBPriceBarUpdate: IBResponse, IBIndexedEvent, Sendable, IBAnyPriceObservation {
 	
 	public var requestID: Int
 	public var bar: IBPriceBar

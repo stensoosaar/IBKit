@@ -29,7 +29,7 @@
 import Foundation
 
 
-public struct IBContractDetails: IBResponse, IBIndexedEvent {
+public struct IBContractDetails:IBResponse, IBIndexedEvent, Sendable, AnyContractDetails {
 	
 	public var requestID: Int
 	
@@ -295,7 +295,7 @@ public struct IBContractDetails: IBResponse, IBIndexedEvent {
 }
 
 
-public struct IBContractDetailsEnd: IBResponse, IBIndexedEvent {
+public struct IBContractDetailsEnd: IBResponse, IBIndexedEvent, Sendable, AnyContractDetails {
 	
 	public var requestID: Int
 	

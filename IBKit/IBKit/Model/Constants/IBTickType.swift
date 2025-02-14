@@ -29,7 +29,7 @@
 import Foundation
 
 
-public enum IBTickType: Int, Codable {
+public enum IBTickType: Int, Codable, Sendable {
 	
 	/// Number of contracts or lots offered at the bid price.
 	case BidSize								= 0

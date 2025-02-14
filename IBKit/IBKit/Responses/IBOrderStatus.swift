@@ -8,7 +8,7 @@
 import Foundation
 
 
-public struct IBOrderStatus: IBResponse, IBIndexedEvent {
+public struct IBOrderStatus: IBResponse, IBIndexedEvent, Sendable, AnyOrderUpdate {
 	
 	public var requestID: Int
 	public var status: IBOrder.Status

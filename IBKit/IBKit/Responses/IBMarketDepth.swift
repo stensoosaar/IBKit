@@ -8,19 +8,8 @@
 import Foundation
 
 
-public protocol IBAnyMarketDepth: IBResponse, IBIndexedEvent{
-	
-	var requestID: Int 	{ get }
-	var position: Int	{ get }
-	var operation: Int	{ get }
-	var side: Int		{ get }
-	var price: Double	{ get }
-	var size: Double	{ get }
 
-}
-
-
-public struct IBMarketDepth: IBAnyMarketDepth{
+public struct IBMarketDepth: IBAnyMarketDepth, Sendable, IBIndexedEvent{
 	
 	public let requestID: Int
 	public let position: Int
@@ -46,7 +35,7 @@ public struct IBMarketDepth: IBAnyMarketDepth{
 
 
 
-public struct IBMarketDepthLevel2: IBAnyMarketDepth{
+public struct IBMarketDepthLevel2: IBAnyMarketDepth, Sendable, IBIndexedEvent{
 	
 	public let requestID: Int
 	public let position: Int

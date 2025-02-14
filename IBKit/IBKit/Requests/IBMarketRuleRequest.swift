@@ -10,19 +10,19 @@ import Foundation
 
 
 
-public struct IBMarketRuleRequest: IBIndexedRequest, Hashable {
+public struct IBMarketRuleRequest: IBRequest, Hashable {
 
 	public var type: IBRequestType = .marketRule
-	public var requestID: Int
+	public var marketRuleID: Int
 
-	public init(requestID: Int){
-		self.requestID = requestID
+	public init(marketRuleID: Int){
+		self.marketRuleID = marketRuleID
 	}
 	
 	public func encode(to encoder: IBEncoder) throws {
 		var container = encoder.unkeyedContainer()
 		try container.encode(type)
-		try container.encode(requestID)
+		try container.encode(marketRuleID)
 	}
 	
 }

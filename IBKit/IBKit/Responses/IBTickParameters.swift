@@ -8,7 +8,7 @@
 import Foundation
 
 
-public struct IBTickParameters: IBResponse, IBIndexedEvent {
+public struct IBTickParameters: IBResponse, IBIndexedEvent, Sendable, IBAnyMarketData {
 	
 	public var requestID: Int
 	public var tickSize: Double

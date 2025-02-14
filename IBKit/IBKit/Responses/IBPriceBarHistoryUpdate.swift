@@ -8,7 +8,7 @@
 import Foundation
 
 
-public struct IBPriceBarHistoryUpdate: IBResponse {
+public struct IBPriceBarHistoryUpdate: IBResponse, IBIndexedEvent, Sendable, IBAnyPriceObservation {
 	
 	public var requestID: Int
 	public var bar: IBPriceBar
