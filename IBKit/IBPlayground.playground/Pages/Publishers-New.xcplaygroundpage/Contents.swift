@@ -9,11 +9,14 @@ import IBKit
 
 var cancelables: [AnyCancellable] = []
 
-let client = IBClient.live(id: 999, type: .workstation)
+class Datasource: IBClient, IBRequestPublisher{}
+
+let client = Datasource(id:999, address:"https://127.0.0.1", port: 7496)
 client.debugMode = true
 
 do{
 	try client.connect()
+	usleep(10000)
 } catch{
 	print(error)
 }

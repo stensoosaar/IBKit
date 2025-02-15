@@ -30,7 +30,8 @@ import NIOCore
 import NIOConcurrencyHelpers
 import NIOPosix
 
-open class IBClient: IBAnyClient, IBRequestWrapper {
+
+open class IBClient: IBAnyClient {
     
     internal var subject = PassthroughSubject<IBEvent,Never>()
     lazy public var eventFeed = subject.share().eraseToAnyPublisher()
@@ -44,6 +45,7 @@ open class IBClient: IBAnyClient, IBRequestWrapper {
     let port: Int
     
     private let dispatchGroup = DispatchGroup()
+	
     var _serverVersion: Int?
     
     public var serverVersion: Int? {
@@ -156,44 +158,3 @@ open class IBClient: IBAnyClient, IBRequestWrapper {
 	
 }
 
-public extension IBClient {
-	enum ConnectionType {
-		case gateway
-		case workstation
-		
-		internal var host: String {
-			"https://127.0.0.1"
-		}
-		
-		internal var liveTradingPort: Int {
-			switch self{
-				case .gateway:        return 4001
-				case .workstation:    return 7496
-			}
-		}
-		
-		internal var simulatedTradingPort: Int {
-			switch self{
-				case .gateway:        return 4002
-				case .workstation:    return 7497
-			}
-		}
-		
-	}
-	
-	/// Creates new live trading client. All orders you send to broker, will be real and executed.
-	/// - Parameter id: Master API ID, set in IB Gateway or Workstation
-	/// - Parameter type: Connection type you are using.
-	
-	static func live(id: Int, type: ConnectionType = .gateway) -> IBClient {
-		IBClient(id: id, address: type.host, port: type.liveTradingPort)
-	}
-	
-	/// Creates new paper trading client, with simulated orders.
-	/// - Parameter id: Master API ID, set in IB Gateway or Workstation
-	/// - Parameter type: Connection type you are using.
-
-	static func paper(id: Int, type: ConnectionType = .gateway) -> IBClient {
-		IBClient(id: id, address: type.host, port: type.simulatedTradingPort)
-	}
-}
