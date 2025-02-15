@@ -21,12 +21,12 @@ do{
 	print(error)
 }
 
-for ticker in ["AAPL","AMZN","MU","META","NVDA","NFLX","GOOGL","TSLA","ARM","BABA"]{
+for ticker in ["BTC"]{
 	
 	let requestID: Int = client.nextRequestID
-	let contract = IBContract.equity(ticker, currency: "USD")
+	let contract = IBContract.crypto(ticker, currency: "USD")
 	
-	client.subscribePriceQuote(requestID, contract: contract, snapshot: false, regulatory: false)
+	try? client.subscribePriceQuote(requestID, contract: contract, snapshot: false, regulatory: false)
 		.sink { completion in
 			print(completion)
 		} receiveValue: { marketdata in

@@ -9,13 +9,13 @@ import Foundation
 
 
 /**
-requst type		 1\0
-version			 6\0
-request id		 10025\0
-type			 1\0
-price			-1.00\0
-size	 		\0
-mask			 1\0
+	"1",
+	"6",
+	"0",
+	"4",
+	"97352.75",
+	"0.00147658",
+	"0"
  */
 
 struct IBTickPrice: Decodable {
@@ -33,12 +33,12 @@ struct IBTickPrice: Decodable {
 		let requestID = try container.decode(Int.self)
 		let type = try container.decode(IBTickType.self)
 		let price = try container.decode(Double.self)
-		
+		let size = try container.decode(Double.self)
+		let mask = try container.decode(Int.self)
+
 		if price == -1 { return }
 
-
 		var attr: [IBTickAttribute] = []
-		let mask = try container.decode(Int.self)
 		
 		if serverVersion >= IBServerVersion.PAST_LIMIT {
 			if mask & 1 != 0 { attr.append(.canAutoExecute)}
@@ -53,8 +53,6 @@ struct IBTickPrice: Decodable {
 		let date = Date()
 		
 		tick.append(IBTick(requestID: requestID, type: type, value: price, date: date))
-
-		let size = try container.decode(Double.self)
 
 		var sizeType: IBTickType?
 		
