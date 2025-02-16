@@ -73,7 +73,7 @@ extension IBDecoder {
 	
 	func readString() throws -> String {
 		guard cursor < buffer.count else {
-			throw IBClientError.decodingError("Premature End Of Data")
+			throw IBError.decodingError("Premature End Of Data")
 		}
 		let value = buffer[cursor]
 		cursor += 1
@@ -84,14 +84,14 @@ extension IBDecoder {
 		switch try unwrap(Int.self) {
 		case 0: return false
 		case 1: return true
-		case let x: throw IBClientError.decodingError("Bool out of range \(x), cursor: \(cursor)  \(buffer)")
+		case let x: throw IBError.decodingError("Bool out of range \(x), cursor: \(cursor)  \(buffer)")
 		}
 	}
 	
 	func unwrap(_ type: Int.Type) throws -> Int {
 		let stringValue = try readString()
 		guard let value = Int(stringValue) else {
-			throw IBClientError.decodingError("cant unwrap Int from \(stringValue), cursor: \(cursor), \(buffer)")
+			throw IBError.decodingError("cant unwrap Int from \(stringValue), cursor: \(cursor), \(buffer)")
 		}
 		return value
 	}
@@ -99,7 +99,7 @@ extension IBDecoder {
 	func unwrap(_ type: Double.Type) throws -> Double {
 		let stringValue = try readString()
 		guard let value = Double(stringValue) else {
-			throw IBClientError.decodingError("cant unwrap double from \(stringValue), cursor: \(cursor)  \(buffer)")
+			throw IBError.decodingError("cant unwrap double from \(stringValue), cursor: \(cursor)  \(buffer)")
 		}
 		return value
 	}
@@ -127,7 +127,7 @@ extension IBDecoder {
 			return Date(timeIntervalSince1970: timestamp)
 		}
 		
-        throw IBClientError.decodingError("cant unwrap date from \(stringValue) using format \(dateDecodingStrategy), cursor: \(cursor)  \(buffer)")
+        throw IBError.decodingError("cant unwrap date from \(stringValue) using format \(dateDecodingStrategy), cursor: \(cursor)  \(buffer)")
 		
 	}
 
@@ -172,7 +172,7 @@ extension IBDecoder {
 	
 	func decode<T:Decodable>(_ type: T.Type, from data: Data) throws -> T {
 		guard let buffer = String(data:data, encoding: .ascii)?.components(separatedBy: separator).dropLast() else {
-			throw IBClientError.decodingError("\(type) not conforming ecodable protocol")
+			throw IBError.decodingError("\(type) not conforming ecodable protocol")
 		}
 		self.buffer = Array(buffer)
 		return try T.init(from: self)

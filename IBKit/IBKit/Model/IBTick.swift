@@ -81,7 +81,7 @@ public struct IBDividend: IBAnyTickData, Sendable, IBIndexedEvent {
 			var container = try decoder.unkeyedContainer()
 			let components = try container.decode(String.self).components(separatedBy: ",")
 			guard components.count == 4  else {
-				throw  IBClientError.decodingError("failed to decode dividend info")
+				throw  IBError.decodingError("failed to decode dividend info")
 			}
 			paidDividends = components[0]
 			expectedDividends = components[1]
@@ -114,7 +114,7 @@ public struct IBRealTimeSales: IBAnyTickData, Sendable, IBIndexedEvent{
 			var container = try decoder.unkeyedContainer()
 			let components = try container.decode(String.self).components(separatedBy: ";")
 			guard components.count == 6  else {
-				throw  IBClientError.decodingError("failed to decode dividend info")
+				throw  IBError.decodingError("failed to decode dividend info")
 			}
 			price = components[0]
 			size = components[1]

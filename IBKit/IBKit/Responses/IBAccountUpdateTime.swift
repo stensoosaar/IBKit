@@ -21,7 +21,7 @@ public struct IBAccountUpdateTime: IBResponse, IBEvent {
 		
 		guard let minuteString = components.first, let minutes = Double(minuteString),
 			let secondsString = components.last, let seconds = Double(secondsString) else {
-			throw IBClientError.decodingError("Unable to parse account update time")
+			throw IBError.decodingError("Unable to parse account update time")
 		}
 		
 		timmestamp = Date().startOfDay.addingTimeInterval(minutes * 60 + seconds)

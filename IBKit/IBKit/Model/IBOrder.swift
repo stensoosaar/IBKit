@@ -74,7 +74,7 @@ public struct IBOrder: Sendable {
 		public init(from decoder: IBDecoder) throws {
 			
 			guard let serverVersion = decoder.serverVersion else {
-				throw IBClientError.decodingError("No server version found. Check the connection!")
+				throw IBError.decodingError("No server version found. Check the connection!")
 			}
 
 			var container = try decoder.unkeyedContainer()
@@ -804,7 +804,7 @@ extension IBOrder: IBCodable {
 	public func encode(to encoder: IBEncoder) throws {
 				
 		guard let serverVersion = encoder.serverVersion else {
-			throw IBClientError.encodingError("Server value expected")
+			throw IBError.encodingError("Server value expected")
 		}
 
 		var container = encoder.unkeyedContainer()
@@ -1190,7 +1190,7 @@ extension IBOrder: IBCodable {
 		let version: Int = 45
 		
 		guard let serverVersion = decoder.serverVersion else {
-			throw IBClientError.decodingError("server version not present")
+			throw IBError.decodingError("server version not present")
 		}
 		
 		var container = try decoder.unkeyedContainer()

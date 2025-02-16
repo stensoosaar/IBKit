@@ -105,7 +105,7 @@ extension IBEncoder {
 	
 	func wrap(_ value: any RawRepresentable) throws {
 		guard let rawValue = value.rawValue as? Encodable else {
-			throw IBClientError.encodingError("enum raw value is not encodable type")
+			throw IBError.encodingError("enum raw value is not encodable type")
 		}
 		try encode(rawValue)
 	}
@@ -135,7 +135,7 @@ extension IBEncoder {
 		case let value as any RawRepresentable: 	try wrap(value)
 		case let value as IBEncodable:				try value.encode(to: self)
 		default:
-			throw IBClientError.encodingError("no conforming \(encodable) type to IBEncodable")
+			throw IBError.encodingError("no conforming \(encodable) type to IBEncodable")
 			
 		}
 	}

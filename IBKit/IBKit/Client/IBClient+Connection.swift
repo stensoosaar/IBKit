@@ -59,7 +59,7 @@ extension IBClient: IBConnectionDelegate {
 					
 			case .ERR_MSG:
 				let object = try decoder.decode(IBServerError.self)
-				subject.send(object)
+				dispatchError(object)
 					
 			case .NEXT_VALID_ID:
 				let object = try decoder.decode(IBNextRequestID.self)
@@ -342,29 +342,33 @@ extension IBClient: IBConnectionDelegate {
 		
 	}
 	
-	func dispatchError(_ error: IBServerError){
+	func dispatchError(_ response: IBServerError){
 
-		switch error.code{
+		switch response.error.code{
 		case 1100:
-			print("connectivity error: \(error.code) \(error.message)")
+			print("connectivity error: \(response.error.code) \(response.error.message)")
+			subject.send(response)
 		case 1101:
-			print("connectivity error: \(error.code) \(error.message)")
+			print("connectivity error: \(response.error.code) \(response.error.message)")
+			subject.send(response)
 		case 1102:
-			print("connectivity error: \(error.code) \(error.message)")
+			print("connectivity error: \(response.error.code) \(response.error.message)")
+			subject.send(response)
 		case 1300:
-			print("connectivity error: \(error.code) \(error.message)")
+			print("connectivity error: \(response.error.code) \(response.error.message)")
+			subject.send(response)
 		case 2100...2169:
-			print("warning message: \(error.code) \(error.message)")
+			print("warning message: \(response.error.code) \(response.error.message)")
 		case 501...504:
-			print("client error: \(error.code) \(error.message)")
+			print("client error: \(response.error.code) \(response.error.message)")
 		case 100...449:
-			print("tws error: \(error.code) \(error.message)")
-			subject.send(error)
+			print("tws error: \(response.error.code) \(response.error.message)")
+			subject.send(response)
 		case 10000...10284:
-			print("tws error: \(error.code) \(error.message)")
-			subject.send(error)
+			print("tws error: \(response.error.code) \(response.error.message)")
+			subject.send(response)
 		default:
-			print("Unknown error received: \(error.code) \(error.message)" )
+			print("Unknown error received: \(response.error.code) \(response.error.message)" )
 		}
 		
 	}

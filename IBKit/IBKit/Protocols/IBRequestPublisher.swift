@@ -76,7 +76,7 @@ public protocol IBRequestPublisher {
 	
 	func unsubscribePositionsMulti(_ requestID: Int) throws
 	
-	func subscribePositionPNL(_ requestID: Int, accountName: String, contract: IBContract, modelCode: [String]) throws -> AnyPublisher<IBPositionPNL,IBServerError>
+	func subscribePositionPNL(_ requestID: Int, accountName: String, contract: IBContract, modelCode: [String]) throws -> AnyPublisher<IBPositionPNL,IBError>
 
 	
 	// MARK: - MARKET DATA
@@ -88,7 +88,7 @@ public protocol IBRequestPublisher {
 	/// - Parameter barSource: data type to build a bar
 	/// - Parameter extendedTrading: use only data from regular trading hours
 	/// - Returns: FirstDatapoint event
-	func firstDatapointDate(_ requestID: Int, contract: IBContract, barSource: IBBarSource, extendedTrading: Bool) throws -> Future<IBHeadTimestamp, IBServerError>
+	func firstDatapointDate(_ requestID: Int, contract: IBContract, barSource: IBBarSource, extendedTrading: Bool) throws -> Future<IBHeadTimestamp, IBError>
 
 	
 	/// Requests historic prices and continues updates for contract
@@ -100,7 +100,7 @@ public protocol IBRequestPublisher {
 	/// - Parameter extendedTrading: shall data from extended trading hours be included or not
 	/// - Returns: PriceHistory event. If IBDuration continousUpdates selected, also PriceBar event of requested resolution will be included as they occur
 	
-	func subscribePriceHistory(_ requestID: Int, contract: IBContract, barSize size: IBBarSize, barSource: IBBarSource, lookback: DateInterval, extendedTrading: Bool, includeExpired: Bool) throws -> AnyPublisher<IBAnyPriceObservation, IBServerError>
+	func subscribePriceHistory(_ requestID: Int, contract: IBContract, barSize size: IBBarSize, barSource: IBBarSource, lookback: DateInterval, extendedTrading: Bool, includeExpired: Bool) throws -> AnyPublisher<IBAnyPriceObservation, IBError>
 
 	/// Requests real time bars with duration of 5 second
 	/// - Parameter reqId: request ID
@@ -109,12 +109,12 @@ public protocol IBRequestPublisher {
 	/// - Parameter lookback: date interval of request.
 	/// - Parameter extendedTrading: shall data from extended trading hours be included or not
 	/// - Returns: PriceHistory event. If IBDuration continousUpdates selected, also PriceBar event of requested resolution will be included as they occur
-	//func requestPriceHistory(_ requestID: Int, contract: IBContract, barSize size: IBBarSize, barSource: IBBarSource, lookback: DateInterval, extendedTrading: Bool, includeExpired: Bool) throws -> Future<IBPriceHistory, IBServerError>
+	//func requestPriceHistory(_ requestID: Int, contract: IBContract, barSize size: IBBarSize, barSource: IBBarSource, lookback: DateInterval, extendedTrading: Bool, includeExpired: Bool) throws -> Future<IBPriceHistory, IBError>
 	
 	
-	func subscribeRealTimeBar(_ requestID: Int, contract: IBContract,  barSource: IBBarSource, extendedTrading: Bool) throws -> AnyPublisher<IBPriceBarUpdate, IBServerError>
+	func subscribeRealTimeBar(_ requestID: Int, contract: IBContract,  barSource: IBBarSource, extendedTrading: Bool) throws -> AnyPublisher<IBPriceBarUpdate, IBError>
 	
-	//func requestMarketData(_ requestID: Int, contract:IBContract, events: [IBMarketDataRequest.SubscriptionType], snapshot: Bool, regulatory: Bool) throws -> AnyPublisher<any IBAnyMarketData,IBServerError>
+	//func requestMarketData(_ requestID: Int, contract:IBContract, events: [IBMarketDataRequest.SubscriptionType], snapshot: Bool, regulatory: Bool) throws -> AnyPublisher<any IBAnyMarketData,IBError>
 	
 	
 	/// subscribes live quote events including bid / ask / last trade and respective sizes
@@ -123,17 +123,17 @@ public protocol IBRequestPublisher {
 	/// - Parameter snapshot:
 	/// - Parameter regulatory:
 	
-	func subscribePriceQuote(_ requestID: Int, contract: IBContract, snapshot: Bool, regulatory: Bool) throws -> AnyPublisher<any IBAnyMarketData,IBServerError>
+	func subscribePriceQuote(_ requestID: Int, contract: IBContract, snapshot: Bool, regulatory: Bool) throws -> AnyPublisher<any IBAnyMarketData,IBError>
 		
 	func unsubscribeMarketData(_ requestID: Int) throws
 	
 	
-	func subscribeMarketDepth(_ requestID: Int, contract: IBContract, rows: Int, smart: Bool) throws -> AnyPublisher<IBMarketDepth,IBServerError>
+	func subscribeMarketDepth(_ requestID: Int, contract: IBContract, rows: Int, smart: Bool) throws -> AnyPublisher<IBMarketDepth,IBError>
 
 	func unsubscribeMarketDepth(_ requestID: Int) throws
 	
 	
-	func requestTickByTick(_ requestID: Int, contract: IBContract, tickType: IBTickRequest.TickType, tickCount: Int, ignoreSize: Bool) throws -> AnyPublisher<any IBAnyMarketData, IBServerError>
+	func requestTickByTick(_ requestID: Int, contract: IBContract, tickType: IBTickRequest.TickType, tickCount: Int, ignoreSize: Bool) throws -> AnyPublisher<any IBAnyMarketData, IBError>
 	
 	
 	func cancelTickByTickData(_ requestID: Int) throws
@@ -151,7 +151,7 @@ public protocol IBRequestPublisher {
 	func historicalTicks(_ requestID: Int, contract: IBContract, numberOfTicks: Int, interval: DateInterval, whatToShow: IBTickHistoryRequest.TickSource, useRth: Bool, ignoreSize: Bool) throws
 	
 	
-	func subscribeNews(_ requestID: Int, contract: IBContract, snapshot: Bool, regulatory: Bool) throws -> AnyPublisher<IBNews,IBServerError>
+	func subscribeNews(_ requestID: Int, contract: IBContract, snapshot: Bool, regulatory: Bool) throws -> AnyPublisher<IBNews,IBError>
 
 
 	// MARK: - ORDERS
@@ -173,7 +173,7 @@ public protocol IBRequestPublisher {
 	/// - requestID: Request id
 	/// - oredr: IBOrder object
 	/// - Returns: IBOpenOrder, IBOrderStatus, IBOrderExecution
-	func placeOrder(_ requestID: Int, order: IBOrder) throws -> AnyPublisher<AnyOrderUpdate,IBServerError>
+	func placeOrder(_ requestID: Int, order: IBOrder) throws -> AnyPublisher<AnyOrderUpdate,IBError>
 
 	func cancelAllOrders() throws
 	
@@ -185,11 +185,11 @@ public protocol IBRequestPublisher {
 	//MARK: - CONTRACTS
 	
 	
-	func searchSymbols(_ requestID: Int, nameOrSymbol text: String) throws -> Future<IBContractSearchResult,IBServerError>
+	func searchSymbols(_ requestID: Int, nameOrSymbol text: String) throws -> Future<IBContractSearchResult,IBError>
 	
-	func contractDetails(_ requestID: Int, contract: IBContract) throws -> Future<AnyContractDetails,IBServerError>
+	func contractDetails(_ requestID: Int, contract: IBContract) throws -> Future<AnyContractDetails,IBError>
 	
-	func subscribeFundamentals(_ requestID: Int, contract: IBContract, reportType: IBFundamantalsRequest.ReportType) throws -> Future<IBFinancialReport,IBServerError>
+	func subscribeFundamentals(_ requestID: Int, contract: IBContract, reportType: IBFundamantalsRequest.ReportType) throws -> Future<IBFinancialReport,IBError>
 
 	func unsubscribeFundamentals(_ requestID: Int) throws
 	
@@ -200,7 +200,7 @@ public protocol IBRequestPublisher {
 	/// - underlying: underlying contract. symbol, type and contractID are required
 	/// - exchange: exhange where options are traded. leaving empty will return all exchanges.
 	
-	func optionChain(_ requestID: Int, underlying contract: IBContract, exchange: IBExchange) throws -> AnyPublisher<IBOptionChain,IBServerError>
+	func optionChain(_ requestID: Int, underlying contract: IBContract, exchange: IBExchange) throws -> AnyPublisher<IBOptionChain,IBError>
 	
 }
 
@@ -209,22 +209,22 @@ public protocol IBRequestPublisher {
 public extension IBRequestPublisher where Self: IBAnyClient {
 	
 	
-	func optionChain(_ requestID: Int, underlying contract: IBContract, exchange: IBExchange) throws  -> AnyPublisher<IBOptionChain,IBServerError> {
+	func optionChain(_ requestID: Int, underlying contract: IBContract, exchange: IBExchange) throws  -> AnyPublisher<IBOptionChain,IBError> {
 		let request = IBOptionChainRequest(requestID: requestID, underlying: contract, exchange: exchange)
 		try send(request: request)
 		
 		return AnyPublisher(self.eventFeed
-			.setFailureType(to: IBServerError.self)
+			.setFailureType(to: IBError.self)
 			.compactMap { $0 as? IBIndexedEvent }
 			.filter { $0.requestID == requestID }
 			.tryMap{ response -> IBOptionChain in
 				switch response {
 				case let event as IBOptionChain: return event
-				case let event as IBServerError: throw event
+				case let event as IBServerError: throw event.error
 				default: fatalError("\(#function) uknown event type received")
 				}
 			}
-			.mapError { $0 as! IBServerError }
+			.mapError { $0 as! IBError }
 			.eraseToAnyPublisher()
 		)
 		
@@ -379,7 +379,7 @@ public extension IBRequestPublisher where Self: IBAnyClient {
 		try send(request: request)
 	}
 
-	func firstDatapointDate(_ requestID: Int, contract: IBContract, barSource: IBBarSource = .trades , extendedTrading: Bool = false) throws -> Future<IBHeadTimestamp, IBServerError>{
+	func firstDatapointDate(_ requestID: Int, contract: IBContract, barSource: IBBarSource = .trades , extendedTrading: Bool = false) throws -> Future<IBHeadTimestamp, IBError>{
 		
 		let request = IBHeadTimestampRequest(requestID: requestID, contract: contract, source: barSource, extendedTrading: extendedTrading)
 		try send(request: request)
@@ -387,17 +387,17 @@ public extension IBRequestPublisher where Self: IBAnyClient {
 		return Future { promise in
 			var cancellable: AnyCancellable?
 			cancellable = self.eventFeed
-				.setFailureType(to: IBServerError.self)
+				.setFailureType(to: IBError.self)
 				.compactMap { $0 as? IBIndexedEvent }
 				.filter { $0.requestID == requestID }
 				.tryMap{ response -> IBHeadTimestamp in
 					switch response {
 					case let event as IBHeadTimestamp: return event
-					case let event as IBServerError: throw event
+					case let event as IBServerError: throw event.error
 					default: fatalError("\(#function) uknown event type received")
 					}
 				}
-				.mapError { $0 as! IBServerError }
+				.mapError { $0 as! IBError }
 				.sink { completion in
 					switch completion {
 					case .failure(let error):
@@ -439,7 +439,7 @@ public extension IBRequestPublisher where Self: IBAnyClient {
 		
 	}
 
-	func requestPriceHistory(_ requestID: Int, contract: IBContract, barSize size: IBBarSize, barSource: IBBarSource, lookback: DateInterval, extendedTrading: Bool = false, includeExpired: Bool = false) throws -> AnyPublisher<IBAnyPriceObservation, IBServerError> {
+	func requestPriceHistory(_ requestID: Int, contract: IBContract, barSize size: IBBarSize, barSource: IBBarSource, lookback: DateInterval, extendedTrading: Bool = false, includeExpired: Bool = false) throws -> AnyPublisher<IBAnyPriceObservation, IBError> {
 		
 		let request = IBPriceHistoryRequest(
 			requestID: requestID,
@@ -454,39 +454,39 @@ public extension IBRequestPublisher where Self: IBAnyClient {
 		try send(request: request)
 		
 		return AnyPublisher(self.eventFeed
-			.setFailureType(to: IBServerError.self)
+			.setFailureType(to: IBError.self)
 			.compactMap { $0 as? IBIndexedEvent }
 			.filter { $0.requestID == requestID }
 			.tryMap{ response -> IBAnyPriceObservation in
 				switch response {
 				case let event as IBPriceHistory: return event
 				case let event as IBPriceBarUpdate: return event
-				case let event as IBServerError: throw event
+				case let event as IBServerError: throw event.error
 				default: fatalError("\(#function) uknown event type received")
 				}
 			}
-			.mapError { $0 as! IBServerError }
+			.mapError { $0 as! IBError }
 			.eraseToAnyPublisher()
 		)
 		
 	}
 	
-	func subscribeRealTimeBar(_ requestID: Int, contract: IBContract, barSource: IBBarSource, extendedTrading: Bool = false) throws -> AnyPublisher<IBPriceBarUpdate, IBServerError> {
+	func subscribeRealTimeBar(_ requestID: Int, contract: IBContract, barSource: IBBarSource, extendedTrading: Bool = false) throws -> AnyPublisher<IBPriceBarUpdate, IBError> {
 		let request = IBRealTimeBarRequest(requestID: requestID, contract: contract, source: barSource, extendedTrading: extendedTrading)
 		try send(request: request)
 		
 		return AnyPublisher(self.eventFeed
-			.setFailureType(to: IBServerError.self)
+			.setFailureType(to: IBError.self)
 			.compactMap { $0 as? IBIndexedEvent }
 			.filter { $0.requestID == requestID }
 			.tryMap{ response -> IBPriceBarUpdate in
 				switch response {
 				case let event as IBPriceBarUpdate: return event
-				case let event as IBServerError: throw event
+				case let event as IBServerError: throw event.error
 				default: fatalError("\(#function) uknown event type received")
 				}
 			}
-			.mapError { $0 as! IBServerError }
+			.mapError { $0 as! IBError }
 			.eraseToAnyPublisher()
 		)
 	}
@@ -503,13 +503,13 @@ public extension IBRequestPublisher where Self: IBAnyClient {
 	}
 	
 	
-	func subscribePriceQuote(_ requestID: Int, contract: IBContract, snapshot: Bool = false, regulatory: Bool = false) throws -> AnyPublisher<any IBAnyMarketData,IBServerError>{
+	func subscribePriceQuote(_ requestID: Int, contract: IBContract, snapshot: Bool = false, regulatory: Bool = false) throws -> AnyPublisher<any IBAnyMarketData,IBError>{
 		
 		let request = IBMarketDataRequest(requestID: requestID, contract: contract, events: [], snapshot: snapshot, regulatory: regulatory)
 		try send(request: request)
 
 		return AnyPublisher(self.eventFeed
-			.setFailureType(to: IBServerError.self)
+			.setFailureType(to: IBError.self)
 			.compactMap { $0 as? IBIndexedEvent }
 			.filter { $0.requestID == requestID }
 			.tryMap{ response -> any IBAnyMarketData in
@@ -518,11 +518,11 @@ public extension IBRequestPublisher where Self: IBAnyClient {
 				case let event as IBTickParameters: return event
 				case let event as IBCurrentMarketDataType: return event
 				case let event as IBTickExchange: return event
-				case let event as IBServerError: throw event
+				case let event as IBServerError: throw event.error
 				default: fatalError("\(#function) uknown event type received\n\(response)")
 				}
 			}
-			.mapError { $0 as! IBServerError }
+			.mapError { $0 as! IBError }
 			.eraseToAnyPublisher()
 		)
 		
@@ -540,22 +540,22 @@ public extension IBRequestPublisher where Self: IBAnyClient {
 		try send(request: request)
 	}
 	
-	func subscribeMarketDepth(_ requestID: Int, contract: IBContract, rows: Int, smart: Bool = false) throws -> AnyPublisher<IBMarketDepth,IBServerError>{
+	func subscribeMarketDepth(_ requestID: Int, contract: IBContract, rows: Int, smart: Bool = false) throws -> AnyPublisher<IBMarketDepth,IBError>{
 		let request = IBMarketDepthRequest(requestID: requestID, contract: contract, rows: rows, smart: smart)
 		try send(request: request)
 		
 		return AnyPublisher(self.eventFeed
-			.setFailureType(to: IBServerError.self)
+			.setFailureType(to: IBError.self)
 			.compactMap { $0 as? IBIndexedEvent }
 			.filter { $0.requestID == requestID }
 			.tryMap{ response -> IBMarketDepth in
 				switch response {
 				case let event as IBMarketDepth: return event
-				case let event as IBServerError: throw event
+				case let event as IBServerError: throw event.error
 				default: fatalError("\(#function) uknown event type received")
 				}
 			}
-			.mapError { $0 as! IBServerError }
+			.mapError { $0 as! IBError }
 			.eraseToAnyPublisher()
 		)
 	}
@@ -565,23 +565,23 @@ public extension IBRequestPublisher where Self: IBAnyClient {
 		try send(request: request)
 	}
 	
-	func requestTickByTick(_ requestID: Int, contract: IBContract, tickType: IBTickRequest.TickType, tickCount: Int, ignoreSize: Bool) throws -> AnyPublisher<any IBAnyMarketData, IBServerError> {
+	func requestTickByTick(_ requestID: Int, contract: IBContract, tickType: IBTickRequest.TickType, tickCount: Int, ignoreSize: Bool) throws -> AnyPublisher<any IBAnyMarketData, IBError> {
 		let request = IBTickRequest(requestID: requestID, contract: contract, type: tickType, count: tickCount, ignoreSize: ignoreSize)
 		try send(request: request)
 		
 		return AnyPublisher(self.eventFeed
-			.setFailureType(to: IBServerError.self)
+			.setFailureType(to: IBError.self)
 			.compactMap { $0 as? IBIndexedEvent }
 			.filter { $0.requestID == requestID }
 			.tryMap{ response -> any IBAnyMarketData in
 				switch response {
 				case let event as IBTick: return event
 				case let event as IBTickExchange: return event
-				case let event as IBServerError: throw event
+				case let event as IBServerError: throw event.error
 				default: fatalError("\(#function) uknown event type received \(response)")
 				}
 			}
-			.mapError { $0 as! IBServerError }
+			.mapError { $0 as! IBError }
 			.eraseToAnyPublisher()
 		)
 	}
@@ -660,47 +660,47 @@ public extension IBRequestPublisher where Self: IBAnyClient {
 	
 	
 	// - TODO
-	func subscribeNews(_ requestID: Int, contract: IBContract, snapshot: Bool = false, regulatory: Bool = false) throws -> AnyPublisher<IBNews,IBServerError>{
+	func subscribeNews(_ requestID: Int, contract: IBContract, snapshot: Bool = false, regulatory: Bool = false) throws -> AnyPublisher<IBNews,IBError>{
 		
 		try requestMarketData(requestID, contract: contract, events: [], snapshot: snapshot, regulatory: regulatory)
 		
 		
 		return AnyPublisher(self.eventFeed
-			.setFailureType(to: IBServerError.self)
+			.setFailureType(to: IBError.self)
 			.compactMap { $0 as? IBIndexedEvent }
 			.filter { $0.requestID == requestID }
 			.tryMap{ response -> IBNews in
 				switch response {
 				case let event as IBNews: return event
-				case let event as IBServerError: throw event
+				case let event as IBServerError: throw event.error
 				default: fatalError("\(#function) uknown event type received")
 				}
 			}
-			.mapError { $0 as! IBServerError }
+			.mapError { $0 as! IBError }
 			.eraseToAnyPublisher()
 		)
 		
 	}
 	
 	
-	func searchSymbols(_ requestID: Int, nameOrSymbol text: String) throws -> Future<IBContractSearchResult,IBServerError>{
+	func searchSymbols(_ requestID: Int, nameOrSymbol text: String) throws -> Future<IBContractSearchResult,IBError>{
 		let request = IBSymbolSearchRequest(requestID: requestID, text: text)
 		try send(request: request)
 		
 		return Future { promise in
 			var cancellable: AnyCancellable?
 			cancellable = self.eventFeed
-				.setFailureType(to: IBServerError.self)
+				.setFailureType(to: IBError.self)
 				.compactMap { $0 as? IBIndexedEvent }
 				.filter { $0.requestID == requestID }
 				.tryMap{ response -> IBContractSearchResult in
 					switch response {
 					case let event as IBContractSearchResult: return event
-					case let event as IBServerError: throw event
+					case let event as IBServerError: throw event.error
 					default: fatalError("\(#function) uknown event type received")
 					}
 				}
-				.mapError { $0 as! IBServerError }
+				.mapError { $0 as! IBError }
 				.sink { completion in
 					switch completion {
 					case .failure(let error):
@@ -717,25 +717,25 @@ public extension IBRequestPublisher where Self: IBAnyClient {
 	}
 	
 	
-	func contractDetails(_ requestID: Int, contract: IBContract) throws -> Future<AnyContractDetails,IBServerError>{
+	func contractDetails(_ requestID: Int, contract: IBContract) throws -> Future<AnyContractDetails,IBError>{
 		let request = IBContractDetailsRequest(requestID: requestID, contract: contract)
 		try send(request: request)
 	
 		return Future { promise in
 			var cancellable: AnyCancellable?
 			cancellable = self.eventFeed
-				.setFailureType(to: IBServerError.self)
+				.setFailureType(to: IBError.self)
 				.compactMap { $0 as? IBIndexedEvent }
 				.filter { $0.requestID == requestID }
 				.tryMap{ response -> AnyContractDetails in
 					switch response {
 					case let event as IBContractDetails: return event
 					case let event as IBContractDetailsEnd: return event
-					case let event as IBServerError: throw event
+					case let event as IBServerError: throw event.error
 					default: fatalError("\(#function) uknown event type received")
 					}
 				}
-				.mapError { $0 as! IBServerError }
+				.mapError { $0 as! IBError }
 				.sink { completion in
 					switch completion {
 					case .failure(let error):
@@ -753,7 +753,7 @@ public extension IBRequestPublisher where Self: IBAnyClient {
 	}
 	
 	
-	func subscribeFundamentals(_ requestID: Int, contract: IBContract, reportType: IBFundamantalsRequest.ReportType) throws -> Future<IBFinancialReport,IBServerError> {
+	func subscribeFundamentals(_ requestID: Int, contract: IBContract, reportType: IBFundamantalsRequest.ReportType) throws -> Future<IBFinancialReport,IBError> {
 		
 		let request = IBFundamantalsRequest(requestID: requestID, contract: contract, reportType: reportType)
 		try send(request: request)
@@ -761,17 +761,17 @@ public extension IBRequestPublisher where Self: IBAnyClient {
 		return Future { promise in
 			var cancellable: AnyCancellable?
 			cancellable = self.eventFeed
-				.setFailureType(to: IBServerError.self)
+				.setFailureType(to: IBError.self)
 				.compactMap { $0 as? IBIndexedEvent }
 				.filter { $0.requestID == requestID }
 				.tryMap{ response -> IBFinancialReport in
 					switch response {
 					case let event as IBFinancialReport: return event
-					case let event as IBServerError: throw event
+					case let event as IBServerError: throw event.error
 					default: fatalError("\(#function) uknown event type received")
 					}
 				}
-				.mapError { $0 as! IBServerError }
+				.mapError { $0 as! IBError }
 				.sink { completion in
 					switch completion {
 					case .failure(let error):
@@ -796,47 +796,47 @@ public extension IBRequestPublisher where Self: IBAnyClient {
 	
 
 	
-	func subscribePositionPNL(_ requestID: Int, accountName: String, contract: IBContract, modelCode: [String] = []) throws -> AnyPublisher<IBPositionPNL,IBServerError> {
+	func subscribePositionPNL(_ requestID: Int, accountName: String, contract: IBContract, modelCode: [String] = []) throws -> AnyPublisher<IBPositionPNL,IBError> {
 		
-		guard let contractID = contract.id else { throw IBClientError.invalidValue("contract id expected") }
+		guard let contractID = contract.id else { throw IBError.invalidValue("contract id expected") }
 		let request = IBPositionPNLRequest(requestID: requestID, accountName: accountName, contractID: contractID, modelCode: modelCode)
 		try send(request: request)
 		
 		return AnyPublisher(self.eventFeed
-			.setFailureType(to: IBServerError.self)
+			.setFailureType(to: IBError.self)
 			.compactMap { $0 as? IBIndexedEvent }
 			.filter { $0.requestID == requestID }
 			.tryMap{ response -> IBPositionPNL in
 				switch response {
 				case let event as IBPositionPNL: return event
-				case let event as IBServerError: throw event
+				case let event as IBServerError: throw event.error
 				default: fatalError("\(#function) uknown event type received")
 				}
 			}
-			.mapError { $0 as! IBServerError }
+			.mapError { $0 as! IBError }
 			.eraseToAnyPublisher()
 		)
 		
 	}
 	
 	
-	func subscribePriceHistory(_ requestID: Int, contract: IBContract, barSize size: IBBarSize, barSource: IBBarSource, lookback: DateInterval, extendedTrading: Bool, includeExpired: Bool) throws -> AnyPublisher<any IBAnyPriceObservation, IBServerError> {
+	func subscribePriceHistory(_ requestID: Int, contract: IBContract, barSize size: IBBarSize, barSource: IBBarSource, lookback: DateInterval, extendedTrading: Bool, includeExpired: Bool) throws -> AnyPublisher<any IBAnyPriceObservation, IBError> {
 		
 		
 		
 		return AnyPublisher(self.eventFeed
-			.setFailureType(to: IBServerError.self)
+			.setFailureType(to: IBError.self)
 			.compactMap { $0 as? IBIndexedEvent }
 			.filter { $0.requestID == requestID }
 			.tryMap{ response -> IBAnyPriceObservation in
 				switch response {
 				case let event as IBPriceHistory: return event
 				case let event as IBPriceBarUpdate: return event
-				case let event as IBServerError: throw event
+				case let event as IBServerError: throw event.error
 				default: fatalError("\(#function) uknown event type received")
 				}
 			}
-			.mapError { $0 as! IBServerError }
+			.mapError { $0 as! IBError }
 			.eraseToAnyPublisher()
 		)
 		
@@ -845,13 +845,13 @@ public extension IBRequestPublisher where Self: IBAnyClient {
 	
 
 	
-	func placeOrder(_ requestID: Int, order: IBOrder) throws -> AnyPublisher<any AnyOrderUpdate, IBServerError> {
+	func placeOrder(_ requestID: Int, order: IBOrder) throws -> AnyPublisher<any AnyOrderUpdate, IBError> {
 		
 		let request = IBPlaceOrderRequest(requestID: requestID, order: order)
 		try send(request: request)
 		
 		return AnyPublisher(self.eventFeed
-			.setFailureType(to: IBServerError.self)
+			.setFailureType(to: IBError.self)
 			.compactMap { $0 as? IBIndexedEvent }
 			.filter { $0.requestID == requestID }
 			.tryMap{ response -> AnyOrderUpdate in
@@ -862,11 +862,11 @@ public extension IBRequestPublisher where Self: IBAnyClient {
 				case let event as IBOrderExecutionEnd: return event
 				case let event as IBOrderCompletion: return event
 				case let event as IBOrderCompletionEnd: return event
-				case let event as IBServerError: throw event
+				case let event as IBServerError: throw event.error
 				default: fatalError("\(#function) uknown event type received")
 				}
 			}
-			.mapError { $0 as! IBServerError }
+			.mapError { $0 as! IBError }
 			.eraseToAnyPublisher()
 		)
 	}

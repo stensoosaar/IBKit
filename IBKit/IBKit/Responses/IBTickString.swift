@@ -61,7 +61,7 @@ struct IBTickString: Decodable {
 			tick = IBTickExchange(requestID: requestID, type: type, value: exchange)
 			
 		default:
-			throw IBClientError.decodingError("unknown tick string of type \(type) received")
+			throw IBError.decodingError("unknown tick string of type \(type) received")
 		}
 		
 	}

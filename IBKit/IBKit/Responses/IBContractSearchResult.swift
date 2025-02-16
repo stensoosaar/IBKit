@@ -24,7 +24,7 @@ public struct IBContractSearchResult: IBResponse, IBIndexedEvent {
 		public init(from decoder: IBDecoder) throws {
 			
 			guard let serverVersion = decoder.serverVersion else {
-				throw IBClientError.decodingError("Server value expected")
+				throw IBError.decodingError("Server value expected")
 			}
 			
 			var container = try decoder.unkeyedContainer()
@@ -49,6 +49,7 @@ public struct IBContractSearchResult: IBResponse, IBIndexedEvent {
 	
     public var values: [Contract] = []
     public var requestID: Int
+	
 	public init(from decoder: IBDecoder) throws {
 		var container = try decoder.unkeyedContainer()
         requestID = try container.decode(Int.self)

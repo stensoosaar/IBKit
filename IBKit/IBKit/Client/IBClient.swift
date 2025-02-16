@@ -97,7 +97,7 @@ open class IBClient: IBAnyClient {
 	///
 	public func connect() throws {
 		guard connection == nil else {
-			throw IBClientError.connectionError("Already connected")
+			throw IBError.connection("Already connected")
 		}
 
 		dispatchGroup.enter()
@@ -120,7 +120,7 @@ open class IBClient: IBAnyClient {
 	
 	public func send(request: IBRequest) throws {
         guard let connection, [.connected, .connectedToAPI].contains(connection.state) else {
-            throw IBClientError.failedToSend("Client not connected")
+            throw IBError.failedToSend("Client not connected")
         }
 		let encoder = IBEncoder(serverVersion)
 		try encoder.encode(request)

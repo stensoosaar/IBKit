@@ -26,7 +26,7 @@ public struct IBOrderCompletion: IBResponse, IBIndexedEvent, Sendable, AnyOrderU
 		let version = Int.max
 
 		guard let serverVersion = decoder.serverVersion else {
-			throw IBClientError.invalidValue("Server version not found.")
+			throw IBError.invalidValue("Server version not found.")
 		}
 		
 		var container = try decoder.unkeyedContainer()

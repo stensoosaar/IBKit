@@ -42,7 +42,7 @@ public struct IBOpenOrder:  IBResponse, IBIndexedEvent, Sendable, AnyOrderUpdate
 	public init(from decoder: IBDecoder) throws {
 		
 		guard let serverVersion = decoder.serverVersion else {
-			throw IBClientError.decodingError("Missing server version")
+			throw IBError.decodingError("Missing server version")
 		}
 	
 		var container = try decoder.unkeyedContainer()

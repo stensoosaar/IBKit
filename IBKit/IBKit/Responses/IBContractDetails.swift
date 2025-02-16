@@ -185,7 +185,7 @@ public struct IBContractDetails:IBResponse, IBIndexedEvent, Sendable, AnyContrac
 	public init(from decoder: IBDecoder) throws {
 		
 		guard let serverVersion = decoder.serverVersion else {
-			throw IBClientError.decodingError("No server version found. Check the connection!")
+			throw IBError.decodingError("No server version found. Check the connection!")
 		}
 
 		var container = try decoder.unkeyedContainer()

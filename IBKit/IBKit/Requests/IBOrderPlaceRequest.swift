@@ -23,7 +23,7 @@ public struct IBPlaceOrderRequest: IBIndexedRequest, Hashable, Equatable {
 	public func encode(to encoder: IBEncoder) throws {
 		
 		guard let serverVersion = encoder.serverVersion else {
-			throw IBClientError.encodingError("Server value expected")
+			throw IBError.encodingError("Server value expected")
 		}
 
 		let version: Int = (serverVersion < IBServerVersion.NOT_HELD) ? 27 : 45

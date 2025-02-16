@@ -25,7 +25,7 @@ public struct IBOrderStatus: IBResponse, IBIndexedEvent, Sendable, AnyOrderUpdat
 	public init(from decoder: IBDecoder) throws {
 		
 		guard let serverVersion = decoder.serverVersion else {
-			throw IBClientError.decodingError("Server version not found.")
+			throw IBError.decodingError("Server version not found.")
 		}
 		
 		var container = try decoder.unkeyedContainer()

@@ -8,15 +8,6 @@
 import Foundation
 
 
-/**
-	"1",
-	"6",
-	"0",
-	"4",
-	"97352.75",
-	"0.00147658",
-	"0"
- */
 
 struct IBTickPrice: Decodable {
 		
@@ -25,7 +16,7 @@ struct IBTickPrice: Decodable {
 	init(from decoder: Decoder) throws {
 		
 		guard let serverVersion = (decoder as? IBDecoder)?.serverVersion else {
-			throw IBClientError.decodingError("No server version found. Check the connection!")
+			throw IBError.decodingError("No server version found. Check the connection!")
 		}
 		
 		var container = try decoder.unkeyedContainer()

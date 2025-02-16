@@ -49,7 +49,7 @@ public struct IBMarketDepthLevel2: IBAnyMarketDepth, Sendable, IBIndexedEvent{
 	public init(from decoder: IBDecoder) throws {
 		
 		guard let serverVersion = decoder.serverVersion else {
-			throw IBClientError.decodingError("server version missing")
+			throw IBError.decodingError("server version missing")
 		}
 		
 		var container = try decoder.unkeyedContainer()

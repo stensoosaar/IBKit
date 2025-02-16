@@ -43,7 +43,7 @@ class IBClientFrameDecoder: ByteToMessageDecoder & NIOSingleStepByteToMessageDec
 	func decodeLast(context: ChannelHandlerContext, buffer: inout ByteBuffer, seenEOF: Bool) throws -> DecodingState {
 		while try self.decode(context: context, buffer: &buffer) == .continue {}
 		if buffer.readableBytes > 0 {
-			context.fireErrorCaught(IBClientError.failedToRead("leftover bytes"))
+			context.fireErrorCaught(IBError.failedToRead("leftover bytes"))
 		}
 		return .needMoreData
 	}
@@ -51,7 +51,7 @@ class IBClientFrameDecoder: ByteToMessageDecoder & NIOSingleStepByteToMessageDec
 	func decodeLast(buffer: inout ByteBuffer, seenEOF: Bool) throws -> InboundOut? {
 		let decoded = try self.decode(buffer: &buffer)
 		if buffer.readableBytes > 0 {
-			throw IBClientError.failedToRead("leftover bytes")
+			throw IBError.failedToRead("leftover bytes")
 		}
 		return decoded
 	}

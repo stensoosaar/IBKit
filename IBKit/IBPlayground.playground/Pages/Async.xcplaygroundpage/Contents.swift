@@ -9,7 +9,7 @@ import IBKit
 
 var cancelables: [AnyCancellable] = []
 
-class Datasource: IBClient, IBRequestPublisher{}
+class Datasource: IBClient, IBRequestAsync{}
 
 let client = Datasource(id:999, address:"https://127.0.0.1", port: 7496)
 client.debugMode = false
@@ -23,16 +23,19 @@ do{
 
 for ticker in ["BTC","ETH"]{
 	
-	let requestID: Int = client.nextRequestID
-	let contract = IBContract.crypto(ticker, currency: "USD")
-	
-	try? client.subscribePriceQuote(requestID, contract: contract, snapshot: false, regulatory: false)
-		.sink { completion in
-			print(completion)
-		} receiveValue: { marketdata in
-			print(marketdata)
+	Task {
+		do {
+			let requestID: Int = client.nextRequestID
+			let contract = IBContract.crypto(ticker, currency: "USD")
+			let source: IBBarSource = .midpoint
+			
+			for try await data in try client.subscribeRealTimeBar(requestID, contract: contract, barSource: source) {
+				print("\(data)")
+			}
+		} catch{
+			print(error)
 		}
-		.store(in: &cancelables)
+	}
 	
 	usleep(10000)
 	
