@@ -12,7 +12,7 @@ var cancelables: [AnyCancellable] = []
 class Datasource: IBClient, IBRequestPublisher{}
 
 let client = Datasource(id:999, address:"https://127.0.0.1", port: 7496)
-client.debugMode = false
+client.debugMode = true
 
 do{
 	try client.connect()
@@ -26,7 +26,7 @@ for ticker in ["BTC","ETH"]{
 	let requestID: Int = client.nextRequestID
 	let contract = IBContract.crypto(ticker, currency: "USD")
 	
-	try? client.subscribePriceQuote(requestID, contract: contract, snapshot: false, regulatory: false)
+	try? client.subscribeRealTimeBar(requestID, contract: contract, barSource: .trades, extendedTrading: true)
 		.sink { completion in
 			print(completion)
 		} receiveValue: { marketdata in

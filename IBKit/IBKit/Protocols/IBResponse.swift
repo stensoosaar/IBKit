@@ -48,9 +48,7 @@ public protocol IBIndexedEvent: IBEvent {
 
 
 
-
-
-public protocol IBAnyMarketData: IBEvent {
+public protocol IBAnyMarketData: IBIndexedEvent {
 	
 }
 
