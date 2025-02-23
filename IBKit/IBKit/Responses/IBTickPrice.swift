@@ -23,8 +23,10 @@ struct IBTickPrice: Decodable {
 		let requestID = try container.decode(Int.self)
 		let type = try container.decode(IBTickType.self)
 		let price = try container.decode(Double.self)
-		let size = try container.decode(Double.self)
-		let mask = try container.decode(Int.self)
+        
+        // Ensures `size` always has a valid `Double` value, defaults to `0.0` if missing or invalid.
+        let size = try container.decode(DecodableValue<Double>.self).orZero
+        let mask = try container.decode(DecodableValue<Int>.self).orZero
 
 		if price == -1 { return }
 
