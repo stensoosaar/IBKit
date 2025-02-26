@@ -37,8 +37,19 @@ public extension IBOrder {
     ///   - tif: Time In Force (default `.day`)
     ///   - hidden: Whether the order should be hidden
     ///   - extendedTrading: Whether it should execute outside regular trading hours
-    static func trailingStop(stopOffset: Double, action: IBAction, quantity: Double, contract: IBContract, account: String, validUntil tif: TimeInForce = .day, hidden: Bool = true, extendedTrading: Bool = false) -> IBOrder {
-        IBOrder(contract: contract, action: action, totalQuantity: quantity, orderType: .TRAILING, lmtPrice: nil, auxPrice: stopOffset, tif: tif, outsideRth: extendedTrading, hidden: hidden, account: account)
+    static func trailingStop(stop: Double, limit: Double, action: IBAction, quantity: Double, contract: IBContract, account: String, validUntil tif: TimeInForce = .day, hidden: Bool = true, extendedTrading: Bool = false) -> IBOrder {
+        IBOrder(
+            contract: contract,
+            action: action,
+            totalQuantity: quantity,
+            orderType: .TRAILING,
+            lmtPrice: limit,
+            auxPrice: abs(limit - stop),
+            tif: tif,
+            outsideRth: extendedTrading,
+            hidden: hidden,
+            account: account
+        )
     }
 }
 
