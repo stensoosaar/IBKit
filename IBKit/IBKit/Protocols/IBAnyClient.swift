@@ -423,8 +423,8 @@ public extension IBRequestWrapper where Self: IBAnyClient {
 		try send(request: request)
 	}
 	
-	func placeOrder(_ requestID: Int, order: IBOrder) throws {
-		let request = IBPlaceOrderRequest(requestID: requestID, order: order)
+	func placeOrder(_ orderId: Int, order: IBOrder) throws {
+		let request = IBPlaceOrderRequest(requestID: orderId, order: order)
 		try send(request: request)
 	}
 	
