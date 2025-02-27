@@ -29,6 +29,31 @@ public extension IBOrder {
     
     /// Creates a **Trailing Stop Order**
     /// - Parameters:
+    ///   - stop: The stop price where the stop-loss should start the trail.
+    ///   - action: `.buy` or `.sell`
+    ///   - quantity: Number of shares/contracts
+    ///   - contract: The asset contract
+    ///   - account: IB account ID
+    ///   - tif: Time In Force (default `.day`)
+    ///   - hidden: Whether the order should be hidden
+    ///   - extendedTrading: Whether it should execute outside regular trading hours
+    static func trailingStop(stop: Double, limit: Double, action: IBAction, quantity: Double, contract: IBContract, account: String, validUntil tif: TimeInForce = .day, hidden: Bool = true, extendedTrading: Bool = false) -> IBOrder {
+        IBOrder(
+            contract: contract,
+            action: action,
+            totalQuantity: quantity,
+            orderType: .TRAILING,
+            lmtPrice: limit,
+            auxPrice: abs(limit - stop),
+            tif: tif,
+            outsideRth: extendedTrading,
+            hidden: hidden,
+            account: account
+        )
+    }
+    
+    /// Creates a **Trailing Stop Order**
+    /// - Parameters:
     ///   - stopOffset: The offset amount from the market price where the stop-loss should trail.
     ///   - action: `.buy` or `.sell`
     ///   - quantity: Number of shares/contracts
@@ -37,8 +62,19 @@ public extension IBOrder {
     ///   - tif: Time In Force (default `.day`)
     ///   - hidden: Whether the order should be hidden
     ///   - extendedTrading: Whether it should execute outside regular trading hours
-    static func trailingStop(stopOffset: Double, action: IBAction, quantity: Double, contract: IBContract, account: String, validUntil tif: TimeInForce = .day, hidden: Bool = true, extendedTrading: Bool = false) -> IBOrder {
-        IBOrder(contract: contract, action: action, totalQuantity: quantity, orderType: .TRAILING, lmtPrice: nil, auxPrice: stopOffset, tif: tif, outsideRth: extendedTrading, hidden: hidden, account: account)
+    static func trailingStop(stopOffset: Double, limit: Double, action: IBAction, quantity: Double, contract: IBContract, account: String, validUntil tif: TimeInForce = .day, hidden: Bool = true, extendedTrading: Bool = false) -> IBOrder {
+        IBOrder(
+            contract: contract,
+            action: action,
+            totalQuantity: quantity,
+            orderType: .TRAILING,
+            lmtPrice: limit,
+            auxPrice: stopOffset,
+            tif: tif,
+            outsideRth: extendedTrading,
+            hidden: hidden,
+            account: account
+        )
     }
 }
 
