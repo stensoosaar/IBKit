@@ -9,26 +9,49 @@ let package = Package(
     name: "IBKit",
 	defaultLocalization: "en",
     platforms: [
-        .macOS(.v12), .iOS(.v16), .tvOS(.v16), .watchOS(.v9), .visionOS(.v1)
+        .macOS(.v13), .iOS(.v17)
     ],
     products: [
         .library(
-			name: "IBKit",
-			targets: ["IBKit"]),
+			name: "IBClient",
+			targets: ["IBClient"]),
+		.library(
+			name: "IBStore",
+			targets: ["IBStore"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-nio", from: .init(2, 0, 0))
+		.package(url: "https://github.com/apple/swift-nio", from: .init(2, 0, 0)),
+		.package(url: "https://github.com/duckdb/duckdb-swift", .upToNextMajor(from: .init(1, 0, 0))),
+		.package(url: "https://github.com/apple/swift-algorithms", from: "1.0.0"),
+		.package(url: "https://github.com/apple/swift-collections.git", .upToNextMinor(from: "1.0.0")),
 	],
     targets: [
-        .target(
-			name: "IBKit",
+		.target(
+			name: "IBClient",
 			dependencies: [
-                .product(name: "NIO", package: "swift-nio")
-            ],
-			path: "IBKit/IBKit"),
-        .testTarget(
-			name: "IBKitTests",
-			dependencies: ["IBKit"],
-			path: "IBKit/IBKitTests")
+				.product(name: "NIO", package: "swift-nio")
+			],
+			path: "IBClient/IBClient"
+		),
+		.testTarget(
+			name: "IBClientTests",
+			dependencies: ["IBClient"],
+			path: "IBClient/IBClientTests"
+		),
+		.target(
+			name: "IBStore",
+			dependencies: [
+				"IBClient",
+				.product(name: "DuckDB", package: "duckdb-swift"),
+				.product(name: "Algorithms", package: "swift-algorithms"),
+				.product(name: "Collections", package: "swift-collections")
+			],
+			path: "IBStore/IBStore"
+		),
+		.testTarget(
+			name: "IBStoreTests",
+			dependencies: ["IBStore"],
+			path: "IBStore/IBStoreTests"
+		)
     ]
 )
