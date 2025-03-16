@@ -83,9 +83,7 @@ open class IBClient {
 			self.connection.debugMode = newValue
 		}
 	}
-	
-	private let dispatchGroup = DispatchGroup()
-	
+		
 	open func onConnect(){}
 	
 	private func listen(){
@@ -117,8 +115,6 @@ open class IBClient {
 			throw IBError.connection("Already connected")
 		}
 		
-		dispatchGroup.enter()
-
 		self.connection.$state
 			.sink { [weak self] state in
 				switch state {
@@ -128,7 +124,6 @@ open class IBClient {
 					} catch {
 						fatalError("failed to start api \(error.localizedDescription)")
 					}
-					self?.dispatchGroup.leave()
 					self?.listen()
 					self?.onConnect()
 				default:

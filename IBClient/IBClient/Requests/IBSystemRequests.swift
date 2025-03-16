@@ -27,12 +27,12 @@ import Foundation
 
 
 
-public struct IBNextIDRequest: IBRequest{
-
+struct IBNextIDRequest: IBRequest{
+	
 	let version: Int = 1
 	public let type: IBRequestType = .nextId
 	public var id: Int? = nil
-
+	
 	public init(){}
 	
 	public func encode(to encoder: IBEncoder) throws {
@@ -45,11 +45,11 @@ public struct IBNextIDRequest: IBRequest{
 }
 
 
-public struct IBServerTimeRequest: IBRequest{
+ struct IBServerTimeRequest: IBRequest{
 	
 	let version: Int = 1
-	public let type: IBRequestType = .serverTime
-	public var id: Int? = nil
+	let type: IBRequestType = .serverTime
+	var id: Int? = nil
 
 	public init(){}
 	
@@ -62,18 +62,18 @@ public struct IBServerTimeRequest: IBRequest{
 }
 
 
-public struct IBBulletinBoardRequest: IBRequest{
+ struct IBBulletinBoardRequest: IBRequest{
 	
 	let version: Int = 1
-	public let type: IBRequestType = .newsBulletins
-	public var includePast: Bool
-	public var id: Int? = nil
+	let type: IBRequestType = .newsBulletins
+	var includePast: Bool
+	var id: Int? = nil
 
-	public init(includePast: Bool = false){
+	init(includePast: Bool = false){
 		self.includePast = includePast
 	}
 	
-	public func encode(to encoder: IBEncoder) throws {
+	func encode(to encoder: IBEncoder) throws {
 		var container = encoder.unkeyedContainer()
 		try container.encode(type)
 		try container.encode(version)
@@ -83,15 +83,15 @@ public struct IBBulletinBoardRequest: IBRequest{
 }
 
 
-public struct IBBulletinBoardCancellationRequest: IBRequest{
+struct IBBulletinBoardCancellationRequest: IBRequest{
 	
 	let version: Int = 1
-	public let type: IBRequestType = .cancelNewsBulletins
-	public var id: Int? = nil
-
-	public init(){}
-
-	public func encode(to encoder: IBEncoder) throws {
+	let type: IBRequestType = .cancelNewsBulletins
+	var id: Int? = nil
+	
+	init(){}
+	
+	func encode(to encoder: IBEncoder) throws {
 		var container = encoder.unkeyedContainer()
 		try container.encode(type)
 		try container.encode(version)
@@ -100,18 +100,18 @@ public struct IBBulletinBoardCancellationRequest: IBRequest{
 }
 
 
-public struct IBMarketDataTypeRequest: IBRequest{
+struct IBMarketDataTypeRequest: IBRequest{
 	
 	let version = 1
-	public let type: IBRequestType = .marketDataType
-	public let dataType: IBMarketDataType
-	public var id: Int? = nil
+	let type: IBRequestType = .marketDataType
+	let dataType: IBMarketDataType
+	var id: Int? = nil
 
-	public init (_ dataType: IBMarketDataType ) {
+	init (_ dataType: IBMarketDataType ) {
 		self.dataType = dataType
 	}
 
-	public func encode(to encoder: IBEncoder) throws {
+	func encode(to encoder: IBEncoder) throws {
 		let version: Int = 1
 		var container = encoder.unkeyedContainer()
 		try container.encode(dataType)
@@ -121,15 +121,15 @@ public struct IBMarketDataTypeRequest: IBRequest{
 }
 
 
-public struct IBGlobalCancelRequest: IBRequest{
+struct IBGlobalCancelRequest: IBRequest{
 	
 	let version = 1
-	public let type: IBRequestType = .globalCancel
-	public var id: Int? = nil
+	let type: IBRequestType = .globalCancel
+	var id: Int? = nil
 
-	public init() {}
+	init() {}
 
-	public func encode(to encoder: IBEncoder) throws {
+	func encode(to encoder: IBEncoder) throws {
 		var container = encoder.unkeyedContainer()
 		try container.encode(type)
 		try container.encode(version)
@@ -137,16 +137,15 @@ public struct IBGlobalCancelRequest: IBRequest{
 	
 }
 
-
-public struct IBPositionRequest: IBRequest {
+struct IBPositionRequest: IBRequest {
 	
-	public var version: Int = 1
-	public var type: IBRequestType = .positions
-	public var id: Int? = nil
+	var version: Int = 1
+	var type: IBRequestType = .positions
+	var id: Int? = nil
 
-	public init(){}
+	init(){}
 	
-	public func encode(to encoder: IBEncoder) throws {
+	func encode(to encoder: IBEncoder) throws {
 		var container = encoder.unkeyedContainer()
 		try container.encode(type)
 		try container.encode(version)
@@ -154,16 +153,15 @@ public struct IBPositionRequest: IBRequest {
 	
 }
 
-
-public struct IBPositionCancellationRequest: IBRequest {
+struct IBPositionCancellationRequest: IBRequest {
 	
-	public var version: Int = 1
-	public var type: IBRequestType = .cancelPositions
-	public var id: Int? = nil
+	var version: Int = 1
+	var type: IBRequestType = .cancelPositions
+	var id: Int? = nil
 
-	public init(){}
+	init(){}
 	
-	public func encode(to encoder: IBEncoder) throws {
+	func encode(to encoder: IBEncoder) throws {
 		var container = encoder.unkeyedContainer()
 		try container.encode(IBRequestType.cancelPositions)
 		try container.encode(version)
@@ -171,16 +169,15 @@ public struct IBPositionCancellationRequest: IBRequest {
 	
 }
 
-
-public struct IBScannerParametersRequest: IBRequest {
+struct IBScannerParametersRequest: IBRequest {
 	
-	public var version: Int = 1
-	public var type: IBRequestType = .scannerParameters
-	public var id: Int? = nil
+	var version: Int = 1
+	var type: IBRequestType = .scannerParameters
+	var id: Int? = nil
 
-	public init(){}
+	init(){}
 	
-	public func encode(to encoder: IBEncoder) throws {
+	func encode(to encoder: IBEncoder) throws {
 		var container = encoder.unkeyedContainer()
 		try container.encode(type)
 		try container.encode(version)
