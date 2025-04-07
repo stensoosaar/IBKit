@@ -328,3 +328,22 @@ public enum IBTickType: Int, Decodable, Sendable {
 	///Delayed implied yield of the bond if it is purchased at the current ask.
 	case Delayed_Yield_Ask = 104
 }
+
+
+extension IBTickType{
+	
+	public var side: TickQuote.Side? {
+		switch self{
+		case .Bid, .Bid_Size, .Delayed_Bid, .Delayed_Bid_Size:
+			return .bid
+		case .Ask, .Ask_Size, .Delayed_Ask, .Delayed_Ask_Size:
+			return .ask
+		case .Last, .Last_Size, .Delayed_Last, .Delayed_Last_Size:
+			return .last
+		case .Mark_Price:
+			return .mid
+		default:
+			return nil
+		}
+	}
+}

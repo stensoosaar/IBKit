@@ -28,14 +28,14 @@ import Foundation
 import IBClient
 
 
-public protocol QuoteSummaryUpdate{
+public protocol AnyTickProtocol{
 	var type: IBTickType {get}
 	var date: Date {get}
 }
 
-extension TickPrice: QuoteSummaryUpdate{}
-extension TickSize: QuoteSummaryUpdate{}
-extension TickQuote: QuoteSummaryUpdate{}
+extension TickPrice: AnyTickProtocol{}
+extension TickSize: AnyTickProtocol{}
+extension TickQuote: AnyTickProtocol{}
 
 
 
@@ -90,7 +90,7 @@ extension QuoteSummary{
 		return false
 	}
 	
-	mutating func update(_ event: QuoteSummaryUpdate){
+	mutating func update(_ event: AnyTickProtocol){
 		
 		if needsReset(lastUpdate: self.updatedAt, eventDate: event.date) == true {
 			reset()

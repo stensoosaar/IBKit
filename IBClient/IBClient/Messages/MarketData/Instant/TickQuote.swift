@@ -15,6 +15,11 @@ import Foundation
 /// is no data for this field currently available, whereas a tickPrice with a positive tickSize indicates
 /// an active quote of 0 (typically for a combo contract).
 public struct TickQuote: AnyTickEvent {
+	
+	public enum Side {
+		case bid, ask, last, mid
+	}
+	
 	public let type: IBTickType
 	public let price: Double?
 	public let size: Double?

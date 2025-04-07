@@ -98,6 +98,7 @@ open class Strategy {
 		for contract in try session.store.fetchContracts(){
 			let key = UUID().uuidString
 			session.contractDetailsPublisher(for: contract)
+			
 				.sink { completion in
 					print("will cancel \(key)")
 					self.subscriptions.removeValue(forKey: key)
@@ -111,11 +112,8 @@ open class Strategy {
 				.store(in: &subscriptions, for: key)
 		}
 
-		// download initial historic data
 		
-			
-		
-		
+
 		// make watchlist. reschedule refresh if needed
 		
 		// subscribe data for watchlist
