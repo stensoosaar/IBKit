@@ -28,6 +28,8 @@ import Foundation
 import DuckDB
 import IBClient
 import TabularData
+import Combine
+
 
 
 public class Store {
@@ -35,10 +37,10 @@ public class Store {
 	let database: Database
 	
 	let connection: Connection
-		
-	var lastUpdate: Foundation.Date = .distantPast
-		
-	
+
+	internal lazy var subject = PassthroughSubject<StoreNotification, Never>()
+	public private(set) lazy var notificationPublisher = subject.share().eraseToAnyPublisher()
+
 	private init(database: Database, connection: Connection) {
 		self.database = database
 		self.connection = connection
@@ -52,6 +54,5 @@ public class Store {
 		return Store(database: database, connection: connection)
 	}
 		
-	
 	
 }

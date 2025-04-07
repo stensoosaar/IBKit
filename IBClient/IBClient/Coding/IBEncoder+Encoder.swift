@@ -28,7 +28,6 @@ import Foundation
 
 
 
-
 extension IBEncoder: Encoder {
 	
 	public var codingPath: [CodingKey] { return [] }
@@ -81,6 +80,7 @@ extension IBEncoder: Encoder {
 			return encoder
 		}
 	}
+	
 	
 	private struct UnkeyedContanier: UnkeyedEncodingContainer, SingleValueEncodingContainer {
 		

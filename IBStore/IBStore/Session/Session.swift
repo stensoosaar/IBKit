@@ -31,21 +31,6 @@ import Combine
 
 
 open class Session {
-
-	public var broker: Broker
-	
-	public var store: Store
-	
-	private var cancellables = Set<AnyCancellable>()
-	
-	public let datePublisher = PassthroughSubject<Date,Never>()
-
-	public init(id: Int, universe: URL) throws {
-		self.broker = Broker(id: id, port: 7496)
-		self.store = try Store.create()
-		try store.blaah(universe)
-		self.broker.store = store
-	}
 	
 	public enum RunMode {
 		case live
@@ -53,36 +38,39 @@ open class Session {
 		case backtest(_ interval: DateInterval)
 	}
 	
+	public var sessionType: RunMode
+
+	public var broker: Broker
+	
+	public var store: Store
+	
+	public var dataNeed: [DataItem] = []
+	
+	var cancellables = Set<AnyCancellable>()
+	
+	var watchlistCancellables: [String: AnyCancellable] = [:]
+	
+	public let datePublisher = PassthroughSubject<Date,Never>()
+
+	public init(id: Int, universe: URL, mode: RunMode) throws {
+		self.broker = Broker(id: id, port: Broker.ConnectionType.workstation.livePort)
+		self.store = try Store.create()
+		try store.storeUniverse(universe)
+		self.broker.store = store
+		self.sessionType = mode
+	}
+	
 }
+
+
 
 extension Session {
 	
-	func subscribeQuotes(for contracts: [IBContract]) -> AnyPublisher<QuoteSummary, Error> {
-		
-		let publishers = contracts.compactMap { contract -> AnyPublisher<MarketData, Error>? in
-			let request = IBMarketDataRequest(id: broker.nextRequestID, contract: contract)
-			return broker.marketDataPublisher(for: request)
-		}
-		
-		return Publishers.MergeMany(publishers)
-			.tryMap { [weak self] in try self?.store.updateQuote(event: $0) }
-			.compactMap { $0 }
-			.eraseToAnyPublisher()
+	
+	public func subscribeQuote(){
+			
 	}
 
-	/*
-	func subscribeBars(count: Int, in resolution: TimeInterval) -> AnyPublisher<MarketData,Error>{}
-	
-	func subscribeBars(count: Int, in resolution: TimeInterval, _ schedule: DispatchQueue.SchedulerTimeType.Stride ) -> AnyPublisher<MarketData,Error>{}
-	
-	func modelPublisher()->AnyPublisher<[Weight],Error>{}
-	
-	func accountModelPublisher() -> AnyPublisher<([AccountSummary], [Weight]), Error> {
-			Publishers.CombineLatest(broker.accountSummaryPublisher, modelPublisher())
-				.eraseToAnyPublisher()
-	}
-	*/
-	
 	
 }
 

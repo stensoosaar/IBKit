@@ -56,14 +56,14 @@ open class Broker: IBClient {
 		case gateway
 		case workstation
 		
-		var livePort: Int {
+		public var livePort: Int {
 			switch self {
 			case .gateway: return 4001
 			case .workstation: return 7496
 			}
 		}
 		
-		var simulatedPort: Int {
+		public var simulatedPort: Int {
 			switch self {
 			case .gateway: return 4002
 			case .workstation: return 7497

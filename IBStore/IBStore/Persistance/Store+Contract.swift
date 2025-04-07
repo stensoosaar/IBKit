@@ -34,9 +34,7 @@ extension Store{
 	
 	
 	private func createTempTable() throws {
-		
-		print(#function)
-		
+				
 		_ = try connection.execute("""
 			CREATE TEMP TABLE IF NOT EXISTS temp_contracts (
 				id INT32,
@@ -54,60 +52,38 @@ extension Store{
 				is_expired BOOL
 			);
 		""")
-		
-
 	}
 	
-	
-	public func blaah(_ url: URL) throws {
+	public func storeUniverse(_ url: URL) throws {
 
 		try createTempTable()
 		
-		let sql = """
-		CREATE TEMP TABLE contract_import AS
-			SELECT * FROM 
-			read_csv('\(url.path())');
-		"""
-		
-		_ = try connection.execute(sql)
+		_ = try connection.execute("""
+			CREATE TEMP TABLE contract_import AS
+			SELECT * FROM read_csv('\(url.path())');
+		""")
 		
 		let result = try connection.query("""
 			SELECT column_name 
 			FROM duckdb_columns() 
-			WHERE table_name IN ('contract_import', 'temp_contracts') 
+			WHERE table_name IN ('temp_contracts', 'contract_import') 
 			GROUP BY column_name 
-			HAVING COUNT(DISTINCT table_name) = 2;
-			""")
+			HAVING COUNT(DISTINCT table_name) = 2
+		""")
 		
-		let column = result[0].cast(to: String.self)
+		let matchingColumns = result[0].cast(to: String.self).compactMap({$0}).joined(separator: ",")
 		
-		_ = column.compactMap({ el -> String? in
-			print(el)
-			return nil
-		})
-		
-		
+		_ = try connection.execute("""
+			insert into temp_contracts (\(matchingColumns))
+			select \(matchingColumns) from contract_import;
+			drop table contract_import;
+		""")
+				
 	}
 	
 	public func storeUniverse(_ contracts: [IBContract]) throws {
 		
-		_ = try connection.execute("""
-			CREATE TEMP TABLE IF NOT EXISTS temp_contracts (
-				id INT32,
-				type VARCHAR,
-				symbol VARCHAR,
-				currency VARCHAR,
-				local_symbol VARCHAR,
-				expiration DATE,
-				strike DOUBLE,
-				execution_right VARCHAR,
-				multiplier VARCHAR,
-				exchange VARCHAR,
-				primary_exchange VARCHAR,
-				trading_class VARCHAR,
-				is_expired BOOL
-			);
-		""")
+		try createTempTable()
 		
 		let appender = try Appender(connection: connection, table: "temp_contracts")
 		for contract in contracts {
@@ -142,7 +118,7 @@ extension Store{
 					COALESCE(CAST(tc.strike AS TEXT), ''), CHR(0), 
 					COALESCE(tc.execution_right, ''), CHR(0),
 					COALESCE(CAST(tc.multiplier AS TEXT), ''), CHR(0),
-					COALESCE(tc.destination_exchange, ''), CHR(0),
+					COALESCE(tc.exchange, ''), CHR(0),
 					COALESCE(tc.primary_exchange, ''), CHR(0),
 					COALESCE(tc.currency, ''), CHR(0),
 					COALESCE(tc.local_symbol, ''), CHR(0),
@@ -166,46 +142,97 @@ extension Store{
 		
 	}
 
-	public func addContracts(_ contracts: [IBContractDetails]) throws {
+	@discardableResult
+	public func addContracts(_ contracts: [IBContractDetails]) throws -> [IBContractDetails]{
 		
-		let appender = try Appender(connection: connection, table: "contracts")
+		print("STORING CONTRACT DETAILS \(contracts)")
 		
-		for contract in contracts {
-			try appender.append(Int32(contract.contractID))					// id INT32 NOT NULL UNIQUE,
-			try appender.append(contract.type.rawValue)						// type VARCHAR NOT NULL,
-			try appender.append(contract.symbol)							// base VARCHAR NOT NULL,
-			try appender.append(contract.currency)							// quote VARCHAR NOT NULL,
-			try appender.append(contract.symbol)							// symbol VARCHAR NOT NULL,
-			try appender.append(contract.localSymbol)						// local_symbol VARCHAR NOT NULL,
-			try appender.append(contract.expiration?.ISO8601Format())		// expiration DATE,
-			try appender.append(contract.strikePrice)						// strike DOUBLE,
-			try appender.append(contract.executionRight?.rawValue)			// execution_right VARCHAR,
-			try appender.append(contract.multiplier)						// multiplier VARCHAR,
-			try appender.append(contract.exchange?.rawValue)				// destination_exchange VARCHAR,
-			try appender.append(contract.primaryExchange?.rawValue)			// primary_exchange VARCHAR,
-			try appender.append(contract.timeZoneID)						// time_zone_id VARCHAR,
-			try appender.append(contract.minimumTick)						// minimum_tick_size DOUBLE,
-			try appender.append(contract.sizeIncrement)						// size_increment DOUBLE,
-			try appender.append(Int32(contract.underlyingContractID))		//underlying_Contract_id INT32,
-			try appender.append(contract.longName)							// ame VARCHAR,
-			try appender.append(Date.empty()?.ISO8601Format())				// regular_session_open DATE,
-			try appender.append(Double(nil))								// regular_session_duration DOUBLE,
-			try appender.append(Date.empty()?.ISO8601Format())				// extened_session_open DATE,
-			try appender.append(Double(nil))								// extended_session_duration DOUBLE,
-			try appender.append(contract.industry)							// industry VARCHAR,
-			try appender.append(contract.category)							// category VARCHAR,
-			try appender.append(contract.subcategory)						// subcategory VARCHAR,
-			try appender.append(String(nil))								// isin VARCHAR,
-			try appender.append(contract.stockType)							// subtype VARCHAR,
-			try appender.append(Date().ISO8601Format())						// created_at TIMESTAMP
-			try appender.append(Date().ISO8601Format())						// updated_at TIMESTAMP
-			try appender.endRow()
+		let sql = """
+			INSERT INTO contracts (
+				id, type, base, quote, symbol, local_symbol, expiration, strike, execution_right,
+				multiplier, destination_exchange, primary_exchange, time_zone_id,
+				minimum_tick_size, size_increment, underlying_contract_id, name,
+				regular_session_open, regular_session_duration,
+				extened_session_open, extended_session_duration,
+				industry, category, subcategory, isin, subtype, updated_at, created_at
+			)
+			VALUES (
+				$1, $2, $3, $4, $5, $6, $7, $8, $9,
+				$10, $11, $12, $13,
+				$14, $15, $16, $17,
+				$18, $19, $20, $21,
+				$22, $23, $24, $25, $26, $27, $28
+			)
+			ON CONFLICT(id) DO UPDATE SET
+				type=$2,
+				base=$3,
+				quote=$4,
+				symbol=$5,
+				local_symbol=$6,
+				expiration=$7,
+				strike=$8,
+				execution_right=$9,
+				multiplier=$10,
+				destination_exchange=$11,
+				primary_exchange=$12,
+				time_zone_id=$13,
+				minimum_tick_size=$14,
+				size_increment=$15,
+				underlying_contract_id=$16,
+				name=$17,
+				regular_session_open=$18,
+				regular_session_duration=$19,
+				extened_session_open=$20,
+				extended_session_duration=$21,
+				industry=$22,
+				category=$23,
+				subcategory=$24,
+				isin=$25,
+				subtype=$26,
+				updated_at=$27
+		"""
 
+		let statement = try PreparedStatement(connection: connection, query: sql)
+
+		for contract in contracts {
+			try statement.bind(Int32(contract.contractID), at: 1)
+			try statement.bind(contract.type.rawValue, at: 2)
+			try statement.bind(contract.symbol, at: 3)
+			try statement.bind(contract.currency, at: 4)
+			try statement.bind(contract.symbol, at: 5)
+			try statement.bind(contract.localSymbol, at: 6)
+			try statement.bind(contract.expiration?.ISO8601Format(), at: 7)
+			try statement.bind(contract.strikePrice, at: 8)
+			try statement.bind(contract.executionRight?.rawValue, at: 9)
+			try statement.bind(contract.multiplier, at: 10)
+			try statement.bind(contract.exchange?.rawValue, at: 11)
+			try statement.bind(contract.primaryExchange?.rawValue, at: 12)
+			try statement.bind(contract.timeZoneID, at: 13)
+			try statement.bind(contract.minimumTick, at: 14)
+			try statement.bind(contract.sizeIncrement, at: 15)
+			try statement.bind(contract.underlyingContractID.map(Int32.init), at: 16)
+			try statement.bind(contract.longName, at: 17)
+			try statement.bind(Date.empty()?.ISO8601Format(), at: 18)
+			try statement.bind(nil as Double?, at: 19)
+			try statement.bind(Date.empty()?.ISO8601Format(), at: 20)
+			try statement.bind(nil as Double?, at: 21)
+			try statement.bind(contract.industry, at: 22)
+			try statement.bind(contract.category, at: 23)
+			try statement.bind(contract.subcategory, at: 24)
+			try statement.bind(nil as String?, at: 25)
+			try statement.bind(contract.stockType, at: 26)
+			try statement.bind(Date().ISO8601Format(), at: 27)
+			try statement.bind(Date().ISO8601Format(), at: 28)
+			_ = try statement.execute()
 		}
 		
-		try appender.flush()
+		print("- STORED")
 		
+		return contracts
+				
 	}
+
+	
 
 }
 

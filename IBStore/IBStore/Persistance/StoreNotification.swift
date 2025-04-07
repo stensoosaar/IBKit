@@ -1,15 +1,23 @@
+//
+//  StoreNotification.swift
+//  IBKit
+//
+//  Created by Sten Soosaar on 05.04.2025.
+//
+
+
+import Foundation
+
 public protocol StoreNotification{}
 
-public enum StoreNotificationCategory {
-	case add
-	case update
-	case delete
+public enum ContractEvent {
+	case quoteUpdated
+	case barUpdated
+	case fundamentalsUpdated
 }
 
-public struct QuoteUpdate: StoreNotification{}
-public struct BarUpdate: StoreNotification{}
-public struct FundamentalsUpdate: StoreNotification{}
-public struct WatchlistUpdate: StoreNotification{}
-public struct AccountUpdate: StoreNotification{}
-public struct ModelUpdate: StoreNotification{}
-
+public enum AccountEvent {
+	case balancesUpdated
+	case positionUpdated
+	case orderUpdated
+}

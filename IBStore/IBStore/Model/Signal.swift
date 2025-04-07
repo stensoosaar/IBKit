@@ -28,11 +28,6 @@ import Foundation
 import IBClient
 
 
-public struct Feature {
-	public var contract: IBContract
-}
-
-
 public protocol Signal{}
 
 public struct TradeSignal: Signal {

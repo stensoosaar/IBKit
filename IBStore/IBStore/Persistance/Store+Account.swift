@@ -35,8 +35,6 @@ extension Store{
 	@discardableResult
 	public func upsertAccounts(_ accounts: [AccountSummary]) -> [AccountSummary]{
 	
-		
-			
 		// udpate index
 		do {
 			let perf = try Appender(connection: connection, table: "performance")

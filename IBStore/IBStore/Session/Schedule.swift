@@ -29,13 +29,19 @@ import IBClient
 
 public enum Schedule {
 	
-	case daily(hour: Int, minute: Int)
-	case weekly(weekday: Int, hour: Int, minute: Int)
+	case hourly(minute: Int = 0)
+	case daily(hour: Int = 0, minute: Int = 0)
+	case weekly(weekday: Int, hour: Int = 0, minute: Int = 0)
 	case monthly(week: Int, weekday: Int)
 	case quarterly(month: Int, week:Int, weekday: Int)
 	
 	public func nextDate(from sessionDate: Date) -> Date? {
 		switch self {
+			
+		case .hourly(let minute):
+			let comps = DateComponents(minute: minute)
+			return Calendar.current.nextDate(after: sessionDate, matching: comps, matchingPolicy: .nextTime)
+
 		case .daily(let hour, let minute):
 			let comps = DateComponents(hour:hour, minute: minute)
 			return Calendar.current.nextDate(after: sessionDate, matching: comps, matchingPolicy: .nextTime)

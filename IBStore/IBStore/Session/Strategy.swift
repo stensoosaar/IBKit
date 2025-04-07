@@ -35,31 +35,32 @@ open class Strategy {
 	var session: Session?
 	var universe: URL
 	var watchlist: Watchlist
+	public var dataNeed: [ScheduledDataItem] = []
 	var subscriptions: [String:AnyCancellable] = [:]
 	let modelPublisher = CurrentValueSubject<[Weight], Never>([])
 	
-	public init(id: Int, universe: URL){
+	public init(id: Int, universe: URL, watchlist: Watchlist){
 		self.id = id
 		self.universe = universe
-		self.watchlist = Watchlist()
+		self.watchlist = watchlist
 	}
 	
-	open func onWatchlist(changes: Watchlist.Changes){
+	open func onWatchlist(changes: Watchlist.Changes) {
 		fatalError("\(#function), not implemented")
 	}
 	
 	// calculates indicators and stuff
-	open func onData(_ event: MarketData)->Feature{
+	open func onData(_ event: MarketData)->Feature {
 		fatalError("\(#function), not implemented")
 	}
 	
 	// evaluates indicators and stuff
-	open func onFeature(_ event: Feature)->TradeSignal?{
+	open func onFeature(_ event: Feature)->TradeSignal? {
 		fatalError("\(#function), not implemented")
 	}
 	
 	// evaluates account updates
-	open func onAccountUpdate(_ event: [AccountSummary]) -> RiskSignal?{
+	open func onAccountUpdate(_ event: [AccountSummary]) -> RiskSignal? {
 		fatalError("\(#function), not implemented")
 	}
 	
@@ -69,11 +70,11 @@ open class Strategy {
 	}
 
 	
-	open func onModel(_ model:[Weight], account:AccountSummary) -> [IBOrder]{
+	open func onModel(_ model:[Weight], account:AccountSummary) -> [IBOrder] {
 		fatalError("\(#function), not implemented")
 	}
 	
-	open func onOrder(_ event: IBOrder, quoteSummary: QuoteSummary) -> [IBOrder]{
+	open func onOrder(_ event: IBOrder, quoteSummary: QuoteSummary) -> [IBOrder] {
 		fatalError("\(#function), not implemented")
 	}
 
@@ -83,16 +84,47 @@ open class Strategy {
 	
 	public func run(in mode: Session.RunMode) throws {
 		
-		self.session = try Session(id: id, universe: universe)
+		self.session = try Session(id: id, universe: universe, mode: mode)
 		try session?.broker.connect()
 		usleep(1_000_000)
 		
 		guard let session = self.session else {
 			throw IBError.connection("Strategy failed to start session")
 		}
-
 		
-		// risk metrix pipeline
+		
+		// MARK: - validation and fetching initial data should be moved into warmup
+		// validate contracts
+		for contract in try session.store.fetchContracts(){
+			let key = UUID().uuidString
+			session.contractDetailsPublisher(for: contract)
+				.sink { completion in
+					print("will cancel \(key)")
+					self.subscriptions.removeValue(forKey: key)
+				} receiveValue: { details in
+					do{
+						try self.session?.store.addContracts([details])
+					} catch {
+						print(error)
+					}
+				}
+				.store(in: &subscriptions, for: key)
+		}
+
+		// download initial historic data
+		
+			
+		
+		
+		// make watchlist. reschedule refresh if needed
+		
+		// subscribe data for watchlist
+		
+		
+		
+		
+		
+		// risk metrics pipeline
 		session.broker
 			.accountSummaryPublisher
 			.compactMap({[weak self] event -> RiskSignal? in
@@ -121,7 +153,6 @@ open class Strategy {
 			id: session.broker.nextRequestID,
 			contract: IBContract.equity("NVDA", currency: "USD")
 		)
-		
 		
 			
 	}

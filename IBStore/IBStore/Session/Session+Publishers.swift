@@ -30,8 +30,8 @@ import IBClient
 
 
 extension Session {
-			
-	/*
+
+
 	public func contractDetailsPublisher(for contract: IBContract) -> AnyPublisher<IBContractDetails, Error> {
 			
 		let id = broker.nextRequestID
@@ -39,6 +39,7 @@ extension Session {
 		let subject = PassthroughSubject<IBContractDetails, Error>()
 					
 		let cancellable = broker.dataTaskPublisher(for: request)
+			.first()
 			.handleEvents(receiveOutput: { message in
 				if message is IBContractDetailsEnd {
 					subject.send(completion: .finished)
@@ -52,10 +53,12 @@ extension Session {
 			}
 
 		return subject
-			.handleEvents(receiveCancel: { cancellable.cancel() }) // Ensure cleanup
+			.handleEvents(receiveCancel: { cancellable.cancel() })
 			.eraseToAnyPublisher()
 
 	}
+	
+	/*
 
 	public func priceHistoryPublisher(contract: IBContract, resolution: IBBarSize, interval: DateInterval) throws -> AnyPublisher<IBPriceHistory, Error> {
 		let id = broker.nextRequestID

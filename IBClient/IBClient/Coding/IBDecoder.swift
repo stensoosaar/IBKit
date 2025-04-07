@@ -284,7 +284,7 @@ extension UnkeyedDecodingContainer {
 				return nil
 			}
 
-		case is Decodable.Type:
+		case is IBDecodable.Type:
 			do {
 				return try self.decode(type)
 			} catch {

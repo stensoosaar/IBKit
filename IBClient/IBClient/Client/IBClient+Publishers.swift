@@ -16,16 +16,22 @@ extension IBClient {
 			.publisher
 			.eraseToAnyPublisher()
 	}
-
+	
 	/// creates new data task and returns publisher
-	public func dataTaskPublisher<T: IBRequest & Identifiable>(for request: T) -> AnyPublisher<IBEvent, Error> {
+	public func dataTaskPublisher<T: IBRequest & Identifiable>(
+		for request: T
+	) -> AnyPublisher<IBEvent, Error> {
+		
 		Deferred {
 			self.sendResultPublisher(request)
 		}
 		.flatMap { _ in
 			self.eventFeed
 				.filter { $0.id != nil }
-				.filter { request.id == $0.id as! T.ID }
+				.filter {
+					guard let responseID = $0.id as? T.ID else { return false }
+					return request.id == responseID
+				}
 				.tryMap { response in
 					switch response.result {
 					case .success(let object):
@@ -36,15 +42,19 @@ extension IBClient {
 				}
 		}
 		.handleEvents(receiveSubscription: {_ in
-			print("REQUESTING \(request.type)")
+			print("\(Date())\tREQUESTING \(request.type) \(request.id)")
 		}, receiveCancel: {
 			if let cancellable = request as? IBCancellableRequest{
 				_ = self.sendResultPublisher(cancellable.cancel)
 			}
-			print("Cancelled")
+			print("\(Date())\tCANCELLED \(request.id)")
 		})
 		.eraseToAnyPublisher()
 	}
+	
+}
+
+extension IBClient {
 	
 	
 	// subscribe tws bulletins
@@ -312,5 +322,3 @@ extension IBClient {
 	}
 	
 }
-
-

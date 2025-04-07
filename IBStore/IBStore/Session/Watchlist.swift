@@ -39,6 +39,8 @@ open class Watchlist {
 	public enum WatchlistType {
 		case manual, schedulled
 	}
+	
+	public var dataNeed: DataItem?
 		
 	public var type: WatchlistType = .manual
 	
