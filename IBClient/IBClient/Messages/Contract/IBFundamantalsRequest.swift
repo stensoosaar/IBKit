@@ -1,0 +1,98 @@
+//
+//  IBClient.swift
+//	IBKit
+//
+//	Copyright (c) 2016-2025 Sten Soosaar
+//
+//	Permission is hereby granted, free of charge, to any person obtaining a copy
+//	of this software and associated documentation files (the "Software"), to deal
+//	in the Software without restriction, including without limitation the rights
+//	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//	copies of the Software, and to permit persons to whom the Software is
+//	furnished to do so, subject to the following conditions:
+//
+//	The above copyright notice and this permission notice shall be included in all
+//	copies or substantial portions of the Software.
+//
+//	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//	SOFTWARE.
+//
+
+
+import Foundation
+
+
+
+public struct IBFundamantalsRequest: IBRequest, Identifiable, IBCancellableRequest {
+
+	public let id: Int
+	public let type: IBRequestType = .fundamentalData
+	public let contract: IBContract
+	private let version: Int = 2
+
+	public enum ReportType: String, Codable {
+		case overview   	= "ReportSnapshot"
+		case summary    	= "ReportsFinSummary"
+		case ratios     	= "ReportRatios"
+		case statements 	= "ReportsFinStatements"
+		case estimates  	= "RESC"
+		case calendar   	= "CalendarReport"
+	}
+
+	public let reportType: ReportType
+	
+	public init(id: Int, contract: IBContract, reportType: ReportType) {
+		self.id = id
+		self.contract = contract
+		self.reportType = reportType
+	}
+	
+	public func encode(to encoder: IBEncoder) throws {
+		var container = encoder.unkeyedContainer()
+		try container.encode(type)
+		try container.encode(version)
+		try container.encode(id)
+		try container.encode(contract.id ?? 0)
+		try container.encode(contract.symbol)
+		try container.encode(contract.securitiesType)
+		try container.encode(contract.exchange)
+		try container.encodeOptional(contract.primaryExchange)
+		try container.encode(contract.currency)
+		try container.encodeOptional(contract.localSymbol)
+		try container.encode(reportType)
+
+	}
+	
+	public var cancel: any IBRequest{
+		return IBFundamantalsCancellation(id: id)
+	}
+
+}
+
+
+
+public struct IBFundamantalsCancellation: IBRequest, Identifiable {
+	
+	public let id: Int
+	public let type: IBRequestType = .cancelFundamentalData
+	private let version: Int = 1
+
+	init(id: Int) {
+		self.id = id
+	}
+	
+	public func encode(to encoder: IBEncoder) throws {
+		var container = encoder.unkeyedContainer()
+		try container.encode(type)
+		try container.encode(version)
+		try container.encode(id)
+	}
+}
+
+
+

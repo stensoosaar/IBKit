@@ -27,19 +27,24 @@ import Foundation
 
 public struct IBWSHMeta: IBEvent {
 	
-	/// request id
-	public var requestID: Int
-	
 	///json payload
-	public var json: String
+	public let json: String
 	
 }
 
 extension IBWSHMeta: IBDecodable {
 	public init(from decoder: IBDecoder) throws {
 		var container = try decoder.unkeyedContainer()
-		self.requestID = try container.decode(Int.self)
 		self.json = try container.decode(String.self)
 	}
 	
+}
+
+
+extension IBResponseWrapper where T == IBWSHMeta {
+	init(from decoder: IBDecoder) throws {
+		var container = try decoder.unkeyedContainer()
+		self.id = try container.decode(Int.self)
+		self.result = try container.decode(T.self)
+	}
 }

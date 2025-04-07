@@ -28,7 +28,7 @@
 import Foundation
 
 
-extension Optional where Wrapped: Comparable {
+public extension Optional where Wrapped: Comparable {
 	
 	static func < (lhs: Wrapped?, rhs: Wrapped?) -> Bool {
 		guard let leftValue = lhs, let righValue = rhs else {return false}

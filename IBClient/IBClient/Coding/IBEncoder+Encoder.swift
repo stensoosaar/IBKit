@@ -118,28 +118,3 @@ extension IBEncoder: Encoder {
 	}
 }
 
-
-public extension UnkeyedEncodingContainer {
-	
-	mutating func encodeOptional<T:Encodable>(_ value:T?) throws {
-				
-		switch value {
-		case .none:
-			if type(of: value) == Int?.self {
-				try encode("")
-			} else if type(of: value) == Double?.self {
-				try encode("")
-			} else if type(of: value) == Date?.self {
-				try encode("")
-			} else {
-				try encode("")
-			}
-			
-		case .some(let wrapped):
-			try encode(wrapped)
-		}
-	}
-	
-}
-
-

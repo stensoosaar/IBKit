@@ -26,8 +26,6 @@
 import Foundation
 
 public struct IBScannerData: IBEvent{
-	
-	public let requestID: Int
 	public let rank: Int
 	public let contract: IBContract
 	public let distance: String
@@ -42,7 +40,6 @@ extension IBScannerData: IBDecodable{
 		
 	public init(from decoder: IBDecoder) throws {
 		var container = try decoder.unkeyedContainer()
-		self.requestID = try container.decode(Int.self)
 		self.rank = try container.decode(Int.self)
 		self.contract = try container.decode(IBContract.self)
 		self.distance = try container.decode(String.self)
@@ -51,4 +48,13 @@ extension IBScannerData: IBDecodable{
 		self.legsStr = try container.decode(String.self)
 	}
 	
+}
+
+
+extension IBResponseWrapper where T == IBScannerData {
+	init(from decoder: IBDecoder) throws {
+		var container = try decoder.unkeyedContainer()
+		self.id = try container.decode(Int.self)
+		self.result = try container.decode(T.self)
+	}
 }

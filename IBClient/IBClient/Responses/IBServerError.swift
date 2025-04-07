@@ -26,25 +26,11 @@
 import Foundation
 
 
-
-public struct IBServerError:IBEvent {
-	public let requestID: Int
-	public let error: IBError
-}
-
-extension IBServerError: IBDecodable{
-	
-	public init(from decoder: IBDecoder) throws {
-		
-		guard let serverVersion = decoder.serverVersion else {
-			throw IBError.decodingError("Decoder didn't found a server version.")
-		}
-		
+extension IBResponseWrapper where T == IBError {
+	init(from decoder: IBDecoder) throws {
 		var container = try decoder.unkeyedContainer()
 		_ = try container.decode(Int.self)
-		self.requestID = try container.decode(Int.self)
-		self.error = try container.decode(IBError.self)
-		
+		id = try container.decode(Int.self)
+		result = try container.decode(IBError.self)
 	}
-	
 }

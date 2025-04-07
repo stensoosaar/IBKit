@@ -46,11 +46,12 @@ public struct AccountSummary {
 	public let avgLoss: Double
 	public let hitRate: Double
 	public let highWatermark: Double
+	public let drawdown: Double
 	public let profitFactor: Double
-	public let cash: [String: Double]
-	public let rates: [String: Double]
+	public let cash: [Balance]
 	public let updatedAt: Date
 	public let positions: DataFrame
+	
 }
 
 
@@ -71,7 +72,6 @@ public class Account: Identifiable {
 	public var leverage: Double = 0.0
 	public var cushion: Double = 0.0
 	public var cash: CashBook = CashBook ()
-	public var rates:[String:Double] = [:]
 	public var positions: [String:Position] = [:]
 	public var orders: [String:IBOrder] = [:]
 	public var updatedAt: Date?
@@ -87,13 +87,20 @@ public class Account: Identifiable {
 	public private(set) var avgLoss: Double = 0
 	public private(set) var hitRate: Double = 0
 	public private(set) var profitFactor: Double = 0
-	
+	public private(set) var drawdown: Double = 0
+
 	public init(name: String) {
 		self.name = name
 	}
 	
 	private func updateHighWatermark(){
 		highWatermark = max(highWatermark, netLiquidation)
+	}
+	
+	func updateRate(_ rate: Double, for currency:String){
+		if cash.balances.keys.contains(where: {$0 == currency}){
+			cash.balances[currency]?.updateRate(rate)
+		}
 	}
 	
 }
@@ -111,6 +118,7 @@ extension Account{
 		avgLoss = Double(unprofitableTrades) > 0 ? totalLoss / Double(totalTrades) : 0.0
 		hitRate = Double(totalTrades) > 0 ? Double(profitableTrades / totalTrades) : 0.0
 		profitFactor = Double(totalLoss) > 0 ? (totalProfit / abs(totalLoss)) : 0.0
+		drawdown = min(0, netLiquidation - highWatermark)
 	}
 	
 }
@@ -132,7 +140,7 @@ extension Account: Hashable, Equatable {
 extension Account: ConvertibleObject{
 		
 	public func convert() -> AccountSummary {
-		
+				
 		let contractIDColumn = Column(ColumnID("id", Int.self), contents: positions.values.map{$0.contract.id!})
 		let contractBaseColumn = Column(ColumnID("base", String.self), contents: positions.values.map{$0.contract.symbol!})
 		let contractQuoteColumn = Column(ColumnID("quote", String.self), contents: positions.values.map{$0.contract.currency})
@@ -177,9 +185,9 @@ extension Account: ConvertibleObject{
 			avgLoss: avgLoss,
 			hitRate: hitRate,
 			highWatermark: highWatermark,
+			drawdown: drawdown,
 			profitFactor: profitFactor,
-			cash: cash.balances,
-			rates: rates,
+			cash: Array(cash.balances.values),
 			updatedAt: updatedAt ?? Date(),
 			positions: dataframe
 		)

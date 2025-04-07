@@ -103,7 +103,8 @@ extension IBDecoder: Decoder {
 			return true
 		}
 		
-		func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type) throws -> KeyedDecodingContainer<NestedKey> where NestedKey : CodingKey {
+		func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type) throws -> KeyedDecodingContainer<NestedKey>
+		where NestedKey : CodingKey {
 			return try decoder.container(keyedBy: type)
 		}
 		
@@ -115,78 +116,5 @@ extension IBDecoder: Decoder {
 			return decoder
 		}
 	}
-}
-
-
-extension UnkeyedDecodingContainer {
-	
-	mutating func decodeOptional<T:Decodable>(_ type: T.Type) throws -> T? {
-		
-		switch type {
-			
-		case is Int.Type:
-			do {
-				let value = try self.decode(type)
-				if (value as? Int) == Int.max 	{return nil}
-				if (value as? Int) == 0 		{ return nil }
-				if (value as? Int) == -1 		{ return nil }
-				return value
-			} catch {
-				return nil
-			}
-
-		case is Double.Type:
-			do {
-				let value = try self.decode(type)
-				if (value as? Double) == Double.greatestFiniteMagnitude { return nil }
-				if (value as? Double) == 0.0 { return nil }
-				if (value as? Double) == -1 { return nil }
-				return value
-			} catch {
-				return nil
-			}
-
-		case is String.Type:
-			do {
-				let value = try self.decode(type)
-				if (value as? String) == "" { return nil }
-				return value
-			} catch {
-				return nil
-			}
-
-		case is Date.Type:
-			do {
-				return try self.decode(type)
-			} catch {
-				return nil
-			}
-
-		case is IBDecodable.Type:
-			do {
-				return try self.decode(type)
-			} catch {
-				return nil
-			}
-
-		case is any RawRepresentable.Type:
-			do {
-				return try self.decode(type)
-			} catch {
-				return nil
-			}
-
-		default:
-			do {
-				let value = try self.decode(type)
-				return value
-			} catch {
-				return nil
-			}
-		}
-		
-		
-	}
-	
 }
 

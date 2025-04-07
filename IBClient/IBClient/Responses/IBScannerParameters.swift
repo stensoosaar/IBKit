@@ -28,9 +28,8 @@ import Foundation
 
 
 public struct IBScannerParameters: IBEvent{
-	
-	public var version: Int
-	public var content: String
+
+	public let content: String
 
 	public func xmlDocument() throws -> XMLDocument {
 		return try XMLDocument(xmlString: content)
@@ -41,7 +40,7 @@ public struct IBScannerParameters: IBEvent{
 extension IBScannerParameters: IBDecodable{
     public init(from decoder: IBDecoder) throws {
         var container = try decoder.unkeyedContainer()
-        version = try container.decode(Int.self)
+        _ = try container.decode(Int.self)
         content = try container.decode(String.self)
     }
 }

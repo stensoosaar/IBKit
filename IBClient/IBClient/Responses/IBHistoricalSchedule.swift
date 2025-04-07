@@ -26,18 +26,17 @@
 import Foundation
 
 
-public struct IBHistoricalSchedule: IBEvent{
+public struct IBHistoricalSchedule: IBEvent {
 	
 	public struct Session: Sendable{
 		public let start: String
-		public let end : String
+		public let end: String
 		public let ref: String
 	}
 	
-	public var requestID: Int
-	public var interval: DateInterval
-	public var timeZoneID: String
-	public var sessions: [Session] = []
+	public let interval: DateInterval
+	public let timeZoneID: String
+	public let sessions: [Session]
 	
 }
 
@@ -45,20 +44,30 @@ extension IBHistoricalSchedule: IBDecodable {
 	
 	public init(from decoder: IBDecoder) throws {
 		var container = try decoder.unkeyedContainer()
-		self.requestID = try container.decode(Int.self)
 		let start = try container.decode(Date.self)
 		let end = try container.decode(Date.self)
 		self.interval = DateInterval(start: start, end: end)
 		self.timeZoneID = try container.decode(String.self)
 		let count = try container.decode(Int.self)
+		var buffer: [Session] = []
 		for _ in 0..<count {
 			let sessionStart = try container.decode(String.self)
 			let sessionEnd = try container.decode(String.self)
 			let referenceDate = try container.decode(String.self)
-			sessions.append(
+			buffer.append(
 				Session(start: sessionStart, end: sessionEnd, ref: referenceDate)
 			)
-			
 		}
+		sessions = buffer
+	}
+}
+
+
+
+extension IBResponseWrapper where T == IBHistoricalSchedule {
+	init(from decoder: IBDecoder) throws {
+		var container = try decoder.unkeyedContainer()
+		self.id = try container.decode(Int.self)
+		self.result = try container.decode(T.self)
 	}
 }

@@ -28,10 +28,10 @@ import Foundation
 
 
 
-public struct IBMarketRuleRequest: IBRequest, Hashable {
+public struct IBMarketRuleRequest: IBRequest, Identifiable, Hashable {
 
+	public var id: Int
 	public var type: IBRequestType = .marketRule
-	public var id: Int?
 
 	public init(id: Int){
 		self.id = id

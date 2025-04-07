@@ -28,20 +28,22 @@ import Foundation
 import IBClient
 
 
-public class CashBook{
+public class CashBook {
 	
-	var balances : [String:Double] = [:]
 	
-	init(){
-		balances["BASE"] = 0
+	var balances: [String: Balance] = [:]
+
+	init() {
+		balances["BASE"] = Balance(currency: "BASE", units: 0, rate: 1.0)
+	}
+
+	public func update(_ currency: String, _ amount: Double, _ rate: Double = 1.0) {
+		balances[currency] = Balance(currency: currency, units: amount, rate: rate)
+	}
+
+	public var total: Double {
+		return balances.values.reduce(0) { $0 + $1.units * $1.rate }
 	}
 	
-	func update(_ currency: String, _ balance:Double){
-		balances[currency] = balance
-	}
-	
-	var total: Double? {
-		return balances["BASE"]
-	}
 	
 }

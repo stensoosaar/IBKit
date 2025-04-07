@@ -29,19 +29,13 @@ import Foundation
 
 public struct IBMarketRule: IBEvent {
 
-	struct PriceIncrement: IBDecodable {
-		var lowerBound: Double
-		var step: Double
-
-		public init(from decoder: IBDecoder) throws {
-			var container = try decoder.unkeyedContainer()
-			self.lowerBound = try container.decode(Double.self)
-			self.step = try container.decode(Double.self)
-		}
+	public struct PriceIncrement: Sendable {
+		public let lowerBound: Double
+		public let step: Double
 	}
 
-	var marketRuleId: Int
-	var values: [PriceIncrement] = []
+	public let marketRuleId: Int
+	public let values: [PriceIncrement]
 	
 }
 
@@ -50,10 +44,19 @@ extension IBMarketRule: IBDecodable{
 		var container = try decoder.unkeyedContainer()
 		marketRuleId = try container.decode(Int.self)
 		let count = try container.decode(Int.self)
+		var buffer: [PriceIncrement] = []
 		for _ in 0..<count{
 			let value = try container.decode(PriceIncrement.self)
-			values.append(value)
+			buffer.append(value)
 		}
+		values = buffer
 	}
 }
 
+extension IBMarketRule.PriceIncrement: IBDecodable{
+	public init(from decoder: IBDecoder) throws {
+		var container = try decoder.unkeyedContainer()
+		self.lowerBound = try container.decode(Double.self)
+		self.step = try container.decode(Double.self)
+	}
+}

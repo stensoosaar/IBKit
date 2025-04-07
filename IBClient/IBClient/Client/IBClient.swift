@@ -90,8 +90,8 @@ open class IBClient {
 		connection.publisher
 			.decode(type: IBResponse.self, decoder: IBDecoder(self.connection.serverVersion))
 			.catch { error -> Empty<IBResponse, Never> in
-				print("Decoding error: \(error)") // Log the error silently
-				return Empty() // Replace with an empty publisher, preventing termination
+				print("Decoding error: \(error)")
+				return Empty()
 			}
 			.sink { completion in
 				print(completion)
@@ -106,6 +106,7 @@ open class IBClient {
 			}
 			.store(in: &cancellables)
 	}
+
 	
 	open func onDisconnect(){}
 		

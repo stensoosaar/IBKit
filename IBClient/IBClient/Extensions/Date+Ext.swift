@@ -55,12 +55,12 @@ public extension Date{
 		return Calendar.current.date(byAdding: components, to: startOfDay)!
 	}
 	
-	private var startOfMonth: Date {
+	var startOfMonth: Date {
 		let components = Calendar.current.dateComponents([.year, .month], from: startOfDay)
 		return Calendar.current.date(from: components)!
 	}
 	
-	private var endOfMonth: Date {
+	var endOfMonth: Date {
 		var components = DateComponents()
 		components.month = 1
 		components.second = -1
@@ -75,12 +75,12 @@ public extension Date{
 		return "\(monthCode)\(yearCode)"		
 	}
 	
-	init(year: Int, month: Int, day: Int, hour: Int = 0, minute: Int = 0, second: Int = 0) throws {
-		let comps = DateComponents(year: year, month: month, day: day, hour: hour, minute: minute, second: second)
-		guard let date = Calendar.current.date(from: comps) else {
-			throw IBError.invalidValue("\(year)-\(month)-\(day) invalid values to make date")
+	static func from(_ components: DateComponents)->Date{
+		guard let date = Calendar.current.date(from: components) else {
+			fatalError("unable to make date from govern components")
 		}
-		self.init(timeIntervalSince1970: date.timeIntervalSince1970)
+		return self.init(timeIntervalSince1970: date.timeIntervalSince1970)
 	}
+
 	
 }

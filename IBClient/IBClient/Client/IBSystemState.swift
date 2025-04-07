@@ -26,7 +26,7 @@
 
 import Foundation
 
-public struct IBSystemState: IBObject {
+public struct IBSystemState {
 	public let code: Int
 	public let message: String
 	public let userInfo: String?

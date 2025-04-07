@@ -27,8 +27,7 @@ import Foundation
 
 
 public struct IBServerTime: IBEvent {
-	
-	public let time: Date
+	public let date: Date
 }
 
 extension IBServerTime: IBDecodable{
@@ -38,7 +37,7 @@ extension IBServerTime: IBDecodable{
 		var container = try decoder.unkeyedContainer()
 		_ = try container.decode(Int.self)
 		let unixTimestamp = try container.decode(Double.self)
-		time = Date(timeIntervalSince1970: unixTimestamp)
+		date = Date(timeIntervalSince1970: unixTimestamp)
 	}
 	
 }

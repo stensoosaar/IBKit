@@ -28,10 +28,10 @@ import Foundation
 
 
 public struct IBBulletin: IBEvent {	
-	public var messageID: Int
-	public var messageType: Int
-	public var message: String
-	public var source: String
+	public let messageID: Int
+	public let messageType: Int
+	public let message: String
+	public let source: String
 }
 
 
