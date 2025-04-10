@@ -26,7 +26,7 @@
 import Foundation
 
 
-public struct IBHistoricalTickBidAsk: IBEvent {
+public struct IBHistoricalTickBidAsk: AnyMarketData{
 	public let ticks: [TickQuote]
 	public let done: Bool
 }

@@ -1,12 +1,15 @@
 //
 //  QueueSubject.swift
-//  
+//
 //
 //  Created by Sten Soosaar on 06.04.2025.
 //
 
+
 import Foundation
 import Combine
+import Collections
+
 
 
 public extension Publisher {
@@ -19,14 +22,18 @@ public extension Publisher {
 }
 
 
+
+
 extension Publishers {
 	public struct Queue<Upstream: Publisher, Context: Scheduler>: Publisher {
 		public typealias Output = Upstream.Output
 		public typealias Failure = Upstream.Failure
 
+
 		private let upstream: Upstream
 		private let interval: Context.SchedulerTimeType.Stride
 		private let scheduler: Context
+
 
 		public init(upstream: Upstream,
 					interval: Context.SchedulerTimeType.Stride,
@@ -36,6 +43,7 @@ extension Publishers {
 			self.scheduler = scheduler
 		}
 
+
 		public func receive<S: Subscriber>(subscriber: S)
 		where S.Input == Output, S.Failure == Failure {
 			let inner = Inner(downstream: subscriber,
@@ -44,20 +52,23 @@ extension Publishers {
 			upstream.subscribe(inner)
 		}
 
+
 		private final class Inner<Downstream: Subscriber>: Subscriber, Subscription
 		where Downstream.Input == Upstream.Output, Downstream.Failure == Upstream.Failure {
 			typealias Input = Upstream.Output
 			typealias Failure = Upstream.Failure
 
+
 			private let lock = NSLock()
 			private var downstream: Downstream?
 			private var upstreamSubscription: Subscription?
-			private var buffer: [Input] = []
+			private var buffer: Deque<Output> = []
 			private var downstreamDemand: Subscribers.Demand = .none
 			private var completed: Bool = false
 			private let interval: Context.SchedulerTimeType.Stride
 			private let scheduler: Context
 			private var isScheduled = false
+
 
 			init(downstream: Downstream,
 				 interval: Context.SchedulerTimeType.Stride,
@@ -67,6 +78,7 @@ extension Publishers {
 				self.scheduler = scheduler
 			}
 
+
 			func request(_ demand: Subscribers.Demand) {
 				guard demand > .none else { return }
 				
@@ -75,10 +87,12 @@ extension Publishers {
 				let shouldSchedule = !buffer.isEmpty && !isScheduled
 				lock.unlock()
 
+
 				if shouldSchedule {
 					scheduleNext()
 				}
 			}
+
 
 			func cancel() {
 				lock.lock()
@@ -90,6 +104,7 @@ extension Publishers {
 				lock.unlock()
 			}
 
+
 			func receive(subscription: Subscription) {
 				lock.lock()
 				upstreamSubscription = subscription
@@ -98,11 +113,13 @@ extension Publishers {
 				subscription.request(.unlimited)
 			}
 
+
 			func receive(_ input: Input) -> Subscribers.Demand {
 				lock.lock()
 				buffer.append(input)
 				let shouldSchedule = downstreamDemand > .none && !isScheduled
 				lock.unlock()
+
 
 				if shouldSchedule {
 					scheduleNext()
@@ -110,17 +127,20 @@ extension Publishers {
 				return .none
 			}
 
+
 			func receive(completion: Subscribers.Completion<Failure>) {
 				lock.lock()
 				completed = true
 				let shouldComplete = buffer.isEmpty && !isScheduled
 				lock.unlock()
 
+
 				if shouldComplete {
 					downstream?.receive(completion: completion)
 					downstream = nil
 				}
 			}
+
 
 			private func scheduleNext() {
 				lock.lock()
@@ -131,10 +151,12 @@ extension Publishers {
 				isScheduled = true
 				lock.unlock()
 
+
 				scheduler.schedule(after: scheduler.now.advanced(by: interval)) { [weak self] in
 					self?.scheduledFlush()
 				}
 			}
+
 
 			private func scheduledFlush() {
 				lock.lock()
@@ -149,17 +171,21 @@ extension Publishers {
 					return
 				}
 
+
 				let next = buffer.removeFirst()
 				downstreamDemand -= 1
 				lock.unlock()
 
+
 				let additionalDemand = downstream?.receive(next) ?? .none
+
 
 				lock.lock()
 				downstreamDemand += additionalDemand
 				isScheduled = false
 				let shouldContinue = downstreamDemand > .none && !buffer.isEmpty
 				lock.unlock()
+
 
 				if shouldContinue {
 					scheduleNext()

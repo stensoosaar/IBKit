@@ -29,6 +29,7 @@ import IBClient
 import Combine
 
 
+
 open class Strategy {
 	
 	let id: Int
@@ -49,27 +50,42 @@ open class Strategy {
 		fatalError("\(#function), not implemented")
 	}
 	
-	// calculates indicators and stuff
-	open func onData(_ event: MarketData)->Feature {
+	/**
+	 Receives market updates and prepares feature to
+	 pass for evaluation
+	 
+	 - Parameter data: any data type eg price history
+	 - Returns: Feature
+	*/
+	open func onData(_ event: AnyMarketData)->Feature {
 		fatalError("\(#function), not implemented")
 	}
 	
-	// evaluates indicators and stuff
+	/// generate optional signal
+	/// - Parameter feature: collection on parameters
+	/// - Returns: Signal describing trade idea
 	open func onFeature(_ event: Feature)->TradeSignal? {
 		fatalError("\(#function), not implemented")
 	}
 	
-	// evaluates account updates
+	/// evaluates account updates
+	/// - Returns: Signal describing risk policy breach
 	open func onAccountUpdate(_ event: [AccountSummary]) -> RiskSignal? {
 		fatalError("\(#function), not implemented")
 	}
 	
-	// generate model portfolio weightings
+	/// evaluates signal and update model portfolio
+	/// - Parameter signal:
+	/// - Returns: portfolio model
 	open func onSignal(){
 		fatalError("\(#function), not implemented")
 	}
 
-	
+	/// calculate model and account delta and evaluate risks
+	/// - Parameters:
+	/// - model: portfolio model
+	/// - accounts: simulated or real trading account
+	/// - Returns: allocation model
 	open func onModel(_ model:[Weight], account:AccountSummary) -> [IBOrder] {
 		fatalError("\(#function), not implemented")
 	}
@@ -78,8 +94,11 @@ open class Strategy {
 		fatalError("\(#function), not implemented")
 	}
 
+	// validate
 	open func warmup() throws {
 		
+		
+
 	}
 	
 	public func run(in mode: Session.RunMode) throws {
@@ -93,24 +112,26 @@ open class Strategy {
 		}
 		
 		
+		/*
+		
 		// MARK: - validation and fetching initial data should be moved into warmup
-		// validate contracts
-		for contract in try session.store.fetchContracts(){
-			let key = UUID().uuidString
-			session.contractDetailsPublisher(for: contract)
-			
-				.sink { completion in
-					print("will cancel \(key)")
-					self.subscriptions.removeValue(forKey: key)
-				} receiveValue: { details in
-					do{
-						try self.session?.store.addContracts([details])
-					} catch {
-						print(error)
-					}
+		
+		session.fetchContractsPublisher()
+			.queue(for: .milliseconds(250), scheduler: DispatchQueue.main)
+			.flatMap{ session.contractDetailsPublisher(for: $0) }
+			.flatMap {
+				do {
+					return try session.priceHistoryPublisher(for: $0.contract)
+				} catch {
+					return Fail(error: error).eraseToAnyPublisher() // Handle thrown error
 				}
-				.store(in: &subscriptions, for: key)
-		}
+			}
+			.sink { completion in
+				print(completion)
+			} receiveValue: { response in
+				print(response)
+			}
+			.store(in: &subscriptions, for: "contract_validation")
 
 		
 
@@ -119,7 +140,7 @@ open class Strategy {
 		// subscribe data for watchlist
 		
 		
-		
+		*/
 		
 		
 		// risk metrics pipeline
@@ -140,10 +161,14 @@ open class Strategy {
 		
 		watchlist.watchlistChangesPublisher()
 			.sink { [weak self] changes in
+				self?.subscribeMarketData(changes)
 				self?.onWatchlist(changes: changes)
 			}
 			.store(in: &subscriptions, for: "WatchlistChanges")
-		scheduleNextUpdate(for: session)
+		
+		if watchlist.type == .schedulled{
+			scheduleNextUpdate(for: session)
+		}
 		  
 
 		// subscribe marketdata
@@ -152,8 +177,78 @@ open class Strategy {
 			contract: IBContract.equity("NVDA", currency: "USD")
 		)
 		
+		session.broker.dataTaskPublisher(for: req)
+			.compactMap({$0 as? AnyTickProtocol })
+			.summarize()
+			.compactMap{[weak self] event in
+				self?.onData(event)
+			}
+			.sink { completion in
+				print(completion)
+			} receiveValue: {  event in
+				print(event)
+			}
+			.store(in: &subscriptions, for: "marketdatarequest")
+
+
+		
+		
+		RunLoop.main.run()
 			
 	}
+	
+	
+	
+	private func subscribeMarketData(_ changes: Watchlist.Changes){
+		
+		guard let session = session else {return }
+		
+		/*
+		changes.added.forEach { contract in
+			print("ADDED",contract)
+			do {
+				let priceStream = try session.priceQuotePublisher(contract: contract)
+				let cancellable = priceStream
+					.handleEvents(receiveCancel: {
+						print("Cancelled subscription for \(contract.symbol)")
+					})
+					.share()
+					.multicast { PassthroughSubject<AnyTickProtocol, Error>() }
+
+				// Bar stream
+				cancellable
+					.autoconnect()
+					.compactMap({$0 as? TickQuote})
+					.aggregate(into: 60, quoteType: .last)
+					.sink(receiveCompletion: { _ in },
+						receiveValue: { bar in
+						print("Bar for \(contract.symbol): \(bar)")
+					})
+					.store(in: &session.watchlistCancellables, for: contract.symbol! + ".bar")
+
+				// Quote summary stream
+				cancellable
+					.autoconnect()
+					.summarize()
+					.sink(receiveCompletion: { _ in },
+						receiveValue: { summary in
+						print("Quote summary for \(contract.symbol): \(summary)")
+					})
+					.store(in: &session.watchlistCancellables, for: contract.symbol! + ".summary")
+
+			} catch {
+				print("Failed to subscribe to \(contract.symbol): \(error)")
+			}
+		}
+
+		changes.removed.forEach { contract in
+			session.watchlistCancellables.removeValue(forKey: contract.symbol! + ".bar")?.cancel()
+			session.watchlistCancellables.removeValue(forKey: contract.symbol! + ".summary")?.cancel()
+			print("Unsubscribed from \(contract)")
+		}
+		 */
+	}
+		
 	
 	
 	// watchlist scheduller

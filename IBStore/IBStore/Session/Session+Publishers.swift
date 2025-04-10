@@ -30,6 +30,25 @@ import IBClient
 
 
 extension Session {
+	
+	public func fetchContractsPublisher(query: String? = nil) -> AnyPublisher<IBContract, Error> {
+		Deferred {
+			Future<[IBContract], Error> { promise in
+				do {
+					let contracts = try self.store.fetchContracts(query: query)
+					promise(.success(contracts))
+				} catch {
+					promise(.failure(error))
+				}
+			}
+		}
+		.flatMap { contracts in
+			Publishers.Sequence(sequence: contracts)
+				.setFailureType(to: Error.self)
+		}
+		.eraseToAnyPublisher()
+	}
+	
 
 
 	public func contractDetailsPublisher(for contract: IBContract) -> AnyPublisher<IBContractDetails, Error> {
@@ -39,7 +58,6 @@ extension Session {
 		let subject = PassthroughSubject<IBContractDetails, Error>()
 					
 		let cancellable = broker.dataTaskPublisher(for: request)
-			.first()
 			.handleEvents(receiveOutput: { message in
 				if message is IBContractDetailsEnd {
 					subject.send(completion: .finished)
@@ -58,9 +76,8 @@ extension Session {
 
 	}
 	
-	/*
 
-	public func priceHistoryPublisher(contract: IBContract, resolution: IBBarSize, interval: DateInterval) throws -> AnyPublisher<IBPriceHistory, Error> {
+	public func priceHistoryPublisher(for contract: IBContract) throws -> AnyPublisher<IBPriceHistory, Error> {
 		let id = broker.nextRequestID
 		let request = IBPriceHistoryRequest(
 			id: id,
@@ -77,11 +94,11 @@ extension Session {
 	}
 		
 	
-	func priceQuotePublisher(contract: IBContract) throws -> AnyPublisher<IBPriceQuote, Error> {
+	func priceQuotePublisher(contract: IBContract) throws -> AnyPublisher<AnyTickProtocol, Error> {
 		let id = broker.nextRequestID
 		let request = IBMarketDataRequest(id: id, contract: contract)
 		return broker.dataTaskPublisher(for: request)
-			.compactMap { $0 as? IBPriceQuote }
+			.compactMap { $0 as? AnyTickProtocol }
 			.eraseToAnyPublisher()
 	}
 	
@@ -89,7 +106,7 @@ extension Session {
 	func priceBarPublihser(contract: IBContract) throws -> AnyPublisher<IBPriceBarUpdate, Error> {
 		let id = broker.nextRequestID
 		let source = getBarSource(for: contract)
-		let sessionType = getSessionType(for: contract)
+		let sessionType = getContractType(for: contract)
 		let request = IBRealTimeBarRequest(id: id, contract: contract, source: source, extendedSession: sessionType)
 		return broker.dataTaskPublisher(for: request)
 			.compactMap { $0 as? IBPriceBarUpdate }
@@ -103,10 +120,9 @@ extension Session {
 	}
 	
 	
-	private func getSessionType(for contract: IBContract) -> Bool{
+	private func getContractType(for contract: IBContract) -> Bool{
 		let collection: [IBSecuritiesType] = [.future, .forex]
 		return collection.contains(contract.securitiesType) ? true : false
 	}
 	
-	*/
 }

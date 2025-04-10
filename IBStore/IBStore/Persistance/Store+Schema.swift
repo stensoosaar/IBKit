@@ -63,14 +63,15 @@ extension Store {
 				units DOUBLE NOT NULL,
 				rateToBase DOUBLE NOT NULL DEFAULT 1.00
 			);
-			-- performance index to hold net liquidation value history
-			CREATE TABLE IF NOT EXISTS performance (
-				timestamp TIMESTAMP,
-				deposits DOUBLE,
-				withdrawals DOUBLE,
-				end_balance DOUBLE,
-				account_name VARCHAR
-			);
+			-- daily index to hold account balance history
+		 CREATE TABLE IF NOT EXISTS equity_curve (
+			 account_name VARCHAR,
+			 timestamp TIMESTAMP,
+			 deposits DOUBLE DEFAULT 0.0,
+			 withdrawals DOUBLE DEFAULT 0.0,
+			 end_balance DOUBLE
+		 );
+		
 			-- orders
 				CREATE TABLE IF NOT EXISTS orders (
 				contract_id INT32 NOT NULL,
@@ -123,10 +124,8 @@ extension Store {
 				size_increment DOUBLE,
 				underlying_contract_id INT32,
 				name VARCHAR,
-				regular_session_open DATE,
-				regular_session_duration DOUBLE,
-				extened_session_open DATE,
-				extended_session_duration DOUBLE,
+				regular_session STRUCT(open TIMESTAMP, close TIMESTAMP)[],
+				extended_session STRUCT(open TIMESTAMP, close TIMESTAMP)[],
 				industry VARCHAR,
 				category VARCHAR,
 				subcategory VARCHAR,
@@ -169,6 +168,55 @@ extension Store {
 				vwap DOUBLE,
 				contract_id INT32 NOT NULL
 			);
+		--VIEWS
+		-- Account performance using modified Dietz method without benchmark
+		CREATE VIEW performance AS
+			WITH 
+			strategy_data AS (
+				SELECT
+					account_name,
+					timestamp,
+					(deposits - withdrawals) AS cash_flow,
+					LAG(end_balance) OVER (PARTITION BY account_name ORDER BY timestamp) AS previous_balance,
+					end_balance,
+					DATEDIFF('day', 
+						LAG(timestamp) OVER (PARTITION BY account_name ORDER BY timestamp), 
+						timestamp) AS date_diff
+				FROM equity_curve
+			),
+			strategy_returns AS (
+				SELECT
+					timestamp,
+					cash_flow,
+					end_balance,
+					CASE 
+						WHEN previous_balance IS NULL THEN NULL
+						WHEN previous_balance + cash_flow = 0 THEN 0
+						ELSE (end_balance - previous_balance - cash_flow) / 
+							(previous_balance + (cash_flow * date_diff / 365.0))
+					END AS strategy_return
+				FROM strategy_data
+			),
+			summary AS (
+				SELECT 
+					timestamp,
+					cash_flow::DOUBLE AS cash_flow,
+					end_balance::DOUBLE AS end_balance,
+					strategy_return::DOUBLE AS strategy_return,
+					COALESCE(SUM(strategy_return) OVER (ORDER BY timestamp), 0) AS strategy_cumulative
+				FROM strategy_returns
+				ORDER BY timestamp
+			)
+			SELECT 
+				timestamp,
+				cash_flow,
+				end_balance,
+				strategy_return,
+				strategy_cumulative,
+				MAX(strategy_cumulative) OVER (ORDER BY timestamp) AS high_watermark,
+				(strategy_cumulative - MAX(strategy_cumulative) OVER (ORDER BY timestamp)) AS drawdown
+		FROM summary;
+		-- trading schedule
 		"""
 	}
 	

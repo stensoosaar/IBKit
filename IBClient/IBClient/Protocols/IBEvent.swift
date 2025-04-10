@@ -35,4 +35,7 @@ public protocol IBIndexedEvent: IBEvent, Identifiable {
 public protocol IBEvent: Sendable {}
 
 
-public protocol AnyTickEvent: IBEvent{}
+public protocol AnyMarketData: IBEvent {}
+
+public protocol AnyTickEvent: AnyMarketData{}
+

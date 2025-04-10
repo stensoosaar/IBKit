@@ -27,7 +27,7 @@
 import Foundation
 
 
-public struct IBHistoricalTick: IBEvent{
+public struct IBHistoricalTick: AnyMarketData {
 	public let ticks: [TickQuote]
 	public let done: Bool
 }

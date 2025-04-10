@@ -27,7 +27,7 @@
 import Foundation
 
 
-public struct IBHistogram: IBEvent {
+public struct IBHistogram: AnyMarketData {
 	
 	public typealias ResultType = (price: Double, size: Double)
 

@@ -27,7 +27,7 @@
 
 import Foundation
 
-public struct IBMarketDepthExchanges: IBEvent {
+public struct IBMarketDepthExchanges: AnyMarketData {
 	
 	public struct Exchange: Sendable {
 		public let exchange: String

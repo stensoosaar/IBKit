@@ -31,47 +31,52 @@ import NIOPosix
 import Combine
 
 
-class IBConnection: ObservableObject {
+class IBConnection: AnyConnection {
 	
-	var publisher = PassthroughSubject<Data,Error>()
+	var requestSubject = PassthroughSubject<Data, Never>()
 	
+	var responseSubject = PassthroughSubject<Data,Error>()
+	
+	var state = CurrentValueSubject<ConnectionState,Never>(.disconnected)
+
 	var debugMode:Bool = false
+	
 	let host: String
+	
 	let port: Int
 	
 	private(set) var serverVersion: Int?
+	
 	private(set) var connectionTime: String?
 
-	enum State: Equatable {
-		case initializing
-		case connecting(String)
-		case connected
-		case connectedToAPI
-		case disconnecting
-		case disconnected
-	}
-
-	@Published var state = State.disconnected
+	private var cancellables: Set<AnyCancellable> = []
 
 	init(host: String, port: Int) {
 		self.host = host
 		self.port = port
-	}
-	
-	deinit {
-		assert(.disconnected == self.state)
-		channel = nil
+		
+		requestSubject
+			.queue(for: .milliseconds(20), scheduler: DispatchQueue.main)
+			.combineLatest(state)
+			.filter { $0.1 == .connectedToAPI }
+			.map { $0.0 }
+			.sink { [weak self] data in
+				self?.send(data: data)
+			}
+			.store(in: &cancellables)
 	}
 	
 	private var channel: Channel?
+	
 	private let group = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+	
 	private let lock = NIOLock()
 
 	func connect(){
 		lock.withLock {
-			assert(.disconnected == self.state)
+			assert(.disconnected == self.state.value)
 			
-			self.state = .initializing
+			self.state.value = .initializing
 			
 			let bootstrap = ClientBootstrap(group: self.group)
 				.channelOption(ChannelOptions.socketOption(.so_reuseaddr), value: 1)
@@ -82,7 +87,7 @@ class IBConnection: ObservableObject {
 					])
 				}
 			
-			self.state = .connecting("\(host):\(port)")
+			self.state.value = .connecting("\(host):\(port)")
 			
 			bootstrap.connect(host: host, port: port).flatMap { channel in
 				channel.eventLoop.makeSucceededFuture(channel)
@@ -91,35 +96,35 @@ class IBConnection: ObservableObject {
 				case .success(let channel):
 					self.lock.withLock {
 						self.channel = channel
-						self.state = .connected
+						self.state.value = .hostReached
 						self.start()
 					}
 				case .failure(let failure):
-					self.publisher.send(completion: .failure(failure))
+					self.responseSubject.send(completion: .failure(failure))
 				}
 			}
 		}
 	}
 		
 	func disconnect(){
-		self.publisher.send(completion: .finished)
+		self.responseSubject.send(completion: .finished)
 		self.stop(error: nil)
 	}
 	
 	public func disconnectSocket() -> EventLoopFuture<Void> {
 		self.lock.withLock {
-			if .connected != self.state {
-				self.state = .disconnected
+			if .hostReached != self.state.value{
+				self.state.value = .disconnected
 				return self.group.next().makeFailedFuture(IBError.connection("Not Ready"))
 			}
 			guard let channel = self.channel else {
-				self.state = .disconnected
+				self.state.value = .disconnected
 				return self.group.next().makeFailedFuture(IBError.connection("Not Ready"))
 			}
-			self.state = .disconnecting
+			self.state.value = .disconnecting
 			channel.closeFuture.whenComplete { _ in
 				self.lock.withLock {
-					self.state = .disconnected
+					self.state.value = .disconnected
 				}
 			}
 			channel.close(promise: nil)
@@ -144,14 +149,15 @@ class IBConnection: ObservableObject {
 	}
 
 	private func stop(error: Error?) {
-		disconnectSocket().whenComplete { result in
-			switch result {
-			case .success:
-				self.publisher.send(completion: .finished)
-			case .failure(let failure):
-				self.publisher.send(completion: .failure(failure))
+		disconnectSocket()
+			.whenComplete { result in
+				switch result {
+				case .success:
+					self.responseSubject.send(completion: .finished)
+				case .failure(let failure):
+					self.responseSubject.send(completion: .failure(failure))
+				}
 			}
-		}
 	}
 
 	func send(data: Data) {
@@ -174,7 +180,7 @@ class IBConnection: ObservableObject {
 			print(#function, String(data: data, encoding: .utf8))
 		}
 				
-		if state == .connected {
+		if state.value == .hostReached {
 			
 			guard let separator = "\0".data(using: .utf8),
 				  let range = data.range(of: separator),
@@ -185,13 +191,17 @@ class IBConnection: ObservableObject {
 						
 			self.serverVersion = serverVersion
 			self.connectionTime = connectionTime
-			self.state = .connectedToAPI
+			self.state.value = .connectedToAPI
 			
-		} else if state == .connectedToAPI {
-			
-			publisher.send(data)
-			
+		} else if state.value == .connectedToAPI {
+			responseSubject.send(data)
 		}
+	}
+	
+	deinit {
+		assert(.disconnected == self.state.value)
+		cancellables.removeAll()
+		channel = nil
 	}
 	
 }

@@ -27,7 +27,7 @@ import Foundation
 
 
 
-public struct IBHistoricalTickLast: IBEvent {
+public struct IBHistoricalTickLast: AnyMarketData {
 	public let ticks: [TickQuote]
 	public let done: Bool
 }

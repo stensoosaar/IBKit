@@ -39,7 +39,7 @@ extension TickQuote: AnyTickProtocol{}
 
 
 
-public struct QuoteSummary {
+public struct QuoteSummary: AnyMarketData {
 	public var bidPrice: Double?
 	public var bidSize: Double?
 	public var askPrice: Double?

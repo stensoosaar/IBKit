@@ -28,6 +28,7 @@ import Foundation
 import DuckDB
 import IBClient
 import TabularData
+import Combine
 
 
 extension Store{
@@ -106,7 +107,9 @@ extension Store{
 		
 	}
 	
-	public func fetchContracts() throws -> [IBContract] {
+	public func fetchContracts(query: String? = nil) throws -> [IBContract] {
+		
+		// select which table to query depending on state.
 		
 		let query = """
 			SELECT 
@@ -119,11 +122,9 @@ extension Store{
 					COALESCE(tc.execution_right, ''), CHR(0),
 					COALESCE(CAST(tc.multiplier AS TEXT), ''), CHR(0),
 					COALESCE(tc.exchange, ''), CHR(0),
-					COALESCE(tc.primary_exchange, ''), CHR(0),
 					COALESCE(tc.currency, ''), CHR(0),
 					COALESCE(tc.local_symbol, ''), CHR(0),
 					COALESCE(tc.trading_class, ''), CHR(0),
-					COALESCE(CAST(tc.is_expired AS TEXT), 'false'), CHR(0),
 					CHR(0)
 				)
 			FROM temp_contracts tc;
@@ -145,23 +146,20 @@ extension Store{
 	@discardableResult
 	public func addContracts(_ contracts: [IBContractDetails]) throws -> [IBContractDetails]{
 		
-		print("STORING CONTRACT DETAILS \(contracts)")
-		
 		let sql = """
 			INSERT INTO contracts (
 				id, type, base, quote, symbol, local_symbol, expiration, strike, execution_right,
 				multiplier, destination_exchange, primary_exchange, time_zone_id,
 				minimum_tick_size, size_increment, underlying_contract_id, name,
-				regular_session_open, regular_session_duration,
-				extened_session_open, extended_session_duration,
+				regular_session, extended_session, 
 				industry, category, subcategory, isin, subtype, updated_at, created_at
 			)
 			VALUES (
 				$1, $2, $3, $4, $5, $6, $7, $8, $9,
 				$10, $11, $12, $13,
 				$14, $15, $16, $17,
-				$18, $19, $20, $21,
-				$22, $23, $24, $25, $26, $27, $28
+				$18, $19,
+				$20, $21, $22, $23, $24, $25, $26
 			)
 			ON CONFLICT(id) DO UPDATE SET
 				type=$2,
@@ -180,21 +178,20 @@ extension Store{
 				size_increment=$15,
 				underlying_contract_id=$16,
 				name=$17,
-				regular_session_open=$18,
-				regular_session_duration=$19,
-				extened_session_open=$20,
-				extended_session_duration=$21,
-				industry=$22,
-				category=$23,
-				subcategory=$24,
-				isin=$25,
-				subtype=$26,
-				updated_at=$27
+				regular_session=$18,
+				extended_session=$19,
+				industry=$20,
+				category=$21,
+				subcategory=$22,
+				isin=$23,
+				subtype=$24,
+				updated_at=$25
 		"""
 
 		let statement = try PreparedStatement(connection: connection, query: sql)
 
 		for contract in contracts {
+						
 			try statement.bind(Int32(contract.contractID), at: 1)
 			try statement.bind(contract.type.rawValue, at: 2)
 			try statement.bind(contract.symbol, at: 3)
@@ -212,22 +209,22 @@ extension Store{
 			try statement.bind(contract.sizeIncrement, at: 15)
 			try statement.bind(contract.underlyingContractID.map(Int32.init), at: 16)
 			try statement.bind(contract.longName, at: 17)
-			try statement.bind(Date.empty()?.ISO8601Format(), at: 18)
-			try statement.bind(nil as Double?, at: 19)
-			try statement.bind(Date.empty()?.ISO8601Format(), at: 20)
-			try statement.bind(nil as Double?, at: 21)
-			try statement.bind(contract.industry, at: 22)
-			try statement.bind(contract.category, at: 23)
-			try statement.bind(contract.subcategory, at: 24)
-			try statement.bind(nil as String?, at: 25)
-			try statement.bind(contract.stockType, at: 26)
-			try statement.bind(Date().ISO8601Format(), at: 27)
-			try statement.bind(Date().ISO8601Format(), at: 28)
+			
+			let regularSchedule = try contract.tradingHours?.blaah()
+			let extendedSchedule = try contract.liquidHours?.blaah()
+
+			try statement.bind(regularSchedule, at: 18)
+			try statement.bind(extendedSchedule, at: 19)
+			try statement.bind(contract.industry, at: 20)
+			try statement.bind(contract.category, at: 21)
+			try statement.bind(contract.subcategory, at: 22)
+			try statement.bind(nil as String?, at: 23)
+			try statement.bind(contract.stockType, at: 24)
+			try statement.bind(Date().ISO8601Format(), at: 25)
+			try statement.bind(Date().ISO8601Format(), at: 26)
 			_ = try statement.execute()
 		}
-		
-		print("- STORED")
-		
+				
 		return contracts
 				
 	}
@@ -235,4 +232,5 @@ extension Store{
 	
 
 }
+
 

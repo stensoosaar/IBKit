@@ -29,11 +29,7 @@ import Combine
 
 open class IBClient {
 	
-	private let id: Int
-
-	private let host: String
-
-	private let port: Int
+	public let id: Int
 
 	private let connection: IBConnection
 	
@@ -54,19 +50,18 @@ open class IBClient {
 	///  - port: default values (live, test): gateway 4001,4002 and workstation 7496,7497
 	public init(id: Int, address: String, port: Int) {
 		
+		self.id = id
+		
 		guard let host = URL(string: address)?.host else {
 			fatalError("Cant figure out the host to connect")
 		}
 		
-		self.host = host
-		self.port = port
-		self.id = id
 		connection = IBConnection(host: host, port: port)
 		
 	}
 	
 	private var _nextValidID: Int = 0
-
+	
 	public var nextRequestID: Int {
 		get{
 			let value = _nextValidID
@@ -83,11 +78,11 @@ open class IBClient {
 			self.connection.debugMode = newValue
 		}
 	}
-		
+	
 	open func onConnect(){}
 	
 	private func listen(){
-		connection.publisher
+		connection.responseSubject
 			.decode(type: IBResponse.self, decoder: IBDecoder(self.connection.serverVersion))
 			.catch { error -> Empty<IBResponse, Never> in
 				print("Decoding error: \(error)")
@@ -107,16 +102,15 @@ open class IBClient {
 			.store(in: &cancellables)
 	}
 
-	
 	open func onDisconnect(){}
-		
+	
 	public func connect() throws {
 
-		guard self.connection.state == .disconnected else {
+		guard self.connection.state.value == .disconnected else {
 			throw IBError.connection("Already connected")
 		}
 		
-		self.connection.$state
+		self.connection.state
 			.sink { [weak self] state in
 				switch state {
 				case .connectedToAPI:
@@ -141,17 +135,21 @@ open class IBClient {
 	}
 	
 	public func send(_ request: IBRequest) throws {
-		guard connection.state == .connectedToAPI else {
+		guard connection.state.value == .connectedToAPI else {
 			throw IBError.connection("Not connected")
 		}
 		let encoder = IBEncoder(connection.serverVersion)
 		try encoder.encode(request)
 		let data = encoder.data
 		let dataWithLength = data.count.toBytes(size: 4) + data
-		connection.send(data: dataWithLength)
+		connection.requestSubject.send(dataWithLength)
 	}
-		
-	private func startAPI() throws {
+	
+	private func setServiceState(_ error: IBError){
+		print("SERVICE STATE", error.message)
+	}
+	
+	func startAPI() throws {
 		let version: Int = 2
 		let encoder = IBEncoder()
 		var container = encoder.unkeyedContainer()
@@ -163,8 +161,9 @@ open class IBClient {
 		connection.send(data: dataWithLength)
 	}
 	
-	private func setServiceState(_ error: IBError){
-		print("SERVICE STATE", error.message)
+	deinit{
+		connection.disconnect()
+		self.cancellables.removeAll()
 	}
 	
 }

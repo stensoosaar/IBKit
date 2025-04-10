@@ -25,7 +25,7 @@
 
 import Foundation
 
-public struct IBHeadTimestamp: IBEvent {
+public struct IBHeadTimestamp: AnyMarketData {
 	public let date: Date
 }
 

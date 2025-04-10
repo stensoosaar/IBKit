@@ -27,7 +27,7 @@ import Foundation
 
 
 
-public struct IBCurrentMarketDataType:IBEvent {
+public struct IBCurrentMarketDataType:AnyMarketData {
 	public let type: IBMarketDataType
 }
 

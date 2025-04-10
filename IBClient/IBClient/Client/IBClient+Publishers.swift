@@ -11,16 +11,24 @@ import Combine
 
 extension IBClient {
 	
-	private func sendResultPublisher(_ request: IBRequest) -> AnyPublisher<Void, Error> {
+	public func sendResultPublisher(_ request: IBRequest) -> AnyPublisher<Void, Error> {
 		Result { try self.send(request) }
 			.publisher
 			.eraseToAnyPublisher()
 	}
 	
-	/// creates new data task and returns publisher
-	public func dataTaskPublisher<T: IBRequest & Identifiable>(
-		for request: T
-	) -> AnyPublisher<IBEvent, Error> {
+	/// Sends an `IBRequest` and returns a publisher that emits matching `IBEvent` responses.
+	///
+	/// This method sends the given request using `sendResultPublisher` and listens for matching
+	/// events on the `eventFeed`. Only events with a non-nil ID matching the request’s ID will
+	/// be processed. If the event contains a successful result, it is emitted to subscribers;
+	/// otherwise, the error is thrown.
+	///
+	/// Request cancellation (if supported) is triggered when the subscription is cancelled.
+	///
+	/// - Parameter request: A request conforming to `IBRequest` and `Identifiable`.
+	/// - Returns: A publisher that emits `IBEvent` objects matching the request ID or fails with an error.
+	public func dataTaskPublisher<T: IBRequest & Identifiable>(for request: T) -> AnyPublisher<IBEvent, Error> {
 		
 		Deferred {
 			self.sendResultPublisher(request)
@@ -53,6 +61,7 @@ extension IBClient {
 	}
 	
 }
+
 
 extension IBClient {
 	
@@ -201,7 +210,6 @@ extension IBClient {
 	/// - Parameter accountName: account name
 	public func accountUpdatePublisher(_ accountName: String) -> AnyPublisher<IBEvent, Error> {
 		
-		//let request =
 		
 		Deferred {
 			self.sendResultPublisher(IBAccountUpdateRequest(accountName: accountName))
@@ -311,6 +319,7 @@ extension IBClient {
 		.eraseToAnyPublisher()
 		
 	}
+	
 	
 }
 

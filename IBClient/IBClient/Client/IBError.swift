@@ -23,6 +23,8 @@
 //	SOFTWARE.
 //
 
+import Foundation
+
 
 public struct IBError: Error, Sendable{
 	public let code: Int

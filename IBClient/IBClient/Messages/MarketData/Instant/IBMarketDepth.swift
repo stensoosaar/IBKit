@@ -35,7 +35,7 @@ public enum IBOperation:Int, Decodable, Sendable {
 }
 
 
-public struct IBMarketDepth: IBEvent{
+public struct IBMarketDepth: AnyMarketData {
 	
 	/// the order book's row being updated
 	public let position: Int
@@ -78,7 +78,7 @@ extension IBResponseWrapper where T == IBMarketDepth {
 
 
 
-public struct IBMarketDepthL2: IBEvent{
+public struct IBMarketDepthL2: AnyTickEvent {
 	
 	/// the order book's row being updated
 	public let position: Int

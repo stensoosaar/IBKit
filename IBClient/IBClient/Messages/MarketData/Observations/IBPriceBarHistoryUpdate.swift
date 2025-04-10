@@ -26,7 +26,7 @@
 import Foundation
 
 
-public struct IBPriceBarHistoryUpdate: IBEvent {
+public struct IBPriceBarHistoryUpdate: AnyMarketData {
 	public let bar: IBPriceBar
 }
 

@@ -26,7 +26,7 @@
 import Foundation
 
 
-public enum IBMarketDataType: Int, Codable, Sendable, IBEvent {
+public enum IBMarketDataType: Int, Codable, Sendable, AnyMarketData {
 	case realTime 		= 1
 	case delayed 		= 2
 	case frozen			= 3
