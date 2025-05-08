@@ -58,7 +58,7 @@ public struct IBTickHistoryRequest: IBIndexedRequest, Hashable, Equatable {
 		try container.encode(interval.end)
 		try container.encode(count)
 		try container.encode(source)
-		try container.encode(extendedHours)
+		try container.encode(extendedHours.reverseValue())
 		try container.encode(ignoreSize)
 		try container.encode("")
 		

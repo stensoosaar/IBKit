@@ -37,7 +37,7 @@ public struct IBHeadTimestampRequest: IBIndexedRequest, Hashable {
 		try container.encode(requestID)
 		try container.encode(contract)
 		try container.encode(contract.isExpired)
-		try container.encode(extendedTrading)
+		try container.encode(extendedTrading.reverseValue())
 		try container.encode(source)
 		try container.encode(1)
 	}

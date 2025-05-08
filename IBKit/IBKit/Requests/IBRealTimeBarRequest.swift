@@ -34,7 +34,7 @@ public struct IBRealTimeBarRequest: IBIndexedRequest, Hashable, Equatable {
 		try container.encode(contract)
 		try container.encode(5)
 		try container.encode(source)
-		try container.encode(extendedTrading)
+		try container.encode(extendedTrading.reverseValue())
 		try container.encode("")
 	}
 	

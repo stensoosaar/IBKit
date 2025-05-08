@@ -67,7 +67,7 @@ public struct IBPriceHistoryRequest: IBIndexedRequest, IBEncodable, Hashable, Eq
 		
 		try container.encode(size)
 		try container.encode(lookback.twsDescription)
-		try container.encode(extendedTrading)
+		try container.encode(extendedTrading.reverseValue())
 		try container.encode(source)
 		try container.encode(1)
 		
