@@ -14,14 +14,16 @@ let package = Package(
     products: [
         .library(
 			name: "IBClient",
-			targets: ["IBClient"]),
+			targets: ["IBClient"]
+		),
 		.library(
 			name: "IBStore",
-			targets: ["IBStore"]),
+			targets: ["IBStore"]
+		),
     ],
     dependencies: [
-		.package(url: "https://github.com/apple/swift-nio", from: .init(2, 0, 0)),
-		.package(url: "https://github.com/duckdb/duckdb-swift", .upToNextMajor(from: .init(1, 0, 0))),
+		.package(url: "https://github.com/stensoosaar/ibmodels", from: "10.33.0"),
+		.package(url: "https://github.com/duckdb/duckdb-swift", .upToNextMajor(from: "1.1.3")),
 		.package(url: "https://github.com/apple/swift-algorithms", from: "1.0.0"),
 		.package(url: "https://github.com/apple/swift-collections.git", .upToNextMinor(from: "1.0.0")),
 	],
@@ -29,7 +31,14 @@ let package = Package(
 		.target(
 			name: "IBClient",
 			dependencies: [
-				.product(name: "NIO", package: "swift-nio")
+				.product(
+					name: "TWS",
+					package: "ibmodels"
+				),
+				.product(
+					name: "Collections",
+					package: "swift-collections"
+				)
 			],
 			path: "IBClient/IBClient"
 		),
@@ -42,16 +51,15 @@ let package = Package(
 			name: "IBStore",
 			dependencies: [
 				"IBClient",
-				.product(name: "DuckDB", package: "duckdb-swift"),
-				.product(name: "Algorithms", package: "swift-algorithms"),
-				.product(name: "Collections", package: "swift-collections")
+				.product(
+					name: "DuckDB",
+					package: "duckdb-swift"
+				),
 			],
-			path: "IBStore/IBStore"
+			path: "IBStore/IBStore",
+			resources: [
+				.copy("Resources/StoreSchema.sql")
+			]
 		),
-		.testTarget(
-			name: "IBStoreTests",
-			dependencies: ["IBStore"],
-			path: "IBStore/IBStoreTests"
-		)
     ]
 )

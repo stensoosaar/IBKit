@@ -1,58 +1,65 @@
 //
-//  IBStore.swift
-//	IBKit
+//  Store.swift
+//  IBKit
 //
-//	Copyright (c) 2016-2025 Sten Soosaar
+//  Created by Sten Soosaar on 24.05.2025.
 //
-//	Permission is hereby granted, free of charge, to any person obtaining a copy
-//	of this software and associated documentation files (the "Software"), to deal
-//	in the Software without restriction, including without limitation the rights
-//	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-//	copies of the Software, and to permit persons to whom the Software is
-//	furnished to do so, subject to the following conditions:
-//
-//	The above copyright notice and this permission notice shall be included in all
-//	copies or substantial portions of the Software.
-//
-//	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-//	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-//	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-//	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-//	SOFTWARE.
-//
-
 
 import Foundation
-import DuckDB
 import IBClient
-import TabularData
-import Combine
+import DuckDB
 
-
-
-public class Store {
+public final class Store {
 	
 	let database: Database
-	
 	let connection: Connection
-
-	internal lazy var subject = PassthroughSubject<StoreNotification, Never>()
-	public private(set) lazy var notificationPublisher = subject.share().eraseToAnyPublisher()
-
+	
 	private init(database: Database, connection: Connection) {
 		self.database = database
 		self.connection = connection
 	}
 	
-	public static func create(_ url: URL? = nil) throws -> Store {
-		let storeType: Database.Store = url == nil ? .inMemory : .file(at: url!)
-		let database = try Database(store: storeType)
+	public func validateUniverse() throws {
+		let whitelist = try connection.query("SELECT * FROM universe;")
+		print(whitelist)
+	}
+	
+}
+
+
+extension Store {
+	
+	public static func create(whitelist url: URL? = nil) throws -> Store {
+		let database = try Database(store: .inMemory)
 		let connection = try database.connect()
-		_ = try connection.execute(self.schema)
+		
+		#if SWIFT_PACKAGE
+		guard let path = Bundle.module.url(forResource: "StoreSchema", withExtension: "sql"),
+			  let schema = try? String(contentsOf: path) else {
+			fatalError("no schama found")
+		}
+		#else
+		fatalError("no schama found")
+		#endif
+		
+		
+		
+		
+		
+		if let url = url {
+			_ = try connection.execute("""
+				CREATE TEMP TABLE IF NOT EXISTS imported_contracts AS 
+				SELECT * FROM read_csv_auto('\(url.path())');
+			""")
+		}
 		return Store(database: database, connection: connection)
 	}
+	
+	public func addAccounts(identifiers: [String]){
+		
+		
+	}
+	
 		
 	
 }

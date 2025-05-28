@@ -1,333 +1,311 @@
-//
-//  IBClient+Publishers.swift
-//  IBKit
-//
-//  Created by Sten Soosaar on 15.03.2025.
-//
+/*
+ MIT License
+
+ Copyright (c) 2016-2025 Sten Soosaar
+
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+
+ The above copyright notice and this permission notice shall be included in all
+ copies or substantial portions of the Software.
+
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ SOFTWARE.
+ */
+
 
 import Foundation
 import Combine
+import TWS
 
 
-extension IBClient {
+public extension IBClient{
 	
-	public func sendResultPublisher(_ request: IBRequest) -> AnyPublisher<Void, Error> {
-		Result { try self.send(request) }
-			.publisher
+	/**
+	Sends an `IBRequest` and returns a publisher that emits matching `IBEvent` responses.
+	
+	This method sends the given request on subscription and listens for matching events.
+	Only events with matching the request’s ID will be processed. If the event contains a
+	successful result, it is emitted to subscribers; otherwise, the error is thrown.
+	 
+	## Usage Example
+	
+	```swift
+	let request = MatchingSymbolsRequest(id: 1, nameOrSymbol: "AAPL")
+	let subscription = broker.dataTaskPublisher(for: request)
+		.receive(on: DispatchQueue.main)
+	    .sink(
+	        receiveCompletion: { completion in
+	            switch completion {
+	            case .finished:
+	                print("Request completed successfully")
+	            case .failure(let error):
+	                print("Request failed: \(error)")
+	            }
+	        },
+	        receiveValue: { event in
+				print("Received response: \(event)")
+			}
+		)
+	```
+	
+	- note: Request cancellation (if supported) is triggered when the subscription is cancelled.
+	
+	- parameter request: A request conforming to `IBRequest` and `Identifiable`.
+	- returns: A publisher that emits `IBEvent` objects matching the request ID or fails with an error.
+	 */
+	
+	func dataTaskPublisher<T: IdentifiableRequest>(for request: T) -> AnyPublisher<IBEvent, Error> {
+		
+		return self.responses
+			.filter {
+				guard let responseID = $0.requestId else { return false }
+				return request.id == responseID
+			}
+			.tryMap { response in
+				switch response.result {
+				case .success(let object):
+					return object
+				case .failure(let error):
+					throw error
+				}
+			}
+			.handleEvents(
+				receiveSubscription: { _ in
+					print("\(Date())\tREQUESTING \(request.type) \(request.id)")
+					self.sendRequest(request)
+				},
+				receiveCancel: {
+					if let cancellable = request as? AnyCancellableRequest {
+						self.sendRequest(cancellable.cancel)
+					}
+					print("\(Date())\tCANCELLED \(request.id)")
+				}
+			)
 			.eraseToAnyPublisher()
 	}
 	
-	/// Sends an `IBRequest` and returns a publisher that emits matching `IBEvent` responses.
-	///
-	/// This method sends the given request using `sendResultPublisher` and listens for matching
-	/// events on the `eventFeed`. Only events with a non-nil ID matching the request’s ID will
-	/// be processed. If the event contains a successful result, it is emitted to subscribers;
-	/// otherwise, the error is thrown.
-	///
-	/// Request cancellation (if supported) is triggered when the subscription is cancelled.
-	///
-	/// - Parameter request: A request conforming to `IBRequest` and `Identifiable`.
-	/// - Returns: A publisher that emits `IBEvent` objects matching the request ID or fails with an error.
-	public func dataTaskPublisher<T: IBRequest & Identifiable>(for request: T) -> AnyPublisher<IBEvent, Error> {
-		
-		Deferred {
-			self.sendResultPublisher(request)
-		}
-		.flatMap { _ in
-			self.eventFeed
-				.filter { $0.id != nil }
-				.filter {
-					guard let responseID = $0.id as? T.ID else { return false }
-					return request.id == responseID
+	
+
+	
+	
+	/**
+	 PositionSize + PositionSizeEnd
+	 Publishes position size's for all managed accounts
+	 */
+	func positionSizePublisher() -> AnyPublisher<PositionSize, Error>{
+		let request = PositionSizeRequest()
+		return self.responses
+			.filter { $0.type == .positionSize }
+			.tryMap { try $0.get() }
+			.compactMap{ $0 as? PositionSize }
+			.handleEvents(
+				receiveSubscription: { _ in
+					print("\(Date())\tREQUESTING \(request.type)")
+					self.sendRequest(request)
+				},
+				receiveCancel: {
+					self.sendRequest(request.cancel)
+					print("\(Date())\tCANCELLED \(request)")
 				}
-				.tryMap { response in
-					switch response.result {
-					case .success(let object):
-						return object
-					case .failure(let error):
-						throw error
+			)
+			.eraseToAnyPublisher()
+	}
+	
+	
+	/**
+	 */
+	func bulletinPublisher(includePast: Bool = true) -> AnyPublisher<NewsBulletin, Error> {
+		let request = NewsBulletinsRequest(includePast: includePast)
+		return self.responses
+			.filter({$0.type == .newsBulletins})
+			.tryMap { try $0.get() }
+			.compactMap{ $0 as? NewsBulletin }
+			.handleEvents(
+				receiveSubscription: {_ in
+					print("\(Date())\tREQUESTING \(request.type)")
+					self.sendRequest(request)
+				}, receiveCancel: {
+					print("\(Date())\tCANCELLED \(request)")
+					self.sendRequest(request.cancel)
+				}
+			)
+			.eraseToAnyPublisher()
+	}
+	
+	
+	/**
+	 Requests accounts available for current trading session
+	 - returns: managed account or error
+	 */
+	func requestManagedAccounts() -> AnyPublisher<ManagedAccounts, Error> {
+		let request = ManagedAccountsRequest()
+		return self.responses
+			.first(where: {$0.type == .managedAccounts} )
+			.tryMap { try $0.get() }
+			.compactMap{ $0 as? ManagedAccounts }
+			.handleEvents(
+				receiveSubscription: {_ in
+					print("\(Date())\tREQUESTING \(request.type)")
+					self.sendRequest(request)
+				}
+			)
+			.eraseToAnyPublisher()
+	}
+	
+	
+	/**
+	 Creates a continuous stream of server-synchronized time updates.
+	
+	 Fetches the current time from the server and then provides regular time updates
+	 using a local timer synchronized to the server timestamp. This approach maintains
+	 accuracy while minimizing server requests.
+	
+	 - Parameter interval: The time interval between updates in seconds
+	 - Returns: A publisher that emits `Date` objects at the specified interval, synchronized with server time
+	
+	 ## Usage
+	 ```swift
+	 let timeStream = serverTimeStream(interval: 1.0)
+	     .sink(receiveCompletion: { completion in
+	         // Handle completion or errors
+	     }, receiveValue: { date in
+	         print("Current time: \(date)")
+	     })
+	 ```
+	
+	 ## Behavior
+	 - Sends an initial server time request
+	 - Emits the server timestamp immediately upon receipt
+	 - Starts a local timer that calculates accurate time progression
+	 - Automatically handles timer cleanup on cancellation or completion
+	 - Maintains accuracy by calculating elapsed time rather than accumulating intervals
+	 */
+	func serverTimePublisher(interval: TimeInterval = 1.0) -> AnyPublisher<Date, Error> {
+
+		let request = ServerTimeRequest()
+		let timerSubject = PassthroughSubject<Date, Never>()
+		
+		let timerQueue = DispatchQueue(label: "timer.queue", qos: .userInitiated)
+		var timerCancellable: Cancellable?
+		
+		let serverTimePublisher = self.responses
+			.filter { $0.type == .currentTime }
+			.tryMap { try $0.get() }
+			.compactMap { $0 as? ServerTime }
+			.map { $0.time }
+			.handleEvents(receiveSubscription: { _ in
+				print("\(Date())\tREQUESTING \(request.type)")
+				self.sendRequest(request)
+			})
+			.share()
+
+		return serverTimePublisher
+			.handleEvents(
+				receiveOutput: { serverDate in
+					timerQueue.async {
+						// Send the initial server time
+						timerSubject.send(serverDate)
+						
+						// Cancel previous timer
+						timerCancellable?.cancel()
+						
+						// Start a new timer with more accurate time calculation
+						let serverTimestamp = serverDate
+						let startTime = Date()
+						
+						timerCancellable = Timer
+							.publish(every: interval, on: .main, in: .default)
+							.autoconnect()
+							.map { _ -> Date in
+								let elapsed = Date().timeIntervalSince(startTime)
+								let intervals = floor(elapsed / interval)
+								return serverTimestamp.addingTimeInterval((intervals + 1) * interval)
+							}
+							.sink(receiveValue: { calculatedDate in
+								timerSubject.send(calculatedDate)
+							})
+					}
+				},
+				receiveCompletion: { _ in
+					// Clean up timer when stream completes
+					timerQueue.async {
+						timerCancellable?.cancel()
+						timerCancellable = nil
+					}
+				},
+				receiveCancel: {
+					// Clean up timer when stream is cancelled
+					timerQueue.async {
+						timerCancellable?.cancel()
+						timerCancellable = nil
 					}
 				}
-		}
-		.handleEvents(receiveSubscription: {_ in
-			print("\(Date())\tREQUESTING \(request.type) \(request.id)")
-		}, receiveCancel: {
-			if let cancellable = request as? IBCancellableRequest{
-				_ = self.sendResultPublisher(cancellable.cancel)
+			)
+			.flatMap { _ in
+				timerSubject.setFailureType(to: Error.self)
 			}
-			print("\(Date())\tCANCELLED \(request.id)")
-		})
-		.eraseToAnyPublisher()
-	}
-	
-}
-
-
-extension IBClient {
-	
-	
-	// subscribe tws bulletins
-	public func bulletinPublisher() -> AnyPublisher<IBBulletin, Error> {
-		Deferred {
-			self.sendResultPublisher(IBBulletinBoardRequest())
-		}
-		.flatMap{ _ in
-			self.eventFeed
-				.filter({$0.type == .NEWS_BULLETINS})
-				.tryMap { response in
-					switch response.result {
-					case .success(let object):
-						guard let typedObject = object as? IBBulletin else {
-							throw IBError.invalidValue("")
-						}
-						return typedObject
-					case .failure(let error):
-						throw error
-					}
-				}
-		}
-		.handleEvents(receiveSubscription: {_ in 
-			print("REQUESTING BULLETINS")
-		}, receiveCancel: {
-			print("CANCELLING BULLETINS")
-			_ = self.sendResultPublisher(IBCancelBulletins())
-		})
-		.eraseToAnyPublisher()
-	}
-	
-	
-	public func nextIDPublisher() -> AnyPublisher<Int, Error> {
-		Deferred {
-			self.sendResultPublisher(IBNextIDRequest())
-		}
-		.flatMap{ _ in
-			self.eventFeed
-				.filter({$0.type == .NEXT_VALID_ID})
-				.first()
-				.tryMap { response in
-					switch response.result {
-					case .success(let object):
-						guard let typedObject = object as? IBNextRequestID else {
-							throw IBError.invalidValue("")
-						}
-						return typedObject.value
-					case .failure(let error):
-						throw error
-					}
-				}
-		}
-		.eraseToAnyPublisher()
-
-	}
-	
-	
-	public func serverTimePublisher() -> AnyPublisher<Date, Error> {
-		Deferred {
-			self.sendResultPublisher(IBServerTimeRequest())
-		}
-		.flatMap{ _ in
-			self.eventFeed
-				.filter({$0.type == .CURRENT_TIME})
-				.first()
-				.tryMap { response in
-					switch response.result {
-					case .success(let object):
-						guard let typedObject = object as? IBServerTime else {
-							throw IBError.invalidValue("")
-						}
-						return typedObject.date
-					case .failure(let error):
-						throw error
-					}
-				}
-		}
-		.eraseToAnyPublisher()
-
+			.eraseToAnyPublisher()
 	}
 
 	
-	// Returns a list of scanner parameters
-	public func scannerParameters() -> AnyPublisher<IBScannerParameters, Error> {
-		Deferred {
-			self.sendResultPublisher(IBScannerParametersRequest())
-		}
-		.flatMap{ _ in
-			self.eventFeed
-				.filter({$0.type == .SCANNER_PARAMETERS})
-				.first()
-				.tryMap { response in
-					switch response.result {
-					case .success(let object):
-						guard let typedObject = object as? IBScannerParameters else {
-							throw IBError.invalidValue("")
-						}
-						return typedObject
-					case .failure(let error):
-						throw error
-					}
-				}
-		}
-		.eraseToAnyPublisher()
-
-	}
-	
-	
-	/// creates a subscription for position updates from multiple accounts
-	/// returns position size or position end event
-	public func positionsPublisher() -> AnyPublisher<IBEvent, Error> {
-		Deferred {
-			self.sendResultPublisher(IBPositionRequest())
-		}
-		.flatMap{ _ in
-			self.eventFeed
-				.filter({[IBResponseType.POSITION_SIZE, IBResponseType.POSITION_SIZE_END].contains($0.type)})
-				.tryMap { response in
-					switch response.result {
-					case .success(let object):
-						if let object = object as? IBPositionSize {
-							return object
-						} else if let object = object as? IBPositionSizeEnd {
-							return object
-						} else {
-							throw IBError.invalidValue("")
-						}
-					case .failure(let error):
-						throw error
-					}
-				}
-		}
-		.handleEvents(receiveCancel: {
-			print(IBPositionRequest().cancel)
-		})
-		.eraseToAnyPublisher()
-	}
-	
-	
-	/// Subscribes account's information.
-	/// After the initial callback to IBAccountUpdate, callbacks only occur for values which have changed.
-	/// This occurs at the time of a position change, or every (fixed) 3 minutes at most.
-	/// Valid for one managed account. For multiple accounts use IBAccuntupdatesMulti
-	/// - Parameter accountName: account name
-	public func accountUpdatePublisher(_ accountName: String) -> AnyPublisher<IBEvent, Error> {
+	/**
+	 Requests account and position updates.
+	 
+	 Initially all data is delivered, then only updated key-values every 3 minutes (fixed interval from IB).
+	 Only one account can be subscribed at time, otherwise the previous subscription is cancelled.
 		
+	 - note: If there is  more than one managed account, use `AccountUpdatesMultiRequest` for balances,
+	 `AccountPNLRequest` for real time account updates, `PositionSizeMultiRequest` and `PositionPNLRequest`
+	 for finer control over account updates.
+	 
+	 - returns: `AccountUpdate` `AccountUpdateTime` and `PositionUpdate` messages or failure
+	 - parameter accountName: account id to be subscribed
+	 */
+	func accountUpdatePublisher(accountName: String) -> AnyPublisher<AnyAccountUpdate, Error> {
 		
-		Deferred {
-			self.sendResultPublisher(IBAccountUpdateRequest(accountName: accountName))
-		}
-		.flatMap{ _ in
-			self.eventFeed
-				.filter({[IBResponseType.PORTFOLIO_VALUE, IBResponseType.ACCT_VALUE, IBResponseType.ACCT_UPDATE_TIME].contains($0.type)})
-				.tryMap { response -> IBEvent in
-					switch response.result {
-					case .success(let object):
-						if let object = object as? IBAccountUpdate {
-							return object
-						} else if let object = object as? IBPositionUpdate {
-							return object
-						} else if let object = object as? IBAccountUpdateTime {
-							return object
-						} else {
-							throw IBError.invalidValue("")
-						}
-					case .failure(let error):
-						throw error
-					}
-				}
-		}
-		.handleEvents(receiveCancel: {
-			let r = IBAccountUpdateRequest(accountName: accountName)
-			_ = self.sendResultPublisher(r.cancel)
-		})
-		.eraseToAnyPublisher()
-	}
-	
-	
-	public func completedOrdersPublisher(apiOnly:Bool = true)->AnyPublisher<IBEvent, Error>{
-		Deferred {
-			self.sendResultPublisher(IBCompletedOrdersRequest(apiOnly: apiOnly))
-		}
-		.flatMap{ _ in
-			self.eventFeed
-				.filter({[IBResponseType.COMPLETED_ORDER, IBResponseType.COMPLETED_ORDERS_END].contains($0.type)})
-				.tryMap { response in
-					switch response.result {
-					case .success(let object):
-						if let object = object as? IBOrderCompletion {
-							return object
-						} else if let object = object as? IBOrderCompletionEnd {
-							return object
-						} else {
-							throw IBError.invalidValue("")
-						}
-					case .failure(let error):
-						throw error
-					}
-				}
-		}.eraseToAnyPublisher()
-	}
-	
-	
-	public func managedAccountsPublisher() -> AnyPublisher<[String], Error> {
-		Deferred {
-			self.sendResultPublisher(IBManagedAccountsRequest())
-		}
-		.flatMap{ _ in
-			self.eventFeed
-				.filter({$0.type == .MANAGED_ACCTS})
-				.first()
-				.tryMap { response in
-					switch response.result {
-					case .success(let object):
-						guard let typedObject = object as? IBManagedAccounts else {
-							throw IBError.invalidValue("")
-						}
-						return typedObject.identifiers
-					case .failure(let error):
-						throw error
-					}
-				}
-		}
-		.eraseToAnyPublisher()
-
-	}
-	
-	
-	public func openOrdersPublisher() -> AnyPublisher<IBEvent, Error> {
-		Deferred {
-			self.sendResultPublisher(IBOpenOrderRequest.all())
-		}
-		.flatMap{ _ in
-			self.eventFeed
-				.filter({[IBResponseType.OPEN_ORDER, IBResponseType.OPEN_ORDER_END, IBResponseType.ORDER_STATUS].contains($0.type)})
-				.tryMap { response in
-					switch response.result {
-					case .success(let object):
-						if let object = object as? IBOpenOrder {
-							return object
-						} else if let object = object as? IBOrderStatus {
-							return object
-						} else if let object = object as? IBOpenOrderEnd {
-							return object
-						} else {
-							throw IBError.invalidValue("")
-						}
-					case .failure(let error):
-						throw error
-					}
-				}
-		}
-		.eraseToAnyPublisher()
+		let request = AccountUpdatesRequest(accountName: accountName)
+		let expectedTypes:[ResponseType] = [.accountValue, .positionUpdate, .accountUpdateTime]
 		
+		return self.responses
+			.filter { expectedTypes.contains($0.type) }
+			.tryMap { try $0.get() }
+			.compactMap{$0 as? AnyAccountUpdate}
+			.handleEvents(
+				receiveSubscription: { _ in
+					print("\(Date())\tREQUESTING \(request.type)")
+					self.sendRequest(request)
+				},
+				receiveCancel: {
+					self.sendRequest(request.cancel)
+					print("\(Date())\tCANCELLED \(request)")
+				}
+			)
+			.eraseToAnyPublisher()
 	}
 	
 	
-}
-
-
-extension IBClient {
 	
-	public func setMarketDataType(_ type: IBMarketDataType) throws {
-		try self.send(IBMarketDataTypeRequest(type))
-	}
+	// AccountUpdates + PositionUpdate + AccountUpdateTime + AccountUpdateEnd
+	// NextRequestID
+
+	// ReceiveFA
+	// ScannerParameters
+	
+	// OpenOrder
+	// OpenOrderEnd
+	// CommissionReport
+	// CompletedOrder + CompletedOrdersEnd
+	
+	// MarketDepthExchanges
 	
 }

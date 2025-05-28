@@ -1,170 +1,225 @@
-//
-//  IBClient.swift
-//	IBKit
-//
-//	Copyright (c) 2016-2023 Sten Soosaar
-//
-//	Permission is hereby granted, free of charge, to any person obtaining a copy
-//	of this software and associated documentation files (the "Software"), to deal
-//	in the Software without restriction, including without limitation the rights
-//	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-//	copies of the Software, and to permit persons to whom the Software is
-//	furnished to do so, subject to the following conditions:
-//
-//	The above copyright notice and this permission notice shall be included in all
-//	copies or substantial portions of the Software.
-//
-//	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-//	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-//	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-//	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-//	SOFTWARE.
-//
+/*
+ MIT License
+
+ Copyright (c) 2016-2025 Sten Soosaar
+
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+
+ The above copyright notice and this permission notice shall be included in all
+ copies or substantial portions of the Software.
+
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ SOFTWARE.
+ */
 
 
 import Foundation
 import Combine
+import TWS
+
 
 open class IBClient {
 	
+	/// app id
 	public let id: Int
 
-	private let connection: IBConnection
+	/// socket connection
+	private var connection: IBConnection
 	
-	private let subject = PassthroughSubject<IBResponse, Error>()
+	public private(set) lazy var responses = connection.responseSubject.share().eraseToAnyPublisher()
 	
-	public lazy var eventFeed = subject.share().eraseToAnyPublisher()
-	
-	public var serverVersion:Int? {
-		return connection.serverVersion
-	}
-
-	public var cancellables: Set<AnyCancellable> = []
-
-	/// Creates new api client
-	/// - Parameters:
-	/// - id: your app identifier
-	///  - adderess: host addrress where your gateway or workstation runs.
-	///  - port: default values (live, test): gateway 4001,4002 and workstation 7496,7497
-	public init(id: Int, address: String, port: Int) {
+	private var cancellables: Set<AnyCancellable> = []
 		
+	public private(set) var managedAccounts: [Account] = []
+
+	public init(id: Int, host: String = "127.0.0.1", port: UInt16 = 4002) {
 		self.id = id
-		
-		guard let host = URL(string: address)?.host else {
-			fatalError("Cant figure out the host to connect")
-		}
-		
-		connection = IBConnection(host: host, port: port)
-		
+		self.connection = IBConnection(host: host, port: port)
 	}
 	
-	private var _nextValidID: Int = 0
-	
-	public var nextRequestID: Int {
-		get{
-			let value = _nextValidID
-			_nextValidID += 1
-			return value
-		}
-		set{
-			_nextValidID = newValue
-		}
-	}
-	
-	public var debugMode: Bool = false{
+	public var debugMode: Bool = false {
 		willSet{
 			self.connection.debugMode = newValue
 		}
 	}
 	
-	open func onConnect(){}
-	
-	private func listen(){
-		connection.responseSubject
-			.decode(type: IBResponse.self, decoder: IBDecoder(self.connection.serverVersion))
-			.catch { error -> Empty<IBResponse, Never> in
-				print("Decoding error: \(error)")
-				return Empty()
-			}
-			.sink { completion in
-				print(completion)
-			} receiveValue: { [weak self] response in
-				
-				if response.id == -1 && response.type == .ERROR, let error = response.error {
-					self?.setServiceState(error)
-					return
-				}
-				
-				self?.subject.send(response)
-			}
-			.store(in: &cancellables)
+	public var state: IBConnection.State {
+		connection.state.value
 	}
-
-	open func onDisconnect(){}
 	
-	public func connect() throws {
-
-		guard self.connection.state.value == .disconnected else {
-			throw IBError.connection("Already connected")
-		}
+	public func connect() {
 		
-		self.connection.state
-			.sink { [weak self] state in
-				switch state {
-				case .connectedToAPI:
-					do {
-						try self?.startAPI()
-					} catch {
-						fatalError("failed to start api \(error.localizedDescription)")
+		connection.state
+			.filter { state in
+				if case .connected = state { return true }
+				return false
+			}
+			.prefix(1)
+			.flatMap { [weak self] _ -> AnyPublisher<IBEvent, Never> in
+				guard let self = self else { return Empty().eraseToAnyPublisher() }
+				print("Connection established. Starting API for client \(self.id)")
+				return self.startAPI(id: self.id)
+			}
+			.sink { [weak self] event in
+				switch event {
+				case let temp as NextRequestID:
+					self?._nextRequestID.send(temp.value)
+					print("􀃲 Next request id: \(temp.value)")
+					if self?.managedAccounts.isEmpty == false {
+						self?.onConnection()
 					}
-					self?.listen()
-					self?.onConnect()
+
+				case let temp as ManagedAccounts:
+					self?.managedAccounts = temp.identifiers.map({Account(name: $0)})
+					print("􀃲 Managed accounts: \( temp.identifiers.joined(separator: ", "))")
+					if self?._nextRequestID.value != -1 {
+						self?.onConnection()
+					}
+					
 				default:
+					print("􀇾 Unhandled event: \(event)")
 					break
 				}
 			}
 			.store(in: &cancellables)
-		connection.connect()
+		
+		
+		connection.state
+			.removeDuplicates()
+			.sink { [weak self] state in
+				if case .failed(let error) = state {
+					print("􀇾 Connection lost due \(error). Starting reconnection loop...")
+					self?.reconnect()
+				}
+			}
+			.store(in: &cancellables)
+		
+
+		currentReconnectionAttempt = 0
+		connection.start()
+
+	}
+		
+	open func onConnection(){
+					
+
 	}
 
 	public func disconnect() {
-		self.onDisconnect()
-		connection.disconnect()
+		timer?.invalidate()
+		timer = nil
+		connection.stop()
+		cancellables.removeAll()
+		managedAccounts.removeAll()
+		_nextRequestID.send(-1)
 	}
+
+
+	/// Reconnection
 	
-	public func send(_ request: IBRequest) throws {
-		guard connection.state.value == .connectedToAPI else {
-			throw IBError.connection("Not connected")
+	private var timer: Timer? = nil
+	
+	public var reconnectInterval: TimeInterval = 30
+	
+	public var maxReconnectAttempts: Int = 100
+	
+	private var currentReconnectionAttempt:Int = 0
+
+	private func reconnect() {
+		
+		print(#function)
+		
+		timer = Timer.scheduledTimer(withTimeInterval: reconnectInterval, repeats: true) { [weak self] timer in
+			guard let self = self else {
+				timer.invalidate()
+				return
+			}
+			
+			self.currentReconnectionAttempt += 1
+			print("...\(self.currentReconnectionAttempt) attempt to reconnect at \(Date())")
+
+			if self.currentReconnectionAttempt > self.maxReconnectAttempts {
+				timer.invalidate()
+				self.connection.stop()
+				print("Max reconnection attempts reached. Giving up...")
+				return
+			}
+
+			if case .connected = self.state {
+				timer.invalidate()
+				print("Already connected. Reconnection halted.")
+				return
+			}
+
+			self.connection.start()
 		}
-		let encoder = IBEncoder(connection.serverVersion)
-		try encoder.encode(request)
-		let data = encoder.data
-		let dataWithLength = data.count.toBytes(size: 4) + data
-		connection.requestSubject.send(dataWithLength)
 	}
 	
-	private func setServiceState(_ error: IBError){
-		print("SERVICE STATE", error.message)
+	public func sendRequest(_ request: AnyRequest){
+		self.connection.requestSubject.send(request)
+	}
+
+	/**
+	 Request IB to start API. Must be sent after handshake
+	 - returns next valid id and managed account identifiers
+	 - parameter id: unique app identifier.
+	 */
+	func startAPI(id: Int) -> AnyPublisher<IBEvent, Never> {
+		
+		let request = StartAPIRequest(clientId: id, options: nil)
+		self.sendRequest(request)
+	
+		let monitoredTypes:[ResponseType] = [.errorMessage, .managedAccounts, .nextValidId, .openOrder, .orderStatus]
+		return self.responses
+			.filter { monitoredTypes.contains($0.type) }
+			.handleEvents(receiveOutput: { response in
+
+				guard let error = response.error else { return }
+		
+				switch error.code {
+				case 1100, 1101, 1102:
+					print("􀇾 Server state update: \(error.code) - \(error.message)")
+				case 2100...2169:
+					print("􀁞 Warning: \(error.code) - \(error.message)")
+				default:
+					break
+				}
+				
+			})
+			.compactMap { response in
+				guard case .success(let event) = response.result else { return nil }
+				return event
+			}
+			.eraseToAnyPublisher()
 	}
 	
-	func startAPI() throws {
-		let version: Int = 2
-		let encoder = IBEncoder()
-		var container = encoder.unkeyedContainer()
-		try container.encode(IBRequestType.startAPI)
-		try container.encode(version)
-		try container.encode(id)
-		try container.encode("")
-		let dataWithLength = encoder.data.count.toBytes(size: 4) + encoder.data
-		connection.send(data: dataWithLength)
-	}
 	
-	deinit{
-		connection.disconnect()
-		self.cancellables.removeAll()
-	}
+	private let nextIdQueue = DispatchQueue(label: "com.ibkit.nextId.queue")
+
+	private let _nextRequestID = CurrentValueSubject<Int, Never>(-1)
 	
+	public func nextIdPublisher(count: Int = 1) -> AnyPublisher<[Int], Never> {
+		_nextRequestID
+			.first { $0 > 0 } // Wait until a valid starting ID appears
+			.map { start in
+				self.nextIdQueue.sync {
+					let ids = Array(start..<(start + count))
+					self._nextRequestID.send(start + count)
+					return ids
+				}
+			}
+			.eraseToAnyPublisher()
+	}
+	  
 }
 
