@@ -39,9 +39,9 @@ open class IBClient {
 	public private(set) lazy var responses = connection.responseSubject.share().eraseToAnyPublisher()
 	
 	private var cancellables: Set<AnyCancellable> = []
-		
+	
 	public private(set) var managedAccounts: [Account] = []
-
+		
 	public init(id: Int, host: String = "127.0.0.1", port: UInt16 = 4002) {
 		self.id = id
 		self.connection = IBConnection(host: host, port: port)
@@ -80,8 +80,7 @@ open class IBClient {
 					}
 
 				case let temp as ManagedAccounts:
-					self?.managedAccounts = temp.identifiers.map({Account(name: $0)})
-					print("􀃲 Managed accounts: \( temp.identifiers.joined(separator: ", "))")
+					self?.setupAccounts(identifiers: temp.identifiers)
 					if self?._nextRequestID.value != -1 {
 						self?.onConnection()
 					}
@@ -109,10 +108,13 @@ open class IBClient {
 		connection.start()
 
 	}
+	
+	open func setupAccounts(identifiers: [String]){
+		self.managedAccounts = identifiers.map({Account(name:$0)})
+	}
 		
 	open func onConnection(){
 					
-
 	}
 
 	public func disconnect() {

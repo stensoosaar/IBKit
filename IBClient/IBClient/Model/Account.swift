@@ -77,7 +77,8 @@ open class Account {
 
 	/// Dictionary of open positions keyed by contract identifier.
 	public var positions: [Int: Position] = [:]
-	
+
+	public var openOrders: [Order] = []
 	
 	public init(name: String) {
 		self.name = name
