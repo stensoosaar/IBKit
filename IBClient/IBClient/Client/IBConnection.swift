@@ -170,6 +170,10 @@ public final class IBConnection {
 	
 	//MARK: - RE/CONNECT
 	
+	
+	var requstPacintInterval:Int = 20
+	
+	
 	/**
 	 Starts the session
 	 */
@@ -177,7 +181,7 @@ public final class IBConnection {
 		print("Starting connection...")
 		
 		requestSubject
-			.queue(for: .milliseconds(20), scheduler: DispatchQueue.main)
+			.queue(for: .milliseconds(self.requstPacintInterval), scheduler: DispatchQueue.main)
 			.combineLatest(state)
 			.filter { _, state in
 				if case .connected = state {

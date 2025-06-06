@@ -27,36 +27,107 @@ import Foundation
 import Combine
 import TWS
 
+/**
+ Interactive Brokers client that manages connection, authentication, and communication with TWS or IB Gateway.
 
+ This class provides a high-level interface for connecting to Interactive Brokers' Trading Workstation (TWS)
+ or IB Gateway. It handles connection management, automatic reconnection, request ID generation, and
+ account management.
+
+ ## Usage
+ ```swift
+ let client = IBClient(id: 1, host: "127.0.0.1", port: 4002)
+ client.connect()
+ ```
+
+ ## Connection States
+ The client automatically manages connection states and provides reconnection capabilities
+ with configurable intervals and maximum attempts.
+ */
 open class IBClient {
 	
-	/// app id
+	/// Unique application identifier used to distinguish this client from others connected to the same TWS/Gateway instance
 	public let id: Int
 
-	/// socket connection
+	/// The underlying socket connection to TWS/Gateway
 	private var connection: IBConnection
 	
+	/**
+	 Publisher that emits all responses received from the TWS/Gateway
+	 
+	 Subscribe to this publisher to receive market data, order updates, account information, and other responses.
+	 The publisher is shared, meaning multiple subscribers will receive the same events.
+	 */
 	public private(set) lazy var responses = connection.responseSubject.share().eraseToAnyPublisher()
 	
+	/// Set of cancellables for managing Combine subscriptions
 	private var cancellables: Set<AnyCancellable> = []
 	
+	/// Array of managed accounts available for the current session
 	public private(set) var managedAccounts: [Account] = []
-		
+	
+	/**
+	 Interval between request transmissions in milliseconds
+	
+	 This property controls the pacing of requests sent to TWS/Gateway to avoid overwhelming the server.
+	 Interactive Brokers has rate limits, and this helps ensure compliance.
+	
+	 Default value is 20 milliseconds. You can reduce it further by purchasing Booster Pack or generate fees.
+	 
+	 - Important: by sending more than 50 orders in second, some orders might cached causing failure to attach parent-child relationships with bracket orders.
+	 */
+	public var requstPacingInterval: Int = 20 {
+		willSet{
+			connection.requstPacintInterval = newValue
+		}
+	}
+
+	/**
+	 Creates a new Interactive Brokers (IB) connection object to a TWS workstation or IB Gateway instance.
+	 - parameter id: unique application id, must not conflict with other connected clients.
+	 - parameter host: the hostname or IP address to connect to (default is `127.0.0.1` for localhost)
+	 - parameter port: the port number to connect to (should match your TWS or Gateway API port).
+	 
+	 You must have either Trader Workstation (TWS) or IB Gateway running and configured to accept API connections.
+	 The `port` must match the settings in your running TWS or Gateway session:
+	 * **Workstation**: `7496 live` and `7497 paper trading`
+	 * **Gateway**: `4001 live`and `4002 paper trading`
+	 */
 	public init(id: Int, host: String = "127.0.0.1", port: UInt16 = 4002) {
 		self.id = id
 		self.connection = IBConnection(host: host, port: port)
 	}
+
 	
+	/// Enables or disables debug mode for detailed logging
 	public var debugMode: Bool = false {
 		willSet{
 			self.connection.debugMode = newValue
 		}
 	}
 	
+	/**
+	 Current connection state
+	
+	 - Returns: The current state of the underlying connection
+	*/
 	public var state: IBConnection.State {
 		connection.state.value
 	}
 	
+	
+	/**
+	Establishes connection to TWS/Gateway and initiates the API handshake
+	
+	This method starts the connection process, which includes:
+	1. Establishing TCP connection to TWS/Gateway
+	2. Performing API handshake
+	3. Starting the API with the specified client ID
+	4. Retrieving next valid request ID
+	5. Getting managed account identifiers
+	
+	Monitor the `state` property or `responses` publisher to track connection progress and handle events.
+	*/
 	public func connect() {
 		
 		connection.state
@@ -98,25 +169,19 @@ open class IBClient {
 			.sink { [weak self] state in
 				if case .failed(let error) = state {
 					print("􀇾 Connection lost due \(error). Starting reconnection loop...")
-					self?.reconnect()
+					DispatchQueue.main.async {
+						self?.reconnect()
+					}
 				}
 			}
 			.store(in: &cancellables)
-		
 
 		currentReconnectionAttempt = 0
 		connection.start()
 
 	}
 	
-	open func setupAccounts(identifiers: [String]){
-		self.managedAccounts = identifiers.map({Account(name:$0)})
-	}
-		
-	open func onConnection(){
-					
-	}
-
+	/// Disconnects from TWS/Gateway and cleans up resources
 	public func disconnect() {
 		timer?.invalidate()
 		timer = nil
@@ -129,18 +194,32 @@ open class IBClient {
 
 	/// Reconnection
 	
-	private var timer: Timer? = nil
-	
+	/// Time interval between reconnection attempts in seconds
 	public var reconnectInterval: TimeInterval = 30
 	
+	/// Maximum number of reconnection attempts before giving up
 	public var maxReconnectAttempts: Int = 100
 	
+	/// Current number of reconnection attempts made
 	private var currentReconnectionAttempt:Int = 0
 
+	/// Timer used for automatic reconnection attempts
+	private var timer: Timer? = nil
+
+	/**
+	 Initiates automatic reconnection process
+		
+	 TWS
+	
+	
+	 This method starts a timer that periodically attempts to reconnect to TWS/Gateway.
+	 It will continue attempting reconnection until either:
+	 - Connection is successfully established
+	 - Maximum number of attempts is reached
+	 - The connection is manually stopped
+	*/
 	private func reconnect() {
-		
-		print(#function)
-		
+				
 		timer = Timer.scheduledTimer(withTimeInterval: reconnectInterval, repeats: true) { [weak self] timer in
 			guard let self = self else {
 				timer.invalidate()
@@ -222,6 +301,33 @@ open class IBClient {
 			}
 			.eraseToAnyPublisher()
 	}
+	
+	
+	/**
+	 Sets up managed accounts from the provided identifiers
+	
+	 This method is called automatically during the connection process when account information
+	 is received from TWS/Gateway. It can be overridden in subclasses to customize account setup.
+	
+	 - Parameter identifiers: Array of account identifier strings received from TWS/Gateway
+	 */
+	open func setupAccounts(identifiers: [String]){
+		self.managedAccounts = identifiers.map({Account(name:$0)})
+	}
+		
+	
+	/**
+	Called when the client is fully connected and authenticated
+
+	This method is invoked after successful connection, API startup, and account setup.
+	Override this method in subclasses to perform initialization tasks that require
+	a fully established connection, such as subscribing to market data or retrieving account information.
+	*/
+	open func onConnection(){
+					
+	}
+
+	
 	  
 }
 
