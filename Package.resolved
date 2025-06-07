@@ -1,0 +1,14 @@
+{
+  "pins" : [
+    {
+      "identity" : "ibmodels",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/stensoosaar/ibmodels",
+      "state" : {
+        "revision" : "772edf922c9d2d7f869ed9dc1c9ca2d87bd01400",
+        "version" : "10.33.0"
+      }
+    }
+  ],
+  "version" : 2
+}
